@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life · Leo">
+<meta name="theme-color" content="#1a1209">
+<title>Life in Weeks · Leo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1209;
+    --paper: #f2ebe0;
+    --aged: #b8a48a;
+    --accent: #8b3a1e;
+    --gold: #c8972a;
+
+    /* 6 life seasons */
+    --childhood:  #7b9e6b;   /* soft sage green — unchosen, formative */
+    --prime:      #1a6b3a;   /* deep forest green — adult prime 18–39 */
+    --peak:       #2d7d9a;   /* steel blue — 40–54 peak execution */
+    --autumn:     #c8972a;   /* amber gold — 55–64 */
+    --twilight:   #8b4a2a;   /* burnt sienna — 65–72 */
+    --late:       #aaaaaa;   /* muted grey — 73–78 */
+
+    --now-ring:   #e8341a;
+    --future-base:#e0d8c8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh; min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  body {
+    padding: max(env(safe-area-inset-top), 24px) 16px max(env(safe-area-inset-bottom), 24px);
+  }
+
+  .grain {
+    position: fixed; inset: 0; opacity: 0.04; pointer-events: none; z-index: 200;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── HEADER ── */
+  header { text-align: center; padding: 16px 0 12px; animation: fadeUp 0.9s ease both; }
+
+  .eyebrow { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+
+  .main-title { font-family: 'Playfair Display', serif; font-size: clamp(1.9rem, 6vw, 2.8rem); font-weight: 700; color: var(--ink); line-height: 1.1; letter-spacing: 0.02em; }
+  .sub-title { font-family: 'Playfair Display', serif; font-size: clamp(0.9rem, 2.8vw, 1.2rem); font-weight: 400; color: var(--aged); line-height: 1.4; margin-top: 4px; }
+  .sub-title em { font-style: italic; color: var(--accent); }
+
+  .rule { width: 40px; height: 1px; background: var(--gold); margin: 12px auto 10px; opacity: 0.7; }
+  .subtitle { font-size: 0.82rem; color: var(--aged); font-weight: 300; letter-spacing: 0.05em; }
+
+  /* ── STATS ── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 14px 0; animation: fadeUp 1s ease both; animation-delay: 0.08s;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.45); border: 1px solid rgba(184,164,138,0.35);
+    border-radius: 6px; padding: 12px 6px; text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    color: var(--accent); font-weight: 700; line-height: 1; display: block; margin-bottom: 4px;
+  }
+
+  .stat-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--aged); }
+
+  /* ── PROGRESS ── */
+  .progress-wrap { margin: 4px 0 14px; animation: fadeUp 1s ease both; animation-delay: 0.13s; }
+
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--aged); margin-bottom: 6px;
+  }
+
+  .progress-track { height: 5px; background: var(--future-base); border-radius: 3px; overflow: hidden; border: 0.5px solid rgba(184,164,138,0.3); }
+
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--childhood), var(--prime), var(--accent));
+    border-radius: 3px; width: 0%; transition: width 2s ease;
+  }
+
+  /* ── LEGEND ── */
+  .bracket-legend { margin: 0 0 12px; animation: fadeUp 1s ease both; animation-delay: 0.18s; }
+
+  .bracket-legend-title { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--aged); text-align: center; margin-bottom: 8px; }
+
+  .legend-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+
+  .legend-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .legend-swatch { width: 100%; height: 7px; border-radius: 2px; }
+  .legend-text { font-size: 7.5px; color: var(--aged); text-align: center; line-height: 1.3; }
+  .legend-text strong { display: block; font-weight: 600; color: var(--ink); font-size: 8px; margin-bottom: 1px; }
+
+  /* ── VIEW SWITCH ── */
+  .view-switch { display: flex; gap: 4px; padding: 4px; margin: 14px auto;
+    max-width: 340px; border: 1px solid rgba(184,164,138,0.5); border-radius: 9px;
+    background: rgba(255,255,255,0.35); }
+  .view-switch button { flex: 1; min-height: 44px; border: 0; border-radius: 6px;
+    background: transparent; color: #66513b; font: 600 1rem 'Cormorant Garamond', serif;
+    cursor: pointer; }
+  .view-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .view-switch button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .grid-summary { margin-bottom: 8px; text-align: center; font-size: 0.9rem; color: #66513b; }
+  .weeks-grid[data-view="months"] { grid-template-columns: repeat(12, 1fr); gap: 3px; max-width: 680px; margin: 0 auto; }
+  .weeks-grid[data-view="years"] { grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 620px; margin: 0 auto; }
+  .weeks-grid[data-view="months"] .week-cell { border-radius: 2px; }
+  .weeks-grid[data-view="years"] .week-cell { border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  /* ── GRID ── */
+  .grid-section { animation: fadeUp 1s ease both; animation-delay: 0.23s; margin-bottom: 16px; }
+
+  .weeks-grid { display: grid; grid-template-columns: repeat(52, 1fr); gap: 1.5px; width: 100%; }
+
+  .week-cell { aspect-ratio: 1; border-radius: 1px; }
+
+  /* Lived — full saturation */
+  .wl-childhood { background: var(--childhood); }
+  .wl-prime     { background: var(--prime); }
+  .wl-peak      { background: var(--peak); }
+  .wl-autumn    { background: var(--autumn); }
+  .wl-twilight  { background: var(--twilight); }
+  .wl-late      { background: var(--late); }
+
+  /* Future — very muted tint */
+  .wf-childhood { background: color-mix(in srgb, var(--childhood) 15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--childhood) 22%, transparent); }
+  .wf-prime     { background: color-mix(in srgb, var(--prime)     15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--prime)     22%, transparent); }
+  .wf-peak      { background: color-mix(in srgb, var(--peak)      15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--peak)      22%, transparent); }
+  .wf-autumn    { background: color-mix(in srgb, var(--autumn)    15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--autumn)    22%, transparent); }
+  .wf-twilight  { background: color-mix(in srgb, var(--twilight)  15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--twilight)  22%, transparent); }
+  .wf-late      { background: color-mix(in srgb, var(--late)      18%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--late)      25%, transparent); }
+
+  /* Current week */
+  .week-cell.current {
+    background: var(--now-ring) !important;
+    box-shadow: 0 0 4px rgba(232,52,26,0.75);
+    animation: pulse 1.8s ease-in-out infinite;
+    border: none !important;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; box-shadow: 0 0 5px rgba(232,52,26,0.8); }
+    50%      { opacity: 0.45; box-shadow: 0 0 2px rgba(232,52,26,0.2); }
+  }
+
+  .year-labels { display: flex; justify-content: space-between; margin-top: 5px; font-size: 8px; color: var(--aged); letter-spacing: 0.05em; }
+
+  /* ── BRACKET DETAIL ── */
+  .brackets-section { margin: 0 0 18px; animation: fadeUp 1s ease both; animation-delay: 0.28s; }
+
+  .section-title {
+    font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic;
+    color: var(--ink); text-align: center; margin-bottom: 12px;
+  }
+
+  .bracket-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 0; border-bottom: 1px solid rgba(184,164,138,0.22);
+  }
+  .bracket-row:last-child { border-bottom: none; }
+
+  .bracket-pip { width: 10px; min-width: 10px; height: 10px; border-radius: 2px; margin-top: 4px; }
+
+  .bracket-info { flex: 1; }
+  .bracket-name { font-family: 'Playfair Display', serif; font-size: 0.88rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .bracket-ages { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aged); margin-bottom: 4px; }
+  .bracket-desc { font-size: 0.82rem; line-height: 1.55; color: #4a3f30; font-weight: 300; }
+
+  .bracket-stat { text-align: right; min-width: 58px; }
+  .bracket-weeks { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; line-height: 1; margin-bottom: 2px; }
+  .bracket-weeks-label { font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aged); }
+
+  /* ── INSIGHTS ── */
+  .insights-section { margin: 0 0 22px; animation: fadeUp 1s ease both; animation-delay: 0.33s; }
+
+  .insight-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(184,164,138,0.22); }
+  .insight-item:last-child { border-bottom: none; }
+
+  .insight-num { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); font-weight: 700; min-width: 20px; text-align: right; padding-top: 1px; line-height: 1; }
+
+  .insight-text { font-size: 0.87rem; line-height: 1.62; color: #3a2f20; font-weight: 300; }
+  .insight-text strong { font-weight: 600; color: var(--accent); }
+
+  /* ── FOOTER ── */
+  .footer-quote {
+    text-align: center; padding: 20px 12px 8px;
+    border-top: 1px solid rgba(184,164,138,0.3);
+    animation: fadeUp 1s ease both; animation-delay: 0.38s;
+  }
+
+  .quote-text { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; color: var(--ink); line-height: 1.72; margin-bottom: 8px; }
+  .quote-source { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--aged); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <div class="eyebrow">A Personal Reckoning</div>
+  <div class="main-title">Leo Xu</div>
+  <div class="sub-title"><em id="viewTitle">Life in Weeks</em></div>
+  <div class="rule"></div>
+  <div class="subtitle" id="subtitleLine">Melbourne · Expectancy 78</div>
+</header>
+
+<div class="view-switch" role="group" aria-label="Life overview unit">
+  <button type="button" data-view="weeks" aria-pressed="true" aria-controls="weeksGrid">Weeks</button>
+  <button type="button" data-view="months" aria-pressed="false" aria-controls="weeksGrid">Months</button>
+  <button type="button" data-view="years" aria-pressed="false" aria-controls="weeksGrid">Years</button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="stat-number" id="weeksLived">—</span>
+    <span class="stat-label" id="livedLabel">Weeks Lived</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number" id="weeksLeft">—</span>
+    <span class="stat-label" id="aheadLabel">Weeks Ahead</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number" id="daysLeft">—</span>
+    <span class="stat-label">Days Ahead</span>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span>Birth</span>
+    <span id="pctLabel">—</span>
+    <span>Age 78</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<div class="bracket-legend">
+  <div class="bracket-legend-title">Life Seasons</div>
+  <div class="legend-grid">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--childhood)"></div>
+      <div class="legend-text"><strong>Childhood</strong>0–17</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--prime)"></div>
+      <div class="legend-text"><strong>Prime</strong>18–39</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--peak)"></div>
+      <div class="legend-text"><strong>Peak</strong>40–54</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--autumn)"></div>
+      <div class="legend-text"><strong>Autumn</strong>55–64</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--twilight)"></div>
+      <div class="legend-text"><strong>Twilight</strong>65–72</div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:var(--late)"></div>
+      <div class="legend-text"><strong>Late</strong>73–78</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-section">
+  <p class="grid-summary" id="gridSummary" aria-live="polite" aria-atomic="true"></p>
+  <div class="weeks-grid" id="weeksGrid" data-view="weeks" role="img" aria-label="Life overview"></div>
+  <div class="year-labels" id="yearLabels"></div>
+</div>
+
+<div class="brackets-section">
+  <div class="section-title">The seasons, decoded</div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--childhood)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Childhood</div>
+      <div class="bracket-ages">Ages 0–17 · 936 weeks · Unchosen</div>
+      <div class="bracket-desc">You didn't design this season. Your values, fears, and instincts were being wired by others — family, school, circumstance. Rich in memory but low in agency. Already spent.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" style="color:var(--childhood)">936</div>
+      <div class="bracket-weeks-label">wks · done</div>
+    </div>
+  </div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--prime)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Prime</div>
+      <div class="bracket-ages">Ages 18–39 · 1,144 weeks · Your authorship years</div>
+      <div class="bracket-desc">Full agency, near-full body, compounding time horizon. The years where habits, relationships, capital, and identity are built from scratch — on your terms. You are in the final stretch of this.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" id="primeLeft" style="color:var(--prime)">—</div>
+      <div class="bracket-weeks-label">wks left</div>
+    </div>
+  </div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--peak)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Peak Power</div>
+      <div class="bracket-ages">Ages 40–54 · 780 weeks · Deploy everything</div>
+      <div class="bracket-desc">Accumulated capital — financial, social, intellectual — gets deployed. Energy still high, wisdom now present. This is when most people either build legacy or slowly realise they optimised for the wrong things.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" style="color:var(--peak)">780</div>
+      <div class="bracket-weeks-label">wks total</div>
+    </div>
+  </div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--autumn)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Autumn</div>
+      <div class="bracket-ages">Ages 55–64 · 520 weeks · Last full season</div>
+      <div class="bracket-desc">Still high quality — mind sharp, travel easy — but the body begins registering past choices. The last bracket where almost anything remains possible. Unfinished things start to press.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" style="color:var(--autumn)">520</div>
+      <div class="bracket-weeks-label">wks total</div>
+    </div>
+  </div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--twilight)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Twilight</div>
+      <div class="bracket-ages">Ages 65–72 · 416 weeks · Quality varies sharply</div>
+      <div class="bracket-desc">Outcome here is almost entirely determined by decisions made before 55. Health constraints narrow options fast. These weeks are real, but the range of what's possible has compressed considerably.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" style="color:var(--twilight)">416</div>
+      <div class="bracket-weeks-label">wks total</div>
+    </div>
+  </div>
+
+  <div class="bracket-row">
+    <div class="bracket-pip" style="background:var(--late)"></div>
+    <div class="bracket-info">
+      <div class="bracket-name">Late Season</div>
+      <div class="bracket-ages">Ages 73–78 · 260 weeks · Peace, not ambition</div>
+      <div class="bracket-desc">Present, if you're fortunate. Don't build for these weeks — build so these weeks are peaceful. Legacy is reviewed here, not created. The goal is to arrive with no regrets to process.</div>
+    </div>
+    <div class="bracket-stat">
+      <div class="bracket-weeks" style="color:var(--late)">260</div>
+      <div class="bracket-weeks-label">wks total</div>
+    </div>
+  </div>
+</div>
+
+<div class="insights-section">
+  <div class="section-title">Five truths · return to these weekly</div>
+
+  <div class="insight-item">
+    <div class="insight-num">I</div>
+    <div class="insight-text"><strong>Prime ends in ~<span id="primeCountdown">—</span> weeks.</strong> Age 40 arrives 5 July 2029. Everything you want to start — a physical identity, a financial structure, a family ritual — starts now or starts in a harder season.</div>
+  </div>
+
+  <div class="insight-item">
+    <div class="insight-num">II</div>
+    <div class="insight-text"><strong>Your infant has ~940 Saturdays before 18.</strong> Not metaphor — countable. Each one spent distracted is gone. Not guilty; just true.</div>
+  </div>
+
+  <div class="insight-item">
+    <div class="insight-num">III</div>
+    <div class="insight-text"><strong>Your fully free life ends closer to 65.</strong> That's only <strong id="qualityLeft">—</strong> weeks away. Every major ambition — the business you want to build, the places you want to see, the person you want to become — must be executable before then.</div>
+  </div>
+
+  <div class="insight-item">
+    <div class="insight-num">IV</div>
+    <div class="insight-text"><strong>Childhood is done; Prime is almost done.</strong> The two seasons where life is richest and most elastic are nearly fully spent. What remains — Peak, Autumn — are still excellent, but they run on the foundation you're pouring right now.</div>
+  </div>
+
+  <div class="insight-item">
+    <div class="insight-num">V</div>
+    <div class="insight-text"><strong>The red square moves every week.</strong> Open this on Sunday. If the week just passed moved you toward who you want to be — good. If not, that's the only question worth answering before Monday.</div>
+  </div>
+</div>
+
+<div class="footer-quote">
+  <div class="quote-text" id="quoteText"></div>
+  <div class="quote-source" id="quoteSource"></div>
+</div>
+
+<script>
+  // ── CONSTANTS ──
+  const DOB         = new Date(1989, 6, 5); // 5 July 1989 (month is 0-indexed)
+  const EXPECTANCY  = 78;
+  const TOTAL_WEEKS = EXPECTANCY * 52;
+
+  // ── LIVE CALCULATIONS ──
+  const now         = new Date();
+  const msPerWeek   = 7 * 24 * 60 * 60 * 1000;
+  const msAlive     = now - DOB;
+  const weeksLived  = Math.floor(msAlive / msPerWeek);
+  const weeksLeft   = TOTAL_WEEKS - weeksLived;
+  const daysLeft    = Math.floor(weeksLeft * 7);
+  const pct         = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(1);
+  const ageNow      = ((msAlive / (365.25 * 24 * 60 * 60 * 1000))).toFixed(1);
+
+  // Quality-adjusted (to 65)
+  const age65date   = new Date(DOB.getTime() + 65 * 365.25 * 24 * 60 * 60 * 1000);
+  const qualLeft    = Math.max(0, Math.floor((age65date - now) / msPerWeek));
+
+  // Prime end (age 40 = 5 July 2029)
+  const age40date   = new Date(DOB.getTime() + 40 * 365.25 * 24 * 60 * 60 * 1000);
+  const primeLeft   = Math.max(0, Math.floor((age40date - now) / msPerWeek));
+
+  // ── FILL DOM ──
+  document.getElementById('subtitleLine').textContent  = `Age ${ageNow} · Melbourne · Expectancy 78`;
+  document.getElementById('weeksLived').textContent    = weeksLived.toLocaleString();
+  document.getElementById('weeksLeft').textContent     = weeksLeft.toLocaleString();
+  document.getElementById('daysLeft').textContent      = daysLeft.toLocaleString();
+  document.getElementById('pctLabel').textContent      = `${pct}% elapsed`;
+  document.getElementById('primeLeft').textContent     = primeLeft.toLocaleString();
+  document.getElementById('primeCountdown').textContent= primeLeft.toLocaleString();
+  document.getElementById('qualityLeft').textContent   = qualLeft.toLocaleString();
+
+  // Calendar dates avoid daylight-saving drift at period boundaries.
+  function calendarDay(date) {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
+  }
+
+  function anniversary(monthOffset) {
+    const first = new Date(DOB.getFullYear(), DOB.getMonth() + monthOffset, 1);
+    const lastDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    return new Date(first.getFullYear(), first.getMonth(), Math.min(DOB.getDate(), lastDay));
+  }
+
+  function lifeView(unit, today) {
+    const horizon = anniversary(EXPECTANCY * 12);
+    const totalDays = calendarDay(horizon) - calendarDay(DOB);
+    const elapsedDays = Math.max(0, calendarDay(today) - calendarDay(DOB));
+    let elapsedMonths = (today.getFullYear() - DOB.getFullYear()) * 12
+      + today.getMonth() - DOB.getMonth();
+    if (calendarDay(today) < calendarDay(anniversary(elapsedMonths))) elapsedMonths--;
+    const total = unit === 'weeks' ? Math.ceil(totalDays / 7)
+      : unit === 'months' ? EXPECTANCY * 12 : EXPECTANCY;
+    const elapsed = unit === 'weeks' ? Math.floor(elapsedDays / 7)
+      : unit === 'months' ? elapsedMonths : Math.floor(elapsedMonths / 12);
+    const lived = elapsedDays >= totalDays ? total : Math.max(0, Math.min(total, elapsed));
+    const current = elapsedDays < totalDays && calendarDay(today) >= calendarDay(DOB) ? lived : -1;
+    return { total, lived, current, ahead: Math.max(0, total - lived - (current >= 0 ? 1 : 0)),
+      daysAhead: Math.max(0, totalDays - elapsedDays),
+      progress: Math.min(100, elapsedDays / totalDays * 100) };
+  }
+
+  function bracket(age) {
+    if (age < 18) return 'childhood';
+    if (age < 40) return 'prime';
+    if (age < 55) return 'peak';
+    if (age < 65) return 'autumn';
+    if (age < 73) return 'twilight';
+    return 'late';
+  }
+
+  let selectedView = 'weeks';
+  const viewNames = { weeks: 'Weeks', months: 'Months', years: 'Years' };
+  const grid = document.getElementById('weeksGrid');
+  const buttons = document.querySelectorAll('.view-switch button');
+
+  function renderView(unit) {
+    if (!Object.hasOwn(viewNames, unit)) unit = 'weeks';
+    selectedView = unit;
+    const state = lifeView(unit, new Date());
+    const name = viewNames[unit];
+    document.getElementById('viewTitle').textContent = `Life in ${name}`;
+    document.title = `Life in ${name} · Leo`;
+    document.getElementById('weeksLived').textContent = state.lived.toLocaleString();
+    document.getElementById('weeksLeft').textContent = state.ahead.toLocaleString();
+    document.getElementById('daysLeft').textContent = state.daysAhead.toLocaleString();
+    document.getElementById('livedLabel').textContent = `${name} Completed`;
+    document.getElementById('aheadLabel').textContent = `Future ${name}`;
+    document.getElementById('pctLabel').textContent = `${state.progress.toFixed(1)}% elapsed`;
+    document.getElementById('progressFill').style.width = state.progress + '%';
+    const summary = `${state.lived.toLocaleString()} completed · ${state.current >= 0 ? '1 current · ' : ''}${state.ahead.toLocaleString()} future ${unit}`;
+    document.getElementById('gridSummary').textContent = summary;
+    grid.setAttribute('aria-label', `Life in ${name}: ${summary}. Red marks the current ${unit.slice(0, -1)}.`);
+    grid.dataset.view = unit;
+    const fragment = document.createDocumentFragment();
+    const formatDate = date => date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    for (let i = 0; i < state.total; i++) {
+      const start = unit === 'weeks' ? new Date(DOB.getFullYear(), DOB.getMonth(), DOB.getDate() + i * 7)
+        : anniversary(unit === 'months' ? i : i * 12);
+      const age = unit === 'weeks' ? i * 7 / 365.2425 : unit === 'months' ? i / 12 : i;
+      const cell = document.createElement('div');
+      const status = i === state.current ? 'current' : i < state.lived ? 'completed' : 'future';
+      cell.className = `week-cell ${i === state.current ? 'current' : `${i < state.lived ? 'wl' : 'wf'}-${bracket(age)}`}`;
+      cell.title = `${name.slice(0, -1)} ${i + 1} · ${formatDate(start)} · ${status}`;
+      cell.setAttribute('aria-hidden', 'true');
+      fragment.appendChild(cell);
+    }
+    grid.replaceChildren(fragment);
+    document.getElementById('yearLabels').textContent = unit === 'weeks'
+      ? 'Each square = 1 week · 52 per row · final week may be partial'
+      : unit === 'months' ? 'Each square = 1 month · each row = 1 year'
+      : 'Each square = 1 year · each full row = 10 years';
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === unit)));
+  }
+
+  buttons.forEach(button => button.addEventListener('click', () => {
+    renderView(button.dataset.view);
+    try { localStorage.setItem('life-overview-view', selectedView); } catch (_) { /* View still works without storage. */ }
+  }));
+  try {
+    const saved = localStorage.getItem('life-overview-view');
+    if (Object.hasOwn(viewNames, saved)) selectedView = saved;
+  } catch (_) { /* Use weeks when storage is unavailable. */ }
+  renderView(selectedView);
+  // Refresh after returning to the page and across local date boundaries.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) renderView(selectedView);
+  });
+  setInterval(() => renderView(selectedView), 60000);
+
+  // ── ROTATING QUOTES ──
+  const QUOTES = [
+    { text: "It is not that we have a short time to live, but that we waste a great deal of it.", source: "— Seneca · On the Shortness of Life" },
+    { text: "人生如白驹过隙，忽然而已。\nLife passes like a white horse glimpsed through a crack — and suddenly, it is gone.", source: "— 庄子 · Zhuangzi" },
+    { text: "The price of anything is the amount of life you exchange for it.", source: "— Henry David Thoreau" },
+    { text: "逝者如斯夫，不舍昼夜。\nIt flows on like this, never ceasing, day or night.", source: "— 孔子 · Confucius, on time passing" },
+    { text: "Most people die at 25 and aren't buried until 75.", source: "— Benjamin Franklin" },
+    { text: "天行健，君子以自强不息。\nHeaven moves with strength; the noble person strives without cease.", source: "— 易经 · I Ching" },
+    { text: "You only live once, but if you do it right, once is enough.", source: "— Mae West" },
+    { text: "少壮不努力，老大徒伤悲。\nIf you do not work hard in youth, you will grieve uselessly in old age.", source: "— 汉乐府 · Han Dynasty folk verse" },
+    { text: "The key is not to prioritise what's on your schedule, but to schedule your priorities.", source: "— Stephen Covey" },
+    { text: "志当存高远。\nLet your ambition reach the heights.", source: "— 诸葛亮 · Zhuge Liang" },
+    { text: "Time is the most valuable thing a man can spend.", source: "— Theophrastus" },
+    { text: "岁月不待人。\nThe years and months wait for no one.", source: "— 陶渊明 · Tao Yuanming" },
+    { text: "Do not squander time, for that is the stuff life is made of.", source: "— Benjamin Franklin" },
+    { text: "花有重开日，人无再少年。\nFlowers bloom again; youth does not return.", source: "— 关汉卿 · Guan Hanqing" },
+  ];
+
+  // Pick a different quote each day (consistent within a day, different each open on a new day)
+  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  const q = QUOTES[dayIndex % QUOTES.length];
+  document.getElementById('quoteText').innerHTML = q.text.replace(/\n/g, '<br>');
+  document.getElementById('quoteSource').textContent = q.source;
+
+</script>
+</body>
+</html>
