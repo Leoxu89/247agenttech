@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>浮城四十日 · World Tour</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel2: #0f172a;
+      --text: #f9fafb;
+      --muted: #cbd5e1;
+      --line: #334155;
+      --accent: #facc15;
+      --danger: #fb7185;
+      --good: #86efac;
+      --blue: #93c5fd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #334155 0%, #0f172a 62%, #020617 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      min-height: 100vh;
+    }
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 30px;
+      letter-spacing: .5px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .topButtons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    button {
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform .05s ease, background .15s ease;
+    }
+    button:hover { background: #334155; }
+    button:active { transform: translateY(1px); }
+    button.primary {
+      background: var(--accent);
+      color: #111827;
+      border-color: #eab308;
+    }
+    button.danger {
+      background: #7f1d1d;
+      border-color: #991b1b;
+    }
+    button.good {
+      background: #064e3b;
+      border-color: #047857;
+    }
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 14px;
+    }
+    .panel {
+      background: rgba(15, 23, 42, .84);
+      border: 1px solid rgba(148, 163, 184, .28);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat {
+      background: rgba(30, 41, 59, .8);
+      border: 1px solid rgba(148, 163, 184, .18);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .label {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .value {
+      font-size: 18px;
+      font-weight: 800;
+      word-break: break-all;
+    }
+    .value.goodText { color: var(--good); }
+    .value.badText { color: var(--danger); }
+    .value.blueText { color: var(--blue); }
+    .sectionTitle {
+      font-weight: 900;
+      font-size: 17px;
+      margin: 4px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .small {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .map {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .marketTable {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    th, td {
+      border-bottom: 1px solid rgba(148, 163, 184, .18);
+      padding: 9px 8px;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    th {
+      color: #cbd5e1;
+      background: rgba(30, 41, 59, .8);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    tr:hover td { background: rgba(30, 41, 59, .34); }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .log {
+      height: 290px;
+      overflow-y: auto;
+      background: rgba(2, 6, 23, .52);
+      border: 1px solid rgba(148, 163, 184, .18);
+      border-radius: 12px;
+      padding: 10px;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .log p {
+      margin: 0 0 8px;
+      color: #e2e8f0;
+    }
+    .inventory {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+    }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #334155;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .barFill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+      width: 0%;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, .72);
+      z-index: 10;
+      padding: 18px;
+    }
+    .modal.show { display: flex; }
+    .modalCard {
+      max-width: 520px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 18px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+    .modalCard h2 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+    .modalCard p {
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+    .hidden { display: none !important; }
+    input[type="number"] {
+      width: 100%;
+      background: #020617;
+      color: white;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .tradeBtns {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hint {
+      margin-top: 10px;
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; }
+      .topButtons { justify-content: flex-start; }
+      .marketTable th:nth-child(3), .marketTable td:nth-child(3) { display: none; }
+      th, td { padding: 8px 5px; font-size: 13px; }
+      button { padding: 9px 10px; font-size: 13px; }
+      h1 { font-size: 26px; }
+    }
+  
+    html { color-scheme: dark; }
+    body { min-height: 100dvh; }
+    .app { width: 100%; padding: clamp(10px, 2vw, 24px); }
+    .grid { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); align-items: start; }
+    .grid > *, .stat, header > *, .marketCard > * { min-width: 0; }
+    button { min-height: 44px; touch-action: manipulation; overflow-wrap: anywhere; }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .topButtons { flex: 1 1 360px; }
+    header > div:first-child { flex: 1 1 300px; }
+    header { flex-wrap: wrap; }
+    .sectionTitle { flex-wrap: wrap; }
+    .marketList { display: grid; gap: 8px; }
+    .marketCard { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px; background: #1e293b; border: 1px solid var(--line); border-radius: 12px; }
+    .marketCard strong { display: block; overflow-wrap: anywhere; }
+    .marketCard .small { display: block; margin-top: 5px; line-height: 1.5; }
+    .tradeActions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .price { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .map { grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); }
+    .hint { line-height: 1.65; }
+    .spacer { margin-top: 22px; }
+    .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: 2px; margin-bottom: 8px; }
+    .panelHeading { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+    dialog { width: min(680px, calc(100% - 20px)); max-height: calc(100dvh - 24px); padding: clamp(14px, 3vw, 24px); border: 1px solid #475569; border-radius: 18px; background: #0f172a; color: var(--text); overflow-y: auto; overscroll-behavior: contain; }
+    dialog::backdrop { background: rgba(2,6,23,.82); backdrop-filter: blur(4px); }
+    dialog h2 { margin: 0 0 12px; overflow-wrap: anywhere; }
+    dialog p { color: var(--muted); line-height: 1.6; }
+    dialog .toolbar { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 18px; }
+    input[type='text'], input[type='number'] { width: 100%; min-width: 0; min-height: 44px; background: #020617; color: white; border: 1px solid #475569; border-radius: 10px; padding: 10px 12px; font-size: 16px; margin: 8px 0 12px; }
+    .homes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .home { background: #1e293b; border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+    .home p { margin: 8px 0; overflow-wrap: anywhere; }
+    .home button { width: 100%; }
+    .board { display: grid; gap: 8px; padding: 0; list-style: none; }
+    .board li { display: grid; grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 10px; border-radius: 10px; background: #1e293b; align-items: center; }
+    .board li > * { overflow-wrap: anywhere; }
+    .board .score { text-align: right; color: var(--good); }
+    .toast { position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); padding: 12px 16px; background: #334155; border: 1px solid #94a3b8; border-radius: 12px; z-index: 100; box-shadow: 0 5px 20px #0008; pointer-events: none; }
+    .dice { font-size: 60px; text-align: center; margin: 10px; }
+    .log { height: 230px; }
+    .value { overflow-wrap: anywhere; word-break: normal; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: minmax(0, 1fr); }
+      header { flex-direction: row; }
+      .topButtons { justify-content: flex-start; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .marketCard { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+      .tradeActions { grid-column: 1 / -1; }
+      .tradeActions button { flex: 1; }
+      .topButtons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+      .homes { grid-template-columns: minmax(0, 1fr); }
+      .panel { padding: 12px; }
+      h1 { font-size: 27px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+  <dialog id="dialog" aria-labelledby="dialogTitle"></dialog>
+  <div id="notice" class="toast hidden" role="status" aria-live="polite"></div>
+  <input id="saveFile" class="hidden" type="file" accept=".json,application/json" aria-label="Load saved game" />
+  <script>
+'use strict';
+const SAVE_KEY = 'floating_city_40_days_save';
+const BOARD_KEY = 'floating_city_40_days_leaderboard_v1';
+const VERSION = 2;
+const goods = [
+  { id: 'blindbox', name: ['限量潮玩盲盒', 'Limited blind boxes'], min: 15, max: 90, size: 1, icon: '🎁' },
+  { id: 'cards', name: ['稀有集换卡', 'Rare trading cards'], min: 20, max: 130, size: 1, icon: '🃏' },
+  { id: 'merch', name: ['偶像演唱会周边', 'K-pop tour merch'], min: 45, max: 260, size: 1, icon: '🎤' },
+  { id: 'sneakers', name: ['限量联名球鞋', 'Sneaker collaborations'], min: 80, max: 520, size: 1, icon: '👟' },
+  { id: 'console', name: ['掌上游戏机', 'Gaming handhelds'], min: 350, max: 1800, size: 2, icon: '🎮' },
+  { id: 'drone', name: ['便携无人机', 'Pocket drones'], min: 700, max: 3200, size: 2, icon: '🚁' },
+  { id: 'glasses', name: ['AI智能眼镜', 'AI smart glasses'], min: 1200, max: 7200, size: 3, icon: '🕶️' },
+  { id: 'gpu', name: ['AI算力显卡', 'AI compute GPUs'], min: 3500, max: 18000, size: 4, icon: '💻' },
+  { id: 'bitcoin', name: ['黑市比特币凭证', 'Black-market Bitcoin notes'], min: 8000, max: 52000, size: 5, icon: '₿' }
+];
+// Curated major-city roster, not a statistical ranking. All prices are fictional.
+const locations = [
+  { id: 'shanghai', name: ['上海', 'Shanghai'], flag: '🇨🇳', bias: [0.75, 1, 1.2, .9, .8, .85, 1.1, .85, 1.15] },
+  { id: 'hongkong', name: ['香港', 'Hong Kong'], flag: '🇭🇰', bias: [1.2, 1.1, 1, 1.15, .9, 1.05, .85, 1.1, .75] },
+  { id: 'london', name: ['伦敦', 'London'], flag: '🇬🇧', bias: [1.2, 1.3, .95, 1.15, 1.1, 1.2, 1.1, 1.25, .9] },
+  { id: 'paris', name: ['巴黎', 'Paris'], flag: '🇫🇷', bias: [1.3, 1.05, 1.1, .8, 1.25, 1.1, 1.2, 1.3, 1.1] },
+  { id: 'newyork', name: ['纽约', 'New York'], flag: '🇺🇸', bias: [1.1, 1.2, 1.3, .85, 1.1, 1.2, 1, .8, 1.15] },
+  { id: 'tokyo', name: ['东京', 'Tokyo'], flag: '🇯🇵', bias: [.85, .75, 1.1, 1.15, .75, 1, 1.05, 1.2, 1.25] },
+  { id: 'singapore', name: ['新加坡', 'Singapore'], flag: '🇸🇬', bias: [1.1, 1.15, 1.1, 1.2, 1, .9, .85, 1.1, .85] },
+  { id: 'dubai', name: ['迪拜', 'Dubai'], flag: '🇦🇪', bias: [1.3, 1.2, 1.25, 1.3, 1.15, 1, .8, .95, .9] },
+  { id: 'bangkok', name: ['曼谷', 'Bangkok'], flag: '🇹🇭', bias: [.85, .95, .9, 1, 1.2, 1.1, 1.3, 1.25, 1.2] },
+  { id: 'seoul', name: ['首尔', 'Seoul'], flag: '🇰🇷', bias: [1, 1.1, .7, 1, 1.1, 1.25, .95, .9, 1.15] }
+];
+const homes = [
+  { name: ['临时住所', 'Temporary room'], price: 0, capacity: 100 },
+  { name: ['单间公寓', 'Studio'], price: 3000, capacity: 140 },
+  { name: ['两卧公寓', 'Two-bedroom apartment'], price: 12000, capacity: 200 },
+  { name: ['三卧公寓', 'Three-bedroom apartment'], price: 35000, capacity: 280 },
+  { name: ['联排别墅', 'Townhouse'], price: 75000, capacity: 400 },
+  { name: ['独栋住宅', 'House'], price: 150000, capacity: 550 },
+  { name: ['顶层豪宅', 'Penthouse'], price: 350000, capacity: 750 },
+  { name: ['海景豪宅', 'Oceanfront mansion'], price: 800000, capacity: 1100 },
+  { name: ['私人庄园', 'Private estate'], price: 2000000, capacity: 1600 }
+];
+let state;
+let lang = 'zh';
+try { lang = localStorage.getItem('floating_city_language') === 'en' ? 'en' : 'zh'; } catch (_) {}
+let modal = null;
+let currentTrade = null;
+let lastRoll = null;
+let noticeTimer;
+const $ = id => document.getElementById(id);
+const t = (zh, en) => lang === 'zh' ? zh : en;
+const nameOf = item => t(...item.name);
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => `${n < 0 ? '-' : ''}¥${Math.abs(Math.floor(n)).toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US')}`;
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const uid = () => globalThis.crypto?.randomUUID?.() || `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const usedSpace = (s = state) => s.inv.reduce((sum, qty, i) => sum + qty * goods[i].size, 0);
+const netWorth = (s = state) => s.cash + s.bank + s.inv.reduce((sum, qty, i) => sum + qty * s.prices[i], 0) + homes[s.home].price - s.debt;
+function notify(zh, en) {
+  $('notice').textContent = t(zh, en);
+  $('notice').classList.remove('hidden');
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => $('notice').classList.add('hidden'), 5500);
+}
+function addLog(zh, en) {
+  state.log.unshift({ day: state.day, zh, en });
+  state.log = state.log.slice(0, 80);
+}
+function newGame(ask = true) {
+  if (ask && state && !state.ended && !confirm(t('开始新游戏会放弃未保存的进度，继续吗？', 'Start a new game and discard unsaved progress?'))) return;
+  closeModal();
+  state = { runId: uid(), day: 1, cash: 2000, bank: 0, debt: 5500, health: 100, home: 0, capacity: 100, location: 0, prices: [], inv: goods.map(() => 0), log: [], news: 0, ended: false, endReason: null, submitted: false };
+  generatePrices();
+  addLog('你抵达上海，带着 ¥2,000 和 ¥5,500 债务。', 'You arrive in Shanghai with ¥2,000 and ¥5,500 of debt.');
+  render();
+}
+function generatePrices(shock = null) {
+  state.prices = goods.map((g, i) => Math.max(1, Math.round(rand(g.min, g.max) * locations[state.location].bias[i] * (.75 + Math.random() * .5) * (shock?.index === i ? shock.factor : 1))));
+  state.news = shock ? { index: shock.index, up: shock.factor > 1 } : rand(0, 2);
+}
+function newsText() {
+  if (typeof state.news === 'object') return `${nameOf(goods[state.news.index])} · ${state.news.up ? t('价格暴涨', 'Price surge') : t('价格暴跌', 'Price crash')}`;
+  return [t('城市在变，机会也在变。', 'New city. New opportunities.'), t('留意仓位，也留一点现金。', 'Watch your storage. Keep some cash.'), t('买低卖高，别忘了利息。', 'Buy low, sell high. Remember the interest.')][state.news];
+}
+function button(label, action, disabled = false, cls = '') {
+  return `<button type="button" class="${cls}" onclick="${action}" ${disabled ? 'disabled' : ''}>${label}</button>`;
+}
+function render() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = t('浮城四十日 · 环球交易', 'Floating City: 40 Days · World Tour');
+  $('saveFile').setAttribute('aria-label', t('读取存档文件', 'Load saved game file'));
+  const stats = [
+    [t('天数', 'Day'), `${state.day}/40`, 'blueText'], [t('城市', 'City'), nameOf(locations[state.location]), ''],
+    [t('现金', 'Cash'), money(state.cash), 'goodText'], [t('银行', 'Bank'), money(state.bank), 'goodText'],
+    [t('债务', 'Debt'), money(state.debt), 'badText'], [t('健康', 'Health'), `${state.health}/100`, ''],
+    [t('仓位', 'Storage'), `${usedSpace()}/${state.capacity}`, ''], [t('净资产', 'Net worth'), money(netWorth()), netWorth() >= 0 ? 'goodText' : 'badText']
+  ];
+  $('app').innerHTML = `<header><div><div class="eyebrow">${t('40天 / 环球交易', '40 DAYS / WORLD TOUR')}</div><h1>${t('浮城四十日', 'Floating City: 40 Days')}</h1><div class="subtitle">${t('十座世界名城。四十天。你能走多远？', 'Ten world cities. Forty days. How far can you go?')}</div></div>
+    <div class="topButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('排行榜', 'Leaderboard'), "openModal('board')")}${button(t('English', '中文'), 'toggleLanguage()')}</div></header>
+    <div class="grid"><aside class="panel"><div class="sectionTitle">${t('你的旅程', 'Your journey')}<span class="small">${state.ended ? t('已结束', 'Finished') : t('进行中', 'In progress')}</span></div>
+    <div class="stats">${stats.map(([label, value, cls]) => `<div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join('')}</div>
+    <div class="bar" role="meter" aria-label="${t('仓位使用', 'Storage used')}" aria-valuemin="0" aria-valuemax="${state.capacity}" aria-valuenow="${usedSpace()}"><div class="barFill" style="width:${Math.min(100, usedSpace() / state.capacity * 100)}%"></div></div>
+    <p class="small">⌂ ${nameOf(homes[state.home])} · ${t('房产价值', 'Property value')} ${money(homes[state.home].price)}</p>
+    <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), 'workGig()', state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), 'rest()', state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}</div>
+    <p class="hint">${t('每天银行 +2%，债务 +10%。旅行、工作、休息消耗一天。交易、买房和骰子不耗时。', 'Each day: bank +2%, debt +10%. Travel, work and rest take a day. Trading, property and dice take no time.')}</p>
+    <p class="hint">${t('统一使用虚构游戏货币 ¥，所有商品和价格均为虚构。', 'All cities use fictional game currency ¥. Goods and prices are fictional.')}</p></aside>
+    <main class="panel"><div class="sectionTitle">${t('全球交易市场', 'Global market')}<span class="small">${newsText()}</span></div><div class="marketList">${goods.map((g, i) => {
+      const average = Math.round((g.min + g.max) / 2);
+      const signal = state.prices[i] < average * .65 ? t('偏低', 'Low') : state.prices[i] > average * 1.35 ? t('偏高', 'High') : t('正常', 'Normal');
+      return `<article class="marketCard"><div><strong>${g.icon} ${nameOf(g)}</strong><span class="small">${t('占位', 'Space')} ${g.size} · ${t('持有', 'Owned')} ${state.inv[i]}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal} · ${t('参考', 'Ref.')} ${money(average)}</span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
+    }).join('')}</div>
+    <div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>
+    <div class="sectionTitle spacer">${t('旅程记录', 'Travel journal')}</div><div class="log">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div></main></div>`;
+}
+function closeModal() {
+  if ($('dialog').open) $('dialog').close();
+  modal = null;
+  currentTrade = null;
+  lastRoll = null;
+}
+function openModal(kind) {
+  if (kind === 'board' && state.ended) kind = 'ending';
+  if (state.ended && ['homes', 'dice', 'trade'].includes(kind)) return;
+  modal = kind;
+  renderModal();
+  if (!$('dialog').open) $('dialog').showModal();
+}
+function toggleLanguage() {
+  const values = {};
+  $('dialog').querySelectorAll('input').forEach(el => values[el.id] = el.value);
+  lang = lang === 'zh' ? 'en' : 'zh';
+  try { localStorage.setItem('floating_city_language', lang); } catch (_) {}
+  render();
+  if (modal) {
+    renderModal();
+    Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
+  }
+}
+function boardEntries() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(BOARD_KEY) || '[]');
+    if (!Array.isArray(rows) || !rows.every(r => r && typeof r.runId === 'string' && typeof r.name === 'string' && r.name.length <= 24 && Number.isSafeInteger(r.score) && typeof r.date === 'string' && Number.isFinite(Date.parse(r.date)))) throw Error('board');
+    return rows.sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
+  } catch (_) { return null; }
+}
+function boardHtml() {
+  const rows = boardEntries();
+  if (rows === null) return `<p>${t('排行榜无法读取。请检查浏览器存储设置；旧数据不会被覆盖。', 'Leaderboard unavailable. Check browser storage settings; existing data will not be overwritten.')}</p>`;
+  if (!rows.length) return `<p>${t('还没有记录，成为第一位上榜玩家！', 'No records yet. Be the first name on the board!')}</p>`;
+  return `<ol class="board">${rows.map((r, i) => `<li><span>${i + 1}</span><span>${escapeHtml(r.name)}<br><span class="small">${escapeHtml(new Date(r.date).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US'))}</span></span><span class="score">${money(r.score)}</span></li>`).join('')}</ol>`;
+}
+function endingTitle() {
+  if (state.health <= 0) return t('倒在半路', 'The road ends early');
+  if (state.debt > 0) return t('债务压顶', 'Buried in debt');
+  if (netWorth() >= 1000000) return t('富人榜新贵', 'Millionaire arrival');
+  if (netWorth() >= 100000) return t('小有成就', 'Making your mark');
+  return t('勉强上岸', 'A fresh start');
+}
+function renderModal() {
+  let title = '', body = '';
+  if (modal === 'intro') {
+    title = t('四十天，环游世界', 'Forty days. A world of opportunity.');
+    body = `<p>${t('从上海出发，带着 ¥2,000 和 ¥5,500 债务。在十座城市间交易潮流商品，买房扩仓，争夺财富榜。', 'Start in Shanghai with ¥2,000 and ¥5,500 of debt. Trade modern collectibles and tech across ten cities, buy property and build your fortune.')}</p><p>${t('活下来、还清债务，在第40天结束时结算。存档可下载为本地JSON文件。', 'Survive, repay your debt and settle at the end of day 40. Download your save as a local JSON file.')}</p>${button(t('开始旅程', 'Start journey'), 'closeModal()', false, 'primary')}`;
+  } else if (modal === 'trade') {
+    const { type, index } = currentTrade;
+    const g = goods[index], max = tradeLimit(type, index);
+    title = `${type === 'buy' ? t('买入', 'Buy') : t('卖出', 'Sell')} · ${nameOf(g)}`;
+    body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max || ''}" required autofocus /><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
+  } else if (modal === 'homes') {
+    title = t('全球房产 · 升级住所', 'Property market · Trade up');
+    body = `<p>${t('只保留一套住所。旧房按原价抵扣，支付差价升级；房产计入净资产，仓位为总容量。', 'Own one home. Trade in your current home at its purchase value and pay the difference. Property counts toward net worth; storage is total capacity.')}</p><div class="homes">${homes.map((home, i) => `<article class="home"><strong>${nameOf(home)}</strong><p>${money(home.price)}<br>${t('总仓位', 'Total storage')}: ${home.capacity}</p>${button(i === state.home ? t('当前住所', 'Current home') : i < state.home ? t('已超越', 'Earlier tier') : `${t('升级', 'Upgrade')} · ${money(home.price - homes[state.home].price)}`, `buyHome(${i})`, i <= state.home || state.cash < home.price - homes[state.home].price, 'primary')}</article>`).join('')}</div>`;
+  } else if (modal === 'dice') {
+    title = t('幸运骰子', 'Lucky dice');
+    body = `<p>${t('掷出4、5、6获胜，返还下注的2倍（含本金）；1、2、3输掉下注。胜率50%，不消耗天数，只使用游戏现金。', 'Roll 4, 5 or 6 to receive 2× your stake including the original bet. Roll 1, 2 or 3 and lose the stake. A 50% win chance, no day cost, game cash only.')}</p><p>${t('可用现金', 'Available cash')}: ${money(state.cash)}</p><div class="dice" aria-hidden="true">${lastRoll ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][lastRoll.roll - 1] : '⚄'}</div><p role="status">${lastRoll ? `${t('点数', 'Roll')}: ${lastRoll.roll} · ${lastRoll.roll >= 4 ? t('获胜，净赚', 'Won, net gain') : t('未获胜，损失', 'Lost')} ${money(lastRoll.bet)}` : ''}</p><form onsubmit="event.preventDefault();rollDice()"><label for="bet">${t('下注金额（整数）', 'Your stake (whole units)')}</label><input id="bet" type="number" inputmode="numeric" min="1" max="${state.cash}" step="1" required value="${Math.min(state.cash, lastRoll?.bet || 100) || ''}" /><button class="primary" ${!state.cash ? 'disabled' : ''}>${t('下注并掷骰', 'Bet & roll')}</button></form>`;
+  } else if (modal === 'board' || modal === 'ending') {
+    title = modal === 'ending' ? endingTitle() : t('财富排行榜', 'Wealth leaderboard');
+    const already = boardEntries()?.some(r => r.runId === state.runId);
+    body = `${modal === 'ending' ? `<p>${t('最终净资产', 'Final net worth')}: <strong class="value goodText">${money(netWorth())}</strong><br>${t('现金', 'Cash')} ${money(state.cash)} · ${t('银行', 'Bank')} ${money(state.bank)} · ${t('债务', 'Debt')} ${money(state.debt)}</p>${already ? `<p>${t('本局成绩已记录。', 'This run has been recorded.')}</p>` : `<form onsubmit="event.preventDefault();submitScore()"><label for="playerName">${t('留下你的名字（最多24字符）', 'Your name (up to 24 characters)')}</label><input id="playerName" type="text" maxlength="24" required autocomplete="nickname" placeholder="${t('玩家名称', 'Player name')}" /><button class="primary">${t('记录成绩', 'Record score')}</button></form>`}${button(t('再玩一次', 'Play again'), 'newGame(false)')}<h3>${t('财富排行榜', 'Wealth leaderboard')}</h3>` : ''}${boardHtml()}<p class="hint">${t('此排行榜持久保存在本浏览器中。清除网站数据会删除记录；不同设备之间不会自动同步。', 'Records persist in this browser. Clearing site data deletes them; other devices do not sync automatically.')}</p>`;
+  }
+  $('dialog').innerHTML = `<div class="toolbar">${button(t('English', '中文'), 'toggleLanguage()')}${button(t('关闭', 'Close'), 'closeModal()')}</div><h2 id="dialogTitle">${title}</h2>${body}`;
+}
+function tradeLimit(type, i) {
+  return type === 'buy' ? Math.max(0, Math.min(Math.floor(state.cash / state.prices[i]), Math.floor((state.capacity - usedSpace()) / goods[i].size))) : state.inv[i];
+}
+function openTrade(type, index) {
+  if (state.ended) return;
+  currentTrade = { type, index };
+  openModal('trade');
+}
+function doTrade() {
+  if (!currentTrade || state.ended) return;
+  const qty = Number($('tradeQty').value);
+  const { type, index } = currentTrade;
+  if (!Number.isSafeInteger(qty) || qty < 1 || qty > tradeLimit(type, index)) return notify('请输入有效的交易数量。', 'Enter a valid trade quantity.');
+  const amount = qty * state.prices[index];
+  state.cash += type === 'buy' ? -amount : amount;
+  state.inv[index] += type === 'buy' ? qty : -qty;
+  addLog(`${type === 'buy' ? '买入' : '卖出'} ${qty} 件${goods[index].name[0]}，金额 ¥${amount}。`, `${type === 'buy' ? 'Bought' : 'Sold'} ${qty} ${goods[index].name[1]} for ¥${amount}.`);
+  closeModal(); render();
+}
+function bankAction(type) {
+  if (state.ended) return;
+  const max = type === 'deposit' ? state.cash : type === 'withdraw' ? state.bank : Math.min(state.cash, state.debt);
+  const labels = { deposit: ['存银行', 'Deposit'], withdraw: ['取银行', 'Withdraw'], repay: ['还债', 'Repay debt'] };
+  const raw = prompt(`${t(...labels[type])} · ${t('最多', 'Maximum')} ${money(max)}`, max);
+  if (raw === null) return;
+  const amount = Number(raw);
+  if (!Number.isSafeInteger(amount) || amount < 1 || amount > max) return notify('请输入范围内的正整数。', 'Enter a positive whole amount within the limit.');
+  if (type === 'deposit') { state.cash -= amount; state.bank += amount; }
+  else if (type === 'withdraw') { state.bank -= amount; state.cash += amount; }
+  else { state.cash -= amount; state.debt -= amount; }
+  addLog(`${labels[type][0]} ¥${amount}。`, `${labels[type][1]}: ¥${amount}.`);
+  render();
+}
+function buyHome(index) {
+  if (state.ended || !homes[index] || index <= state.home) return;
+  const cost = homes[index].price - homes[state.home].price;
+  if (state.cash < cost) return notify('现金不足。', 'Not enough cash.');
+  state.cash -= cost; state.home = index; state.capacity = homes[index].capacity;
+  addLog(`升级为${homes[index].name[0]}，支付差价 ¥${cost}，总仓位 ${state.capacity}。`, `Upgraded to ${homes[index].name[1]} for ¥${cost}; total storage ${state.capacity}.`);
+  render(); renderModal();
+}
+function rollDice() {
+  if (state.ended) return;
+  const bet = Number($('bet').value);
+  if (!Number.isSafeInteger(bet) || bet < 1 || bet > state.cash || !Number.isSafeInteger(state.cash + bet)) return notify('下注必须是现金范围内的正整数。', 'Bet a positive whole amount within your available cash.');
+  const roll = rand(1, 6);
+  state.cash += roll >= 4 ? bet : -bet;
+  lastRoll = { roll, bet };
+  addLog(`骰子点数 ${roll}，${roll >= 4 ? '净赚' : '损失'} ¥${bet}。`, `Dice roll ${roll}: ${roll >= 4 ? 'net gain' : 'lost'} ¥${bet}.`);
+  render(); renderModal();
+}
+function workGig() {
+  if (state.ended) return;
+  const earn = rand(180, 520), loss = rand(4, 9);
+  state.cash += earn; state.health -= loss;
+  addLog(`接远程零工赚到 ¥${earn}，健康 -${loss}。`, `Remote gig earned ¥${earn}; health -${loss}.`);
+  nextDay();
+}
+function rest() {
+  if (state.ended) return;
+  const gain = rand(10, 18);
+  state.health = Math.min(100, state.health + gain);
+  addLog(`休息恢复健康 +${gain}（最高100）。`, `Rest restored ${gain} health (up to 100).`);
+  nextDay();
+}
+function travel(index) {
+  if (state.ended || !locations[index] || index === state.location) return;
+  state.location = index;
+  addLog(`抵达${locations[index].name[0]}。`, `Arrived in ${locations[index].name[1]}.`);
+  nextDay();
+}
+function nextDay() {
+  if (state.ended) return;
+  state.bank = Math.floor(state.bank * 1.02); state.debt = Math.floor(state.debt * 1.1);
+  let shock = null;
+  if (Math.random() < .52) {
+    const event = rand(0, 7);
+    const messages = [
+      ['长途旅行让你疲惫，健康 -6。', 'Long journeys take their toll. Health -6.'],
+      ['直播带货佣金到账，现金 +300。', 'A livestream commission arrives. Cash +300.'],
+      ['遭遇交易诈骗，现金损失15%。', 'A trading scam costs 15% of your cash.'],
+      ['熬夜盯盘，健康 -10。', 'Late-night market watching. Health -10.'],
+      ['收到平台返现，现金 +120。', 'A marketplace cashback arrives. Cash +120.'],
+      ['物流费用超支，现金最多 -500。', 'Unexpected shipping costs. Lose up to ¥500.'],
+      ['今天精神不错，健康 +5。', 'Feeling refreshed. Health +5.'],
+      ['热搜引发行情波动。', 'A viral trend shakes the market.']
+    ];
+    if (event === 0) state.health -= 6;
+    if (event === 1) state.cash += 300;
+    if (event === 2) state.cash = Math.floor(state.cash * .85);
+    if (event === 3) state.health -= 10;
+    if (event === 4) state.cash += 120;
+    if (event === 5) state.cash = Math.max(0, state.cash - 500);
+    if (event === 6) state.health += 5;
+    if (event === 7) shock = { index: rand(0, goods.length - 1), factor: Math.random() < .5 ? 2.8 : .25 };
+    addLog(...messages[event]);
+  }
+  state.health = Math.max(0, Math.min(100, state.health));
+  if (state.health === 0) return endGame('health');
+  if (state.day === 40) return endGame('time');
+  state.day++; generatePrices(shock); render();
+}
+function endGame(reason) {
+  if (state.ended) return;
+  state.inv.forEach((qty, i) => { state.cash += qty * state.prices[i]; state.inv[i] = 0; });
+  if (state.cash + state.bank >= state.debt) {
+    const cashPay = Math.min(state.cash, state.debt);
+    state.cash -= cashPay; state.debt -= cashPay;
+    state.bank -= state.debt; state.debt = 0;
+  }
+  state.ended = true; state.endReason = reason;
+  closeModal();
+  addLog(`旅程结束，最终净资产 ¥${netWorth()}。`, `Journey ended. Final net worth: ¥${netWorth()}.`);
+  render(); openModal('ending');
+}
+function submitScore() {
+  if (!state.ended) return;
+  const name = $('playerName').value.trim();
+  if (!name || name.length > 24) return notify('请输入1至24字符的名称。', 'Enter a name between 1 and 24 characters.');
+  const rows = boardEntries();
+  if (rows === null) return notify('无法读取排行榜，成绩尚未保存。', 'Leaderboard unavailable. Your score has not been saved.');
+  if (rows.some(row => row.runId === state.runId)) { state.submitted = true; renderModal(); return; }
+  rows.push({ runId: state.runId, name, score: netWorth(), date: new Date().toISOString() });
+  try {
+    localStorage.setItem(BOARD_KEY, JSON.stringify(rows));
+    state.submitted = true;
+    // Keep a recoverable copy of the completed run as well as its board entry.
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(saveEnvelope())); } catch (_) {}
+    renderModal(); notify('成绩已永久记录到本浏览器。', 'Score recorded in this browser.');
+  } catch (_) { notify('存储不可用或已满，成绩未保存。可保存游戏文件后重试。', 'Storage unavailable or full. Save your game file and retry later.'); }
+}
+function saveEnvelope() {
+  return { game: 'floating-city-40-days', version: VERSION, savedAt: new Date().toISOString(), language: lang, goods: goods.map(g => g.id), cities: locations.map(l => l.id), state };
+}
+async function saveGame() {
+  const text = JSON.stringify(saveEnvelope(), null, 2);
+  let browserSaved = true;
+  try { localStorage.setItem(SAVE_KEY, text); } catch (_) { browserSaved = false; }
+  const filename = `floating-city-day-${state.day}-${new Date().toISOString().slice(0, 10)}.json`;
+  try {
+    if (typeof window.showSaveFilePicker === 'function') {
+      const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Game save JSON', accept: { 'application/json': ['.json'] } }] });
+      const writable = await handle.createWritable();
+      await writable.write(text); await writable.close();
+      notify('存档文件已保存。', 'Save file written.');
+    } else {
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      notify('已请求下载存档，请在浏览器下载位置查找。', 'Save download requested. Check your browser’s downloads.');
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') notify(browserSaved ? '文件保存已取消，浏览器副本已保留。' : '文件保存已取消，浏览器副本也未保存。', browserSaved ? 'File save canceled. A browser copy was kept.' : 'File save canceled. No browser copy was saved.');
+    else notify(browserSaved ? '文件保存失败，浏览器副本已保留。' : '保存失败，请重试。', browserSaved ? 'File save failed. A browser copy was kept.' : 'Saving failed. Please retry.');
+  }
+  if (!browserSaved) notify('浏览器副本未保存，请保留下载的存档文件。', 'Browser backup unavailable. Keep your downloaded save file.');
+}
+function loadGame() { $('saveFile').value = ''; $('saveFile').click(); }
+function validateState(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('state');
+  const integer = (n, min, max) => Number.isSafeInteger(n) && n >= min && n <= max;
+  if (typeof value.runId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(value.runId)) throw Error('runId');
+  if (!integer(value.day, 1, 40) || !integer(value.health, 0, 100) || !integer(value.home, 0, homes.length - 1) || !integer(value.location, 0, locations.length - 1)) throw Error('range');
+  for (const key of ['cash', 'bank', 'debt']) if (!integer(value[key], 0, Number.MAX_SAFE_INTEGER)) throw Error(key);
+  if (!integer(value.capacity, 100, 1600) || value.capacity !== homes[value.home].capacity) throw Error('capacity');
+  if (!Array.isArray(value.inv) || value.inv.length !== goods.length || !value.inv.every(n => integer(n, 0, 1600)) || usedSpace(value) > value.capacity) throw Error('inventory');
+  if (!Array.isArray(value.prices) || value.prices.length !== goods.length || !value.prices.every(n => integer(n, 1, 1000000))) throw Error('prices');
+  if (typeof value.ended !== 'boolean' || typeof value.submitted !== 'boolean' || ![null, 'time', 'health'].includes(value.endReason)) throw Error('ending');
+  if (value.ended !== (value.endReason !== null) || (!value.ended && (value.health === 0 || value.submitted)) || (value.endReason === 'health' && value.health !== 0) || (value.endReason === 'time' && value.day !== 40) || (value.ended && value.inv.some(Boolean))) throw Error('ending consistency');
+  if (!(integer(value.news, 0, 2) || (value.news && typeof value.news === 'object' && integer(value.news.index, 0, goods.length - 1) && typeof value.news.up === 'boolean'))) throw Error('news');
+  if (!Array.isArray(value.log) || value.log.length > 80 || !value.log.every(r => r && integer(r.day, 1, 40) && typeof r.zh === 'string' && typeof r.en === 'string' && r.zh.length <= 2000 && r.en.length <= 2000)) throw Error('log');
+  // Reconstruct only documented fields, dropping unknown input keys.
+  return Object.fromEntries(['runId', 'day', 'cash', 'bank', 'debt', 'health', 'home', 'capacity', 'location', 'prices', 'inv', 'log', 'news', 'ended', 'endReason', 'submitted'].map(key => [key, value[key]]));
+}
+function migrateLegacy(old) {
+  const integer = (n, min, max) => Number.isSafeInteger(n) && n >= min && n <= max;
+  if (!old || !integer(old.day, 1, 41) || !integer(old.roomLevel, 0, 4) || !integer(old.location, 0, 6) || ![100,120,150,200,280].includes(old.capacity) || typeof old.ended !== 'boolean' || !Array.isArray(old.log) || !old.log.every(s => typeof s === 'string')) throw Error('legacy');
+  const home = [0, 1, 2, 3, 4][old.roomLevel];
+  // Map old locations explicitly; there is no claim that the cities are equivalent.
+  const location = [0, 5, 3, 4, 2, 1, 6][old.location];
+  const migrated = { ...old, runId: uid(), day: Math.min(old.day, 40), home, capacity: homes[home].capacity, location, news: 0, endReason: old.ended ? (old.health <= 0 ? 'health' : 'time') : null, submitted: false, log: old.log.slice(0, 79).map(text => ({ day: Math.min(old.day, 40), zh: `[旧存档] ${text}`, en: `[Legacy save, original text] ${text}` })) };
+  if (old.ended && migrated.endReason === 'time') migrated.day = 40;
+  return validateState(migrated);
+}
+function applySave(data) {
+  let next, legacy = false;
+  if (data?.game === 'floating-city-40-days') {
+    if (data.version !== VERSION || JSON.stringify(data.goods) !== JSON.stringify(goods.map(g => g.id)) || JSON.stringify(data.cities) !== JSON.stringify(locations.map(l => l.id))) throw Error('version');
+    next = validateState(data.state);
+  } else {
+    legacy = true; next = migrateLegacy(data);
+  }
+  if (!confirm(legacy ? t('将转换旧版存档：旧商品按顺序替换为新商品，地点映射到世界城市，住所升级为新房产。现金、银行、债务和库存数量保留。继续并替换当前进度吗？', 'Convert this legacy save? Goods are replaced by position, locations mapped to world cities and housing converted. Cash, bank, debt and inventory quantities are preserved. Replace your current progress?') : t('读取此存档并替换当前进度？', 'Load this save and replace your current progress?'))) return;
+  closeModal(); state = next;
+  if (legacy) addLog('旧版存档已转换为环球版本。', 'Legacy save converted to the world-tour edition.');
+  if (!legacy && ['zh', 'en'].includes(data.language)) lang = data.language;
+  render(); if (state.ended) openModal('ending');
+  notify('存档已读取。', 'Save loaded.');
+}
+function loadBrowserSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return notify('没有浏览器存档，请选择本地文件。', 'No browser save. Choose a local save file.');
+    applySave(JSON.parse(raw));
+  } catch (_) { notify('存档无效或存储不可用，当前进度未被替换。', 'Invalid save or unavailable storage. Your current progress was preserved.'); }
+}
+$('saveFile').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    if (file.size > 1000000) throw Error('size');
+    applySave(JSON.parse(await file.text()));
+  } catch (_) { notify('无法读取此存档，当前进度未被替换。', 'Could not read this save. Your current progress was preserved.'); }
+});
+$('dialog').addEventListener('close', () => { if (!$('dialog').open) { modal = null; currentTrade = null; lastRoll = null; } });
+$('dialog').addEventListener('cancel', event => { event.preventDefault(); closeModal(); });
+document.addEventListener('keydown', event => {
+  if (event.target.closest('input, textarea, select, [contenteditable]') || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+  if (event.key.toLowerCase() === 's') { event.preventDefault(); saveGame(); }
+});
+newGame(false);
+openModal('intro');
+
+  </script>
+</body>
+</html>
