@@ -320,6 +320,9 @@
       .panel { padding: 12px; }
       h1 { font-size: 27px; }
     }
+    @media (max-width: 900px) and (max-height: 500px) and (min-width: 560px) {
+      .mobileDock .cityGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
     .mobileHeader, .mobileDock, .marketPager, .shortName { display: none; }
@@ -347,7 +350,7 @@
       .gameMenu .mobilePanel { top: 44px; }
       .menuButtons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .mobileStatus[open] .statusStrip { border-color: var(--accent); }
-      .grid { display: flex; flex: 1; min-height: 0; }
+      .grid { display: flex; flex: 1; min-height: 0; align-items: stretch; }
       .marketPanel { width: 100%; padding: 8px; display: flex; flex-direction: column; gap: 4px; min-height: 0; box-shadow: none; }
       .marketHeading { font-size: 14px; margin: 0; min-height: 24px; flex-wrap: nowrap; }
       .marketHeading .small { max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
@@ -364,9 +367,15 @@
       .marketCard .tradeActions button:last-child { color: #fde68a; }
       .marketPager { display: flex; justify-content: space-between; align-items: center; min-height: 32px; gap: 6px; color: #94a3b8; font-size: 10px; }
       .marketPager button { min-height: 32px; padding: 2px 10px; font-size: 11px; }
-      .mobileDock { display: grid; flex-shrink: 0; grid-template-columns: 38px minmax(0, 1fr) 76px; gap: 6px; align-items: center; }
+      .mobileDock { display: grid; flex-shrink: 0; grid-template-columns: minmax(0, 1fr); gap: 5px; }
+      .cityGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+      .cityGrid button { font-size: 11px; line-height: 1.15; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; }
+      .cityGrid button span { font-size: 15px; }
+      .cityGrid button[aria-current] { border-color: var(--accent); opacity: .65; }
+      .travelTools { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 5px; }
       .mobileDock select { min-width: 0; width: 100%; height: 44px; font-size: 14px; border: 1px solid #475569; background: #1e293b; border-radius: 9px; padding: 6px; color: white; }
       .mobileDock button { padding: 6px; min-height: 44px; font-size: 12px; }
+      .mobileDock .cityGrid button { padding: 3px 1px; font-size: 10px; white-space: nowrap; }
       dialog { top: calc(var(--viewport-offset, 0px) + 8px); bottom: auto; margin: 0 auto; max-height: calc(var(--app-height, 100dvh) - 16px); }
       dialog .toolbar { position: sticky; top: -14px; z-index: 2; background: #0f172a; padding: 5px 0; }
       .toast { bottom: max(64px, env(safe-area-inset-bottom)); font-size: 12px; }
@@ -389,7 +398,7 @@ let sharedRecordedRun = null;
 let sharedRequest = 0;
 let submittingScore = false;
 const runTokens = new Map();
-const VERSION = 2;
+const VERSION = 3;
 const goods = [
   { id: 'blindbox', name: ['限量潮玩盲盒', 'Limited blind boxes'], min: 15, max: 90, size: 1, icon: '🎁' },
   { id: 'cards', name: ['稀有集换卡', 'Rare trading cards'], min: 20, max: 130, size: 1, icon: '🃏' },
@@ -435,10 +444,30 @@ let noticeTimer;
 let marketPage = 0;
 const shortNames = [['潮玩盲盒', 'Blind boxes'], ['稀有卡牌', 'Rare cards'], ['偶像周边', 'K-pop merch'], ['联名球鞋', 'Sneakers'], ['游戏掌机', 'Handhelds'], ['无人机', 'Drones'], ['AI眼镜', 'AI glasses'], ['算力显卡', 'AI GPUs'], ['比特币凭证', 'Bitcoin notes']];
 const compactMoney = n => `${n < 0 ? '-' : ''}¥${new Intl.NumberFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.abs(n))}`;
-function marketPageSize() { return matchMedia('(max-width: 900px)').matches ? Math.min(9, Math.max(1, Math.floor(((visualViewport?.height || innerHeight) - 244) / 46))) : 9; }
+function marketPageSize() { return matchMedia('(max-width: 900px)').matches ? Math.min(9, Math.max(1, Math.floor(((visualViewport?.height || innerHeight) - 352) / 46))) : 9; }
 function changeMarketPage(delta) { marketPage += delta; render(); }
 function closePanels() { document.querySelectorAll('.mobileHeader details').forEach(el => el.open = false); }
-function travelSelected() { const value = $('destination').value; if (value !== '') travel(Number(value)); }
+function secureRandomInt(limit) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 0x100000000) throw Error('Invalid random range');
+  const bound = Math.floor(0x100000000 / limit) * limit;
+  const bytes = new Uint32Array(1);
+  do { crypto.getRandomValues(bytes); } while (bytes[0] >= bound);
+  return bytes[0] % limit;
+}
+function randomTravel() {
+  if (state.ended) return;
+  const choices = locations.map((_, i) => i).filter(i => i !== state.location);
+  try { travel(choices[secureRandomInt(choices.length)]); }
+  catch (_) { notify('随机服务不可用，请直接选择城市。', 'Random source unavailable. Choose a city directly.'); }
+}
+const propertyValue = (s = state) => s.properties.reduce((sum, qty, i) => sum + qty * homes[i].price, 0);
+const propertyCapacity = properties => 100 + properties.reduce((sum, qty, i) => sum + qty * (homes[i].capacity - 100), 0);
+const propertyCount = (s = state) => s.properties.reduce((sum, qty) => sum + qty, 0);
+function propertiesFromHome(home) { return homes.map((_, i) => i === home && i > 0 ? 1 : 0); }
+function upgradeV2State(old) {
+  if (!old || !Number.isInteger(old.home) || !homes[old.home] || old.capacity !== homes[old.home].capacity) throw Error('Legacy home');
+  return { ...old, properties: propertiesFromHome(old.home) };
+}
 const $ = id => document.getElementById(id);
 const t = (zh, en) => lang === 'zh' ? zh : en;
 const nameOf = item => t(...item.name);
@@ -447,7 +476,7 @@ const money = n => `${n < 0 ? '-' : ''}¥${Math.abs(Math.floor(n)).toLocaleStrin
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const uid = () => globalThis.crypto?.randomUUID?.() || `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const usedSpace = (s = state) => s.inv.reduce((sum, qty, i) => sum + qty * goods[i].size, 0);
-const netWorth = (s = state) => s.cash + s.bank + s.inv.reduce((sum, qty, i) => sum + qty * s.prices[i], 0) + homes[s.home].price - s.debt;
+const netWorth = (s = state) => s.cash + s.bank + s.inv.reduce((sum, qty, i) => sum + qty * s.prices[i], 0) + propertyValue(s) - s.debt;
 function notify(zh, en) {
   $('notice').textContent = t(zh, en);
   $('notice').classList.remove('hidden');
@@ -461,7 +490,7 @@ function addLog(zh, en) {
 function newGame(ask = true) {
   if (ask && state && !state.ended && !confirm(t('开始新游戏会放弃未保存的进度，继续吗？', 'Start a new game and discard unsaved progress?'))) return;
   closeModal();
-  state = { runId: uid(), day: 1, cash: 2000, bank: 0, debt: 5500, health: 100, home: 0, capacity: 100, location: 0, prices: [], inv: goods.map(() => 0), log: [], news: 0, ended: false, endReason: null, submitted: false };
+  state = { runId: uid(), day: 1, cash: 2000, bank: 0, debt: 5500, health: 100, home: 0, properties: homes.map(() => 0), capacity: 100, location: 0, prices: [], inv: goods.map(() => 0), log: [], news: 0, ended: false, endReason: null, submitted: false };
   generatePrices();
   addLog('你抵达上海，带着 ¥2,000 和 ¥5,500 债务。', 'You arrive in Shanghai with ¥2,000 and ¥5,500 of debt.');
   render();
@@ -493,8 +522,8 @@ function render() {
   const statusHtml = `<div class="sectionTitle">${t('你的旅程', 'Your journey')}<span class="small">${state.ended ? t('已结束', 'Finished') : t('进行中', 'In progress')}</span></div>
     <div class="stats">${stats.map(([label, value, cls]) => `<div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join('')}</div>
     <div class="bar" role="meter" aria-label="${t('仓位使用', 'Storage used')}" aria-valuemin="0" aria-valuemax="${state.capacity}" aria-valuenow="${usedSpace()}"><div class="barFill" style="width:${Math.min(100, usedSpace() / state.capacity * 100)}%"></div></div>
-    <p class="small">⌂ ${nameOf(homes[state.home])} · ${t('房产价值', 'Property value')} ${money(homes[state.home].price)}</p>
-    <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), 'workGig()', state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), 'rest()', state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}</div>
+    <p class="small">⌂ ${t('房产', 'Properties')} ${propertyCount()} · ${t('总价值', 'Total value')} ${money(propertyValue())}</p>
+    <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), 'workGig()', state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), 'rest()', state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}${button(t('医院', 'Hospital'), "openModal('hospital')", state.ended)}</div>
     <p class="hint">${t('每天银行 +2%，债务 +10%。旅行、工作、休息消耗一天。交易、买房和骰子不耗时。', 'Each day: bank +2%, debt +10%. Travel, work and rest take a day. Trading, property and dice take no time.')}</p>
     <p class="hint">${t('统一使用虚构游戏货币 ¥，所有商品和价格均为虚构。', 'All cities use fictional game currency ¥. Goods and prices are fictional.')}</p>`;
   $('app').innerHTML = `<header class="desktopHeader"><div><div class="eyebrow">${t('40天 / 环球交易', '40 DAYS / WORLD TOUR')}</div><h1>${t('浮城四十日', 'Floating City: 40 Days')}</h1><div class="subtitle">${t('十座世界名城。四十天。你能走多远？', 'Ten world cities. Forty days. How far can you go?')}</div></div>
@@ -507,9 +536,9 @@ function render() {
       const signal = state.prices[i] < average * .65 ? t('偏低', 'Low') : state.prices[i] > average * 1.35 ? t('偏高', 'High') : t('正常', 'Normal');
       return `<article class="marketCard"><div><strong><span class="itemIcon" aria-hidden="true">${g.icon}</span><span class="fullName">${nameOf(g)}</span><span class="shortName">${t(...shortNames[i])}</span></strong><span class="small"><span class="unitSize">${t('占位', 'Space')} ${g.size} · </span> ${t('持有', 'Owned')} ${state.inv[i]}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal}<span class="reference"> · ${t('参考', 'Ref.')} ${money(average)}</span></span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
     }).join('')}</div>
-    <div class="marketPager">${button('‹', 'changeMarketPage(-1)', marketPage === 0)}<span>${t('商品', 'Items')} ${marketPage * pageSize + 1}–${Math.min((marketPage + 1) * pageSize, goods.length)} / ${goods.length} · ${t('持有数量显示在名称下方', 'Holdings shown below each item')}</span>${button('›', 'changeMarketPage(1)', (marketPage + 1) * pageSize >= goods.length)}</div><div class="desktopTravel"><div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>
+    <div class="marketPager">${button('‹', 'changeMarketPage(-1)', marketPage === 0)}<span>${t('商品', 'Items')} ${marketPage * pageSize + 1}–${Math.min((marketPage + 1) * pageSize, goods.length)} / ${goods.length} · ${t('持有数量显示在名称下方', 'Holdings shown below each item')}</span>${button('›', 'changeMarketPage(1)', (marketPage + 1) * pageSize >= goods.length)}</div><div class="desktopTravel"><div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>${button(t('🎲 随机下一站 · 1天', '🎲 Random city · 1 day'), 'randomTravel()', state.ended, 'primary')}
     </div><div class="desktopJournal"><div class="sectionTitle spacer">${t('旅程记录', 'Travel journal')}</div><div class="log">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div></div></main></div>
-    <nav class="mobileDock" aria-label="${t('旅行', 'Travel')}"><button type="button" aria-label="${t('旅程记录', 'Travel journal')}" onclick="openModal('journal')">☷</button><select id="destination" aria-label="${t('下一站城市', 'Next destination')}" ${state.ended ? 'disabled' : ''}><option value="">${t('选择下一站 · 1天', 'Next city · 1 day')}</option>${locations.map((loc,i) => `<option value="${i}" ${i===state.location ? 'disabled' : ''}>${loc.flag} ${nameOf(loc)}${i===state.location ? t('（当前）', ' (here)') : ''}</option>`).join('')}</select>${button(t('出发 →', 'Travel →'), 'travelSelected()', state.ended, 'primary')}</nav>`;
+    <nav class="mobileDock" aria-label="${t('选择目的地', 'Choose destination')}"><div class="cityGrid">${locations.map((loc,i) => `<button type="button" onclick="travel(${i})" ${state.ended || i===state.location ? 'disabled' : ''} ${i===state.location ? 'aria-current="location"' : ''}><span aria-hidden="true">${loc.flag}</span> ${nameOf(loc)}</button>`).join('')}</div><div class="travelTools"><button type="button" aria-label="${t('旅程记录', 'Travel journal')}" onclick="openModal('journal')">☷</button>${button(t('🎲 随机下一站 · 1天', '🎲 Random city · 1 day'), 'randomTravel()', state.ended, 'primary')}</div></nav>`;
   document.querySelectorAll('.mobileHeader summary').forEach(summary => summary.addEventListener('click', () => {
     document.querySelectorAll('.mobileHeader details').forEach(details => { if (details !== summary.parentElement) details.open = false; });
   }));
@@ -523,7 +552,7 @@ function closeModal() {
 function openModal(kind) {
   closePanels();
   if (kind === 'board' && state.ended) kind = 'ending';
-  if (state.ended && ['homes', 'dice', 'trade'].includes(kind)) return;
+  if (state.ended && ['homes', 'dice', 'hospital', 'trade'].includes(kind)) return;
   modal = kind;
   renderModal();
   if (!$('dialog').open) $('dialog').showModal();
@@ -538,6 +567,7 @@ function toggleLanguage() {
   if (modal) {
     renderModal();
     Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
+    if (modal === 'hospital') updateHospitalCost();
   }
 }
 function localBoardEntries() {
@@ -616,8 +646,12 @@ function renderModal() {
     title = `${type === 'buy' ? t('买入', 'Buy') : t('卖出', 'Sell')} · ${nameOf(g)}`;
     body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max || ''}" required autofocus /><div class="tradeQuantityButtons">${button(t('最少', 'Min'), "$('tradeQty').value=1", !max)}${button(t('最大', 'Max'), `$('tradeQty').value=${max}`, !max)}</div><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
   } else if (modal === 'homes') {
-    title = t('全球房产 · 升级住所', 'Property market · Trade up');
-    body = `<p>${t('只保留一套住所。旧房按原价抵扣，支付差价升级；房产计入净资产，仓位为总容量。', 'Own one home. Trade in your current home at its purchase value and pay the difference. Property counts toward net worth; storage is total capacity.')}</p><div class="homes">${homes.map((home, i) => `<article class="home"><strong>${nameOf(home)}</strong><p>${money(home.price)}<br>${t('总仓位', 'Total storage')}: ${home.capacity}</p>${button(i === state.home ? t('当前住所', 'Current home') : i < state.home ? t('已超越', 'Earlier tier') : `${t('升级', 'Upgrade')} · ${money(home.price - homes[state.home].price)}`, `buyHome(${i})`, i <= state.home || state.cash < home.price - homes[state.home].price, 'primary')}</article>`).join('')}</div>`;
+    title = t('全球房产 · 购置资产', 'Property market · Build your portfolio');
+    body = `<p>${t('每种房产都能重复购买，可选择购买数量。每次支付全价，房产价值及额外仓位累计，不设购房套数上限。', 'Buy any property repeatedly, with your choice of quantity. Pay the full price each time; property value and extra storage accumulate with no gameplay limit on ownership.')}</p><p>${t('已持有', 'Owned')}: ${propertyCount()} · ${t('总仓位', 'Total storage')}: ${state.capacity}</p><div class="homes">${homes.slice(1).map((home, offset) => { const i = offset + 1, max = Math.floor(state.cash / home.price); return `<article class="home"><strong>${nameOf(home)}</strong><p>${money(home.price)} / ${t('套', 'property')}<br>${t('每套增加仓位', 'Extra storage each')}: +${home.capacity - 100}<br>${t('持有', 'Owned')}: ${state.properties[i]}</p><form onsubmit="event.preventDefault();buyHome(${i})"><label for="homeQty${i}">${t('购买数量', 'Quantity')}</label><input id="homeQty${i}" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="1" required /><button class="primary" ${max < 1 ? 'disabled' : ''}>${t('购买', 'Buy property')}</button></form></article>`; }).join('')}</div>`;
+  } else if (modal === 'hospital') {
+    title = t('医院', 'Hospital');
+    const max = Math.max(0, Math.min(100 - state.health, Math.floor(state.cash / 10000)));
+    body = `<p>${t('每恢复1点健康花费 ¥10,000，不消耗天数。健康最高100点。', 'Restore health for ¥10,000 per point, without spending a day. Maximum health is 100.')}</p><p>${t('当前健康', 'Current health')}: ${state.health}/100 · ${t('现金', 'Cash')}: ${money(state.cash)}<br>${t('最多可恢复', 'Maximum recovery')}: ${max}</p><form onsubmit="event.preventDefault();buyHealth()"><label for="healthQty">${t('恢复点数', 'Health points to restore')}</label><input id="healthQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max ? 1 : ''}" oninput="updateHospitalCost()" required /><p id="hospitalCost" aria-live="polite">${t('费用', 'Cost')}: ${money(max ? 10000 : 0)}</p>${button(t('最大恢复', 'Maximum recovery'), `$('healthQty').value=${max};updateHospitalCost()`, !max)} <button class="primary" ${!max ? 'disabled' : ''}>${t('确认治疗', 'Confirm treatment')}</button></form>${!max ? `<p>${state.health === 100 ? t('健康已满。', 'You are already at full health.') : t('现金不足，每点健康需要 ¥10,000。', 'Not enough cash. Each point costs ¥10,000.')}</p>` : ''}`;
   } else if (modal === 'dice') {
     title = t('幸运骰子', 'Lucky dice');
     body = `<p>${t('掷出4、5、6获胜，返还下注的2倍（含本金）；1、2、3输掉下注。胜率50%，不消耗天数，只使用游戏现金。', 'Roll 4, 5 or 6 to receive 2× your stake including the original bet. Roll 1, 2 or 3 and lose the stake. A 50% win chance, no day cost, game cash only.')}</p><p>${t('可用现金', 'Available cash')}: ${money(state.cash)}</p><div class="dice" aria-hidden="true">${lastRoll ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][lastRoll.roll - 1] : '⚄'}</div><p role="status">${lastRoll ? `${t('点数', 'Roll')}: ${lastRoll.roll} · ${lastRoll.roll >= 4 ? t('获胜，净赚', 'Won, net gain') : t('未获胜，损失', 'Lost')} ${money(lastRoll.bet)}` : ''}</p><form onsubmit="event.preventDefault();rollDice()"><label for="bet">${t('下注金额（整数）', 'Your stake (whole units)')}</label><input id="bet" type="number" inputmode="numeric" min="1" max="${state.cash}" step="1" required value="${Math.min(state.cash, lastRoll?.bet || 100) || ''}" /><button class="primary" ${!state.cash ? 'disabled' : ''}>${t('下注并掷骰', 'Bet & roll')}</button></form>`;
@@ -665,18 +699,37 @@ function bankAction(type) {
   render();
 }
 function buyHome(index) {
-  if (state.ended || !homes[index] || index <= state.home) return;
-  const cost = homes[index].price - homes[state.home].price;
-  if (state.cash < cost) return notify('现金不足。', 'Not enough cash.');
-  state.cash -= cost; state.home = index; state.capacity = homes[index].capacity;
-  addLog(`升级为${homes[index].name[0]}，支付差价 ¥${cost}，总仓位 ${state.capacity}。`, `Upgraded to ${homes[index].name[1]} for ¥${cost}; total storage ${state.capacity}.`);
+  if (state.ended || !homes[index] || index < 1) return;
+  const qty = Number($(`homeQty${index}`)?.value || 1);
+  const cost = homes[index].price * qty;
+  const properties = [...state.properties]; properties[index] += qty;
+  const capacity = propertyCapacity(properties);
+  if (!Number.isSafeInteger(qty) || qty < 1 || !Number.isSafeInteger(cost) || cost > state.cash || !Number.isSafeInteger(capacity) || !Number.isSafeInteger(propertyValue({...state, properties}))) return notify('请输入现金范围内的有效购买数量。', 'Enter a valid property quantity within your cash balance.');
+  state.cash -= cost; state.properties = properties; state.capacity = capacity; state.home = Math.max(state.home, index);
+  addLog(`购入 ${qty} 套${homes[index].name[0]}，支付 ¥${cost}，累计仓位 ${capacity}。`, `Bought ${qty} ${homes[index].name[1]} for ¥${cost}; total storage ${capacity}.`);
   render(); renderModal();
 }
+function updateHospitalCost() {
+  const qty = Number($('healthQty')?.value);
+  if ($('hospitalCost')) $('hospitalCost').textContent = `${t('费用', 'Cost')}: ${Number.isSafeInteger(qty) && qty >= 0 && Number.isSafeInteger(qty * 10000) ? money(qty * 10000) : '—'}`;
+}
+function buyHealth() {
+  if (state.ended) return;
+  const qty = Number($('healthQty')?.value);
+  const cost = qty * 10000;
+  if (!Number.isSafeInteger(qty) || qty < 1 || qty > 100 - state.health || cost > state.cash) return notify('恢复点数超出健康或现金限制。', 'Recovery exceeds your health or cash limit.');
+  state.cash -= cost; state.health += qty;
+  addLog(`医院恢复 ${qty} 点健康，花费 ¥${cost}。`, `Hospital restored ${qty} health for ¥${cost}.`);
+  render(); renderModal();
+}
+
 function rollDice() {
   if (state.ended) return;
   const bet = Number($('bet').value);
   if (!Number.isSafeInteger(bet) || bet < 1 || bet > state.cash || !Number.isSafeInteger(state.cash + bet)) return notify('下注必须是现金范围内的正整数。', 'Bet a positive whole amount within your available cash.');
-  const roll = rand(1, 6);
+  let roll;
+  try { roll = secureRandomInt(6) + 1; }
+  catch (_) { return notify('安全随机源不可用，本次未下注。', 'Secure randomness unavailable. No bet was placed.'); }
   state.cash += roll >= 4 ? bet : -bet;
   lastRoll = { roll, bet };
   addLog(`骰子点数 ${roll}，${roll >= 4 ? '净赚' : '损失'} ¥${bet}。`, `Dice roll ${roll}: ${roll >= 4 ? 'net gain' : 'lost'} ¥${bet}.`);
@@ -755,7 +808,7 @@ async function submitScore() {
   submittingScore = true; renderBoardPreservingInput();
   try {
     await leaderboardRequest('/api/runs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({runId:run.runId, token})});
-    const final = {cash:run.cash,bank:run.bank,debt:run.debt,home:run.home,day:run.day,health:run.health,ended:run.ended,endReason:run.endReason,inventoryEmpty:run.inv.every(n => n === 0)};
+    const final = {cash:run.cash,bank:run.bank,debt:run.debt,home:run.home,version:VERSION,properties:run.properties,day:run.day,health:run.health,ended:run.ended,endReason:run.endReason,inventoryEmpty:run.inv.every(n => n === 0)};
     const data = await leaderboardRequest('/api/leaderboard', {method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({runId:run.runId,name,final})});
     if (!data.ok || data.entry?.runId !== run.runId) throw Error('Invalid response');
     if (state.runId === run.runId) { state.submitted = true; sharedRecordedRun = run.runId; }
@@ -805,15 +858,16 @@ function validateState(value) {
   if (typeof value.runId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(value.runId)) throw Error('runId');
   if (!integer(value.day, 1, 40) || !integer(value.health, 0, 100) || !integer(value.home, 0, homes.length - 1) || !integer(value.location, 0, locations.length - 1)) throw Error('range');
   for (const key of ['cash', 'bank', 'debt']) if (!integer(value[key], 0, Number.MAX_SAFE_INTEGER)) throw Error(key);
-  if (!integer(value.capacity, 100, 1600) || value.capacity !== homes[value.home].capacity) throw Error('capacity');
-  if (!Array.isArray(value.inv) || value.inv.length !== goods.length || !value.inv.every(n => integer(n, 0, 1600)) || usedSpace(value) > value.capacity) throw Error('inventory');
+  if (!Array.isArray(value.properties) || value.properties.length !== homes.length || value.properties[0] !== 0 || !value.properties.every(n => integer(n, 0, Number.MAX_SAFE_INTEGER)) || !Number.isSafeInteger(propertyValue(value))) throw Error('properties');
+  if (!integer(value.capacity, 100, Number.MAX_SAFE_INTEGER) || value.capacity !== propertyCapacity(value.properties)) throw Error('capacity');
+  if (!Array.isArray(value.inv) || value.inv.length !== goods.length || !value.inv.every(n => integer(n, 0, value.capacity)) || !Number.isSafeInteger(usedSpace(value)) || usedSpace(value) > value.capacity) throw Error('inventory');
   if (!Array.isArray(value.prices) || value.prices.length !== goods.length || !value.prices.every(n => integer(n, 1, 1000000))) throw Error('prices');
   if (typeof value.ended !== 'boolean' || typeof value.submitted !== 'boolean' || ![null, 'time', 'health'].includes(value.endReason)) throw Error('ending');
   if (value.ended !== (value.endReason !== null) || (!value.ended && (value.health === 0 || value.submitted)) || (value.endReason === 'health' && value.health !== 0) || (value.endReason === 'time' && value.day !== 40) || (value.ended && value.inv.some(Boolean))) throw Error('ending consistency');
   if (!(integer(value.news, 0, 2) || (value.news && typeof value.news === 'object' && integer(value.news.index, 0, goods.length - 1) && typeof value.news.up === 'boolean'))) throw Error('news');
   if (!Array.isArray(value.log) || value.log.length > 80 || !value.log.every(r => r && integer(r.day, 1, 40) && typeof r.zh === 'string' && typeof r.en === 'string' && r.zh.length <= 2000 && r.en.length <= 2000)) throw Error('log');
   // Reconstruct only documented fields, dropping unknown input keys.
-  return Object.fromEntries(['runId', 'day', 'cash', 'bank', 'debt', 'health', 'home', 'capacity', 'location', 'prices', 'inv', 'log', 'news', 'ended', 'endReason', 'submitted'].map(key => [key, value[key]]));
+  return Object.fromEntries(['runId', 'day', 'cash', 'bank', 'debt', 'health', 'home', 'properties', 'capacity', 'location', 'prices', 'inv', 'log', 'news', 'ended', 'endReason', 'submitted'].map(key => [key, value[key]]));
 }
 function migrateLegacy(old) {
   const integer = (n, min, max) => Number.isSafeInteger(n) && n >= min && n <= max;
@@ -821,15 +875,15 @@ function migrateLegacy(old) {
   const home = [0, 1, 2, 3, 4][old.roomLevel];
   // Map old locations explicitly; there is no claim that the cities are equivalent.
   const location = [0, 5, 3, 4, 2, 1, 6][old.location];
-  const migrated = { ...old, runId: uid(), day: Math.min(old.day, 40), home, capacity: homes[home].capacity, location, news: 0, endReason: old.ended ? (old.health <= 0 ? 'health' : 'time') : null, submitted: false, log: old.log.slice(0, 79).map(text => ({ day: Math.min(old.day, 40), zh: `[旧存档] ${text}`, en: `[Legacy save, original text] ${text}` })) };
+  const migrated = { ...old, runId: uid(), day: Math.min(old.day, 40), home, properties: propertiesFromHome(home), capacity: homes[home].capacity, location, news: 0, endReason: old.ended ? (old.health <= 0 ? 'health' : 'time') : null, submitted: false, log: old.log.slice(0, 79).map(text => ({ day: Math.min(old.day, 40), zh: `[旧存档] ${text}`, en: `[Legacy save, original text] ${text}` })) };
   if (old.ended && migrated.endReason === 'time') migrated.day = 40;
   return validateState(migrated);
 }
 function applySave(data) {
   let next, legacy = false;
   if (data?.game === 'floating-city-40-days') {
-    if (data.version !== VERSION || JSON.stringify(data.goods) !== JSON.stringify(goods.map(g => g.id)) || JSON.stringify(data.cities) !== JSON.stringify(locations.map(l => l.id))) throw Error('version');
-    next = validateState(data.state);
+    if (![2, VERSION].includes(data.version) || JSON.stringify(data.goods) !== JSON.stringify(goods.map(g => g.id)) || JSON.stringify(data.cities) !== JSON.stringify(locations.map(l => l.id))) throw Error('version');
+    next = validateState(data.version === 2 ? upgradeV2State(data.state) : data.state);
   } else {
     legacy = true; next = migrateLegacy(data);
   }
