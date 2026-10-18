@@ -2,448 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2ebe0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Life · Leo">
-<meta name="theme-color" content="#1a1209">
-<title>Life in Weeks · Leo</title>
+<meta name="apple-mobile-web-app-title" content="Life Overview">
+<meta name="description" content="A little perspective on your life. Explore weeks, months, and years with a personal planning horizon.">
+<title>Life in Weeks</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
-
-  :root {
-    --ink: #1a1209;
-    --paper: #f2ebe0;
-    --aged: #b8a48a;
-    --accent: #8b3a1e;
-    --gold: #c8972a;
-
-    /* 6 life seasons */
-    --childhood:  #7b9e6b;   /* soft sage green — unchosen, formative */
-    --prime:      #1a6b3a;   /* deep forest green — adult prime 18–39 */
-    --peak:       #2d7d9a;   /* steel blue — 40–54 peak execution */
-    --autumn:     #c8972a;   /* amber gold — 55–64 */
-    --twilight:   #8b4a2a;   /* burnt sienna — 65–72 */
-    --late:       #aaaaaa;   /* muted grey — 73–78 */
-
-    --now-ring:   #e8341a;
-    --future-base:#e0d8c8;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Cormorant Garamond', serif;
-    min-height: 100vh; min-height: 100dvh;
-    overflow-x: hidden;
-  }
-
-  body {
-    padding: max(env(safe-area-inset-top), 24px) 16px max(env(safe-area-inset-bottom), 24px);
-  }
-
-  .grain {
-    position: fixed; inset: 0; opacity: 0.04; pointer-events: none; z-index: 200;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* ── HEADER ── */
-  header { text-align: center; padding: 16px 0 12px; animation: fadeUp 0.9s ease both; }
-
-  .eyebrow { font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
-
-  .main-title { font-family: 'Playfair Display', serif; font-size: clamp(1.9rem, 6vw, 2.8rem); font-weight: 700; color: var(--ink); line-height: 1.1; letter-spacing: 0.02em; }
-  .sub-title { font-family: 'Playfair Display', serif; font-size: clamp(0.9rem, 2.8vw, 1.2rem); font-weight: 400; color: var(--aged); line-height: 1.4; margin-top: 4px; }
-  .sub-title em { font-style: italic; color: var(--accent); }
-
-  .rule { width: 40px; height: 1px; background: var(--gold); margin: 12px auto 10px; opacity: 0.7; }
-  .subtitle { font-size: 0.82rem; color: var(--aged); font-weight: 300; letter-spacing: 0.05em; }
-
-  /* ── STATS ── */
-  .stats-row {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-    margin: 14px 0; animation: fadeUp 1s ease both; animation-delay: 0.08s;
-  }
-
-  .stat-card {
-    background: rgba(255,255,255,0.45); border: 1px solid rgba(184,164,138,0.35);
-    border-radius: 6px; padding: 12px 6px; text-align: center;
-  }
-
-  .stat-number {
-    font-family: 'Playfair Display', serif; font-size: 1.4rem;
-    color: var(--accent); font-weight: 700; line-height: 1; display: block; margin-bottom: 4px;
-  }
-
-  .stat-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--aged); }
-
-  /* ── PROGRESS ── */
-  .progress-wrap { margin: 4px 0 14px; animation: fadeUp 1s ease both; animation-delay: 0.13s; }
-
-  .progress-meta {
-    display: flex; justify-content: space-between;
-    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--aged); margin-bottom: 6px;
-  }
-
-  .progress-track { height: 5px; background: var(--future-base); border-radius: 3px; overflow: hidden; border: 0.5px solid rgba(184,164,138,0.3); }
-
-  .progress-fill {
-    height: 100%; background: linear-gradient(90deg, var(--childhood), var(--prime), var(--accent));
-    border-radius: 3px; width: 0%; transition: width 2s ease;
-  }
-
-  /* ── LEGEND ── */
-  .bracket-legend { margin: 0 0 12px; animation: fadeUp 1s ease both; animation-delay: 0.18s; }
-
-  .bracket-legend-title { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--aged); text-align: center; margin-bottom: 8px; }
-
-  .legend-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-
-  .legend-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .legend-swatch { width: 100%; height: 7px; border-radius: 2px; }
-  .legend-text { font-size: 7.5px; color: var(--aged); text-align: center; line-height: 1.3; }
-  .legend-text strong { display: block; font-weight: 600; color: var(--ink); font-size: 8px; margin-bottom: 1px; }
-
-  /* ── VIEW SWITCH ── */
-  .view-switch { display: flex; gap: 4px; padding: 4px; margin: 14px auto;
-    max-width: 340px; border: 1px solid rgba(184,164,138,0.5); border-radius: 9px;
-    background: rgba(255,255,255,0.35); }
-  .view-switch button { flex: 1; min-height: 44px; border: 0; border-radius: 6px;
-    background: transparent; color: #66513b; font: 600 1rem 'Cormorant Garamond', serif;
-    cursor: pointer; }
-  .view-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .view-switch button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-  .grid-summary { margin-bottom: 8px; text-align: center; font-size: 0.9rem; color: #66513b; }
-  .weeks-grid[data-view="months"] { grid-template-columns: repeat(12, 1fr); gap: 3px; max-width: 680px; margin: 0 auto; }
-  .weeks-grid[data-view="years"] { grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 620px; margin: 0 auto; }
-  .weeks-grid[data-view="months"] .week-cell { border-radius: 2px; }
-  .weeks-grid[data-view="years"] .week-cell { border-radius: 4px; }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-  }
-
-  /* ── GRID ── */
-  .grid-section { animation: fadeUp 1s ease both; animation-delay: 0.23s; margin-bottom: 16px; }
-
-  .weeks-grid { display: grid; grid-template-columns: repeat(52, 1fr); gap: 1.5px; width: 100%; }
-
-  .week-cell { aspect-ratio: 1; border-radius: 1px; }
-
-  /* Lived — full saturation */
-  .wl-childhood { background: var(--childhood); }
-  .wl-prime     { background: var(--prime); }
-  .wl-peak      { background: var(--peak); }
-  .wl-autumn    { background: var(--autumn); }
-  .wl-twilight  { background: var(--twilight); }
-  .wl-late      { background: var(--late); }
-
-  /* Future — very muted tint */
-  .wf-childhood { background: color-mix(in srgb, var(--childhood) 15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--childhood) 22%, transparent); }
-  .wf-prime     { background: color-mix(in srgb, var(--prime)     15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--prime)     22%, transparent); }
-  .wf-peak      { background: color-mix(in srgb, var(--peak)      15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--peak)      22%, transparent); }
-  .wf-autumn    { background: color-mix(in srgb, var(--autumn)    15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--autumn)    22%, transparent); }
-  .wf-twilight  { background: color-mix(in srgb, var(--twilight)  15%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--twilight)  22%, transparent); }
-  .wf-late      { background: color-mix(in srgb, var(--late)      18%, var(--future-base)); border: 0.4px solid color-mix(in srgb, var(--late)      25%, transparent); }
-
-  /* Current week */
-  .week-cell.current {
-    background: var(--now-ring) !important;
-    box-shadow: 0 0 4px rgba(232,52,26,0.75);
-    animation: pulse 1.8s ease-in-out infinite;
-    border: none !important;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; box-shadow: 0 0 5px rgba(232,52,26,0.8); }
-    50%      { opacity: 0.45; box-shadow: 0 0 2px rgba(232,52,26,0.2); }
-  }
-
-  .year-labels { display: flex; justify-content: space-between; margin-top: 5px; font-size: 8px; color: var(--aged); letter-spacing: 0.05em; }
-
-  /* ── BRACKET DETAIL ── */
-  .brackets-section { margin: 0 0 18px; animation: fadeUp 1s ease both; animation-delay: 0.28s; }
-
-  .section-title {
-    font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic;
-    color: var(--ink); text-align: center; margin-bottom: 12px;
-  }
-
-  .bracket-row {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 11px 0; border-bottom: 1px solid rgba(184,164,138,0.22);
-  }
-  .bracket-row:last-child { border-bottom: none; }
-
-  .bracket-pip { width: 10px; min-width: 10px; height: 10px; border-radius: 2px; margin-top: 4px; }
-
-  .bracket-info { flex: 1; }
-  .bracket-name { font-family: 'Playfair Display', serif; font-size: 0.88rem; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
-  .bracket-ages { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aged); margin-bottom: 4px; }
-  .bracket-desc { font-size: 0.82rem; line-height: 1.55; color: #4a3f30; font-weight: 300; }
-
-  .bracket-stat { text-align: right; min-width: 58px; }
-  .bracket-weeks { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; line-height: 1; margin-bottom: 2px; }
-  .bracket-weeks-label { font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--aged); }
-
-  /* ── INSIGHTS ── */
-  .insights-section { margin: 0 0 22px; animation: fadeUp 1s ease both; animation-delay: 0.33s; }
-
-  .insight-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(184,164,138,0.22); }
-  .insight-item:last-child { border-bottom: none; }
-
-  .insight-num { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); font-weight: 700; min-width: 20px; text-align: right; padding-top: 1px; line-height: 1; }
-
-  .insight-text { font-size: 0.87rem; line-height: 1.62; color: #3a2f20; font-weight: 300; }
-  .insight-text strong { font-weight: 600; color: var(--accent); }
-
-  /* ── FOOTER ── */
-  .footer-quote {
-    text-align: center; padding: 20px 12px 8px;
-    border-top: 1px solid rgba(184,164,138,0.3);
-    animation: fadeUp 1s ease both; animation-delay: 0.38s;
-  }
-
-  .quote-text { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; color: var(--ink); line-height: 1.72; margin-bottom: 8px; }
-  .quote-source { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--aged); }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@400;500;600&display=swap');
+:root { color-scheme: light; --paper:#f2ebe0; --ink:#29271f; --muted:#766956; --line:#d9cebc; --accent:#8b3a1e;
+ --childhood:#7b9e6b; --prime:#1a6b3a; --peak:#2d7d9a; --autumn:#c8972a; --twilight:#8b4a2a; --late:#888b83; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'Cormorant Garamond',Georgia,serif; }
+button,input { font:inherit; }
+button,a,summary { -webkit-tap-highlight-color:transparent; }
+button { cursor:pointer; }
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible { outline:3px solid #9c6d27; outline-offset:3px; }
+.shell { width:min(1120px,100%); height:100svh; margin:auto; padding:max(18px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left)); display:flex; flex-direction:column; gap:12px; }
+header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.identity { min-width:0; }
+.eyebrow { margin:0 0 5px; text-transform:uppercase; letter-spacing:.22em; color:var(--accent); font:10px system-ui,sans-serif; }
+h1 { margin:0; font:600 clamp(22px,3.5vw,36px)/1.12 'Playfair Display',Georgia,serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.subtitle { margin:5px 0 0; color:var(--muted); font-size:14px; }
+.quiet-button { background:transparent; border:1px solid var(--line); border-radius:24px; min-height:44px; padding:8px 18px; color:var(--ink); font-size:15px; white-space:nowrap; }
+.quiet-button:hover { background:#e9dfce; }
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+h2 { font:italic 400 clamp(18px,2.5vw,25px)/1.2 'Playfair Display',Georgia,serif; margin:0; }
+.view-switch { display:flex; gap:3px; padding:3px; border:1px solid var(--line); border-radius:25px; background:#f8f3e9; }
+.view-switch button { border:0; border-radius:22px; background:transparent; color:var(--muted); min-height:38px; min-width:76px; padding:7px 16px; font-size:16px; }
+.view-switch button[aria-pressed="true"] { background:var(--ink); color:var(--paper); box-shadow:0 2px 6px #29271f14; }
+.stats-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-block:1px solid var(--line); padding:10px 0; }
+.stat-card { text-align:center; padding:0 6px; }
+.stat-card+.stat-card { border-left:1px solid var(--line); }
+.stat-number { display:block; color:var(--accent); font:600 clamp(20px,2.5vw,30px)/1.05 'Playfair Display',Georgia,serif; }
+.stat-label { display:block; margin-top:5px; font:9px system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.visual-panel { flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; padding:16px 20px; background:#ffffff55; border:1px solid var(--line); border-radius:18px; }
+.progress-meta { display:flex; justify-content:space-between; align-items:center; font:10px system-ui,sans-serif; color:var(--muted); }
+.progress-track { height:3px; background:#ded6c7; border-radius:3px; overflow:hidden; flex-shrink:0; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--childhood),var(--prime)); }
+.grid-space { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+.weeks-grid { display:grid; flex:none; }
+.week-cell { min-width:0; min-height:0; border-radius:1px; }
+.wl-childhood { background:var(--childhood); }.wl-prime { background:var(--prime); }.wl-peak { background:var(--peak); }.wl-autumn { background:var(--autumn); }.wl-twilight { background:var(--twilight); }.wl-late { background:var(--late); }
+.wf-childhood { background:#dce4d1; }.wf-prime { background:#d0dfcf; }.wf-peak { background:#d1e0e2; }.wf-autumn { background:#e8dfc5; }.wf-twilight { background:#e4d2c2; }.wf-late { background:#dddcd3; }
+.week-cell.current { background:#cf452c; box-shadow:0 0 0 1px #a83320; border-radius:2px; }
+.grid-summary { text-align:center; color:var(--muted); font-size:14px; margin:0; }
+.year-labels { text-align:center; color:var(--muted); font:10px/1.4 system-ui,sans-serif; margin:0; }
+.key { display:flex; align-items:center; justify-content:center; gap:16px; font:10px system-ui,sans-serif; color:var(--muted); }
+.key span { display:inline-flex; align-items:center; gap:5px; }.dot { width:7px; height:7px; border-radius:2px; background:var(--prime); }.dot.now { background:#cf452c; }.dot.future { background:#d0dfcf; border:1px solid #aab7a4; }
+footer { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.footer-note { font-size:13px; color:var(--muted); margin:0; }
+.text-button { padding:8px 0 8px 12px; border:0; background:none; color:var(--accent); min-height:44px; font-size:15px; }
+dialog { width:min(600px,calc(100% - 32px)); max-height:calc(100dvh - 40px); border:1px solid var(--line); border-radius:22px; padding:24px; color:var(--ink); background:#f8f3e9; box-shadow:0 20px 100px #29271f33; }
+dialog::backdrop { background:#29271f55; backdrop-filter:blur(5px); }
+.dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.dialog-heading h2 { font-style:normal; }.close-button { background:transparent; border:1px solid var(--line); border-radius:50%; min-width:44px; min-height:44px; font-size:24px; color:var(--muted); }
+.dialog-intro { margin:0 0 20px; color:var(--muted); line-height:1.5; font-size:17px; }
+form { display:grid; gap:16px; }label { display:grid; gap:7px; font-size:17px; }input { width:100%; min-height:46px; border:1px solid #c7baa5; background:#fffcf6; border-radius:9px; padding:10px 12px; font-size:18px; color:var(--ink); }
+.hint { font:12px/1.5 system-ui,sans-serif; color:var(--muted); margin:0; }.error { font:13px/1.5 system-ui,sans-serif; color:#a12e1b; margin:0; }.error:empty { display:none; }
+.form-actions { display:flex; gap:10px; justify-content:space-between; margin-top:4px; }.primary { border:0; border-radius:24px; padding:10px 22px; min-height:44px; color:var(--paper); background:var(--ink); }
+details { border-top:1px solid var(--line); }summary { display:flex; gap:10px; align-items:center; padding:17px 0; cursor:pointer; font:500 19px 'Cormorant Garamond',Georgia,serif; list-style:none; }summary::-webkit-details-marker { display:none; }summary::after { content:'+'; margin-left:auto; color:var(--muted); font:22px Georgia,serif; }details[open]>summary::after { content:'−'; }.season-dot { width:9px; height:9px; border-radius:3px; flex:none; } .detail-body { padding:0 0 18px; font-size:17px; line-height:1.6; color:#655a48; }.detail-body p { margin:0 0 10px; }.detail-body p:last-child { margin:0; }.range { color:var(--muted); font-size:15px; margin-left:auto; }summary .range+* { margin-left:0; }
+#saveNotice { max-width:70%; }.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+@media(max-width:600px) { .shell { gap:9px; padding-inline:16px; padding-top:max(14px,env(safe-area-inset-top)); } .eyebrow { font-size:9px; }.quiet-button { padding-inline:13px; font-size:14px; }.toolbar { flex-direction:column; gap:8px; }.toolbar h2 { font-size:20px; }.view-switch { width:100%; }.view-switch button { flex:1; min-height:38px; padding-inline:10px; }.visual-panel { padding:12px; gap:8px; border-radius:14px; }.stats-row { padding:9px 0; }.stat-label { font-size:8px; letter-spacing:.08em; }.grid-summary { font-size:13px; }.footer-note { font-size:12px; }.text-button { font-size:14px; }.year-labels { font-size:9px; }dialog { padding:20px; }.range { font-size:13px; } }
+@media(max-height:640px) { .shell { gap:6px; padding-top:8px; padding-bottom:6px; }h1 { font-size:23px; }.eyebrow { display:none; }.subtitle { margin-top:2px; font-size:12px; }.toolbar { flex-direction:row; gap:8px; }.toolbar h2 { font-size:16px; white-space:nowrap; }.view-switch { width:auto; }.view-switch button { min-width:0; padding-inline:10px; font-size:14px; min-height:34px; }.visual-panel { padding:9px 12px; gap:6px; }.stats-row { padding:6px 0; }.stat-number { font-size:21px; }.key { gap:10px; }.footer-note { font-size:11px; } }
+/* At very high zoom, allow natural scrolling instead of hiding content. */
+@media(max-height:360px) { .shell { height:auto; min-height:100svh; }.grid-space { min-height:180px; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
-<div class="grain"></div>
-
-<header>
-  <div class="eyebrow">A Personal Reckoning</div>
-  <div class="main-title">Leo Xu</div>
-  <div class="sub-title"><em id="viewTitle">Life in Weeks</em></div>
-  <div class="rule"></div>
-  <div class="subtitle" id="subtitleLine">Melbourne · Expectancy 78</div>
-</header>
-
-<div class="view-switch" role="group" aria-label="Life overview unit">
-  <button type="button" data-view="weeks" aria-pressed="true" aria-controls="weeksGrid">Weeks</button>
-  <button type="button" data-view="months" aria-pressed="false" aria-controls="weeksGrid">Months</button>
-  <button type="button" data-view="years" aria-pressed="false" aria-controls="weeksGrid">Years</button>
-</div>
-
-<div class="stats-row">
-  <div class="stat-card">
-    <span class="stat-number" id="weeksLived">—</span>
-    <span class="stat-label" id="livedLabel">Weeks Lived</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number" id="weeksLeft">—</span>
-    <span class="stat-label" id="aheadLabel">Weeks Ahead</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-number" id="daysLeft">—</span>
-    <span class="stat-label">Days Ahead</span>
-  </div>
-</div>
-
-<div class="progress-wrap">
-  <div class="progress-meta">
-    <span>Birth</span>
-    <span id="pctLabel">—</span>
-    <span>Age 78</span>
-  </div>
-  <div class="progress-track">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
-</div>
-
-<div class="bracket-legend">
-  <div class="bracket-legend-title">Life Seasons</div>
-  <div class="legend-grid">
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--childhood)"></div>
-      <div class="legend-text"><strong>Childhood</strong>0–17</div>
-    </div>
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--prime)"></div>
-      <div class="legend-text"><strong>Prime</strong>18–39</div>
-    </div>
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--peak)"></div>
-      <div class="legend-text"><strong>Peak</strong>40–54</div>
-    </div>
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--autumn)"></div>
-      <div class="legend-text"><strong>Autumn</strong>55–64</div>
-    </div>
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--twilight)"></div>
-      <div class="legend-text"><strong>Twilight</strong>65–72</div>
-    </div>
-    <div class="legend-item">
-      <div class="legend-swatch" style="background:var(--late)"></div>
-      <div class="legend-text"><strong>Late</strong>73–78</div>
+<main class="shell">
+  <header>
+    <div class="identity"><p class="eyebrow">A little perspective</p><h1 id="profileName">Leo Xu</h1><p class="subtitle" id="subtitleLine">80-year horizon</p></div>
+    <button type="button" class="quiet-button" id="editProfile" aria-haspopup="dialog">Personalise ↗</button>
+  </header>
+  <div class="toolbar">
+    <h2 id="viewTitle">Life in Weeks</h2>
+    <div class="view-switch" role="group" aria-label="Life overview unit">
+      <button type="button" data-view="weeks" aria-pressed="true" aria-controls="weeksGrid">Weeks</button>
+      <button type="button" data-view="months" aria-pressed="false" aria-controls="weeksGrid">Months</button>
+      <button type="button" data-view="years" aria-pressed="false" aria-controls="weeksGrid">Years</button>
     </div>
   </div>
-</div>
-
-<div class="grid-section">
-  <p class="grid-summary" id="gridSummary" aria-live="polite" aria-atomic="true"></p>
-  <div class="weeks-grid" id="weeksGrid" data-view="weeks" role="img" aria-label="Life overview"></div>
-  <div class="year-labels" id="yearLabels"></div>
-</div>
-
-<div class="brackets-section">
-  <div class="section-title">The seasons, decoded</div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--childhood)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Childhood</div>
-      <div class="bracket-ages">Ages 0–17 · 936 weeks · Unchosen</div>
-      <div class="bracket-desc">You didn't design this season. Your values, fears, and instincts were being wired by others — family, school, circumstance. Rich in memory but low in agency. Already spent.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" style="color:var(--childhood)">936</div>
-      <div class="bracket-weeks-label">wks · done</div>
-    </div>
-  </div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--prime)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Prime</div>
-      <div class="bracket-ages">Ages 18–39 · 1,144 weeks · Your authorship years</div>
-      <div class="bracket-desc">Full agency, near-full body, compounding time horizon. The years where habits, relationships, capital, and identity are built from scratch — on your terms. You are in the final stretch of this.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" id="primeLeft" style="color:var(--prime)">—</div>
-      <div class="bracket-weeks-label">wks left</div>
-    </div>
-  </div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--peak)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Peak Power</div>
-      <div class="bracket-ages">Ages 40–54 · 780 weeks · Deploy everything</div>
-      <div class="bracket-desc">Accumulated capital — financial, social, intellectual — gets deployed. Energy still high, wisdom now present. This is when most people either build legacy or slowly realise they optimised for the wrong things.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" style="color:var(--peak)">780</div>
-      <div class="bracket-weeks-label">wks total</div>
-    </div>
-  </div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--autumn)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Autumn</div>
-      <div class="bracket-ages">Ages 55–64 · 520 weeks · Last full season</div>
-      <div class="bracket-desc">Still high quality — mind sharp, travel easy — but the body begins registering past choices. The last bracket where almost anything remains possible. Unfinished things start to press.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" style="color:var(--autumn)">520</div>
-      <div class="bracket-weeks-label">wks total</div>
-    </div>
-  </div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--twilight)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Twilight</div>
-      <div class="bracket-ages">Ages 65–72 · 416 weeks · Quality varies sharply</div>
-      <div class="bracket-desc">Outcome here is almost entirely determined by decisions made before 55. Health constraints narrow options fast. These weeks are real, but the range of what's possible has compressed considerably.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" style="color:var(--twilight)">416</div>
-      <div class="bracket-weeks-label">wks total</div>
-    </div>
-  </div>
-
-  <div class="bracket-row">
-    <div class="bracket-pip" style="background:var(--late)"></div>
-    <div class="bracket-info">
-      <div class="bracket-name">Late Season</div>
-      <div class="bracket-ages">Ages 73–78 · 260 weeks · Peace, not ambition</div>
-      <div class="bracket-desc">Present, if you're fortunate. Don't build for these weeks — build so these weeks are peaceful. Legacy is reviewed here, not created. The goal is to arrive with no regrets to process.</div>
-    </div>
-    <div class="bracket-stat">
-      <div class="bracket-weeks" style="color:var(--late)">260</div>
-      <div class="bracket-weeks-label">wks total</div>
-    </div>
-  </div>
-</div>
-
-<div class="insights-section">
-  <div class="section-title">Five truths · return to these weekly</div>
-
-  <div class="insight-item">
-    <div class="insight-num">I</div>
-    <div class="insight-text"><strong>Prime ends in ~<span id="primeCountdown">—</span> weeks.</strong> Age 40 arrives 5 July 2029. Everything you want to start — a physical identity, a financial structure, a family ritual — starts now or starts in a harder season.</div>
-  </div>
-
-  <div class="insight-item">
-    <div class="insight-num">II</div>
-    <div class="insight-text"><strong>Your infant has ~940 Saturdays before 18.</strong> Not metaphor — countable. Each one spent distracted is gone. Not guilty; just true.</div>
-  </div>
-
-  <div class="insight-item">
-    <div class="insight-num">III</div>
-    <div class="insight-text"><strong>Your fully free life ends closer to 65.</strong> That's only <strong id="qualityLeft">—</strong> weeks away. Every major ambition — the business you want to build, the places you want to see, the person you want to become — must be executable before then.</div>
-  </div>
-
-  <div class="insight-item">
-    <div class="insight-num">IV</div>
-    <div class="insight-text"><strong>Childhood is done; Prime is almost done.</strong> The two seasons where life is richest and most elastic are nearly fully spent. What remains — Peak, Autumn — are still excellent, but they run on the foundation you're pouring right now.</div>
-  </div>
-
-  <div class="insight-item">
-    <div class="insight-num">V</div>
-    <div class="insight-text"><strong>The red square moves every week.</strong> Open this on Sunday. If the week just passed moved you toward who you want to be — good. If not, that's the only question worth answering before Monday.</div>
-  </div>
-</div>
-
-<div class="footer-quote">
-  <div class="quote-text" id="quoteText"></div>
-  <div class="quote-source" id="quoteSource"></div>
-</div>
-
+  <section class="stats-row" aria-label="Life overview totals">
+    <div class="stat-card"><span class="stat-number" id="weeksLived">—</span><span class="stat-label" id="livedLabel">Weeks completed</span></div>
+    <div class="stat-card"><span class="stat-number" id="weeksLeft">—</span><span class="stat-label" id="aheadLabel">Future weeks</span></div>
+    <div class="stat-card"><span class="stat-number" id="daysLeft">—</span><span class="stat-label">Days to horizon</span></div>
+  </section>
+  <section class="visual-panel" aria-label="Your life overview">
+    <div class="progress-meta"><span>Birth</span><span id="pctLabel">—</span><span id="horizonLabel">Age 80</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="grid-space" id="gridSpace"><div class="weeks-grid" id="weeksGrid" data-view="weeks" role="img" aria-label="Life overview"></div></div>
+    <p class="grid-summary" id="gridSummary" aria-live="polite" aria-atomic="true"></p>
+    <p class="year-labels" id="yearLabels"></p>
+    <div class="key" aria-hidden="true"><span><i class="dot"></i>Completed</span><span><i class="dot now"></i>Current</span><span><i class="dot future"></i>Future</span></div>
+  </section>
+  <footer><p class="footer-note" id="saveNotice" role="status">Your whole life. A moment to reflect.</p><button type="button" class="text-button" id="openDetails" aria-haspopup="dialog">Seasons &amp; reflections +</button></footer>
+</main>
+<dialog id="profileDialog" aria-labelledby="profileHeading">
+  <div class="dialog-heading"><h2 id="profileHeading">Make it yours</h2><button type="button" class="close-button" data-close aria-label="Close personalisation">×</button></div>
+  <p class="dialog-intro">A name, a beginning, and a little room to imagine.</p>
+  <form id="profileForm">
+    <label>Your name<input id="nameInput" name="displayName" type="text" maxlength="60" autocomplete="name" placeholder="Your name"></label>
+    <label>Date of birth<input id="birthInput" name="birthDate" type="date" required autocomplete="bday" aria-describedby="birthHint"></label>
+    <p class="hint" id="birthHint">Used to place your current week, month, and year.</p>
+    <label>Expected life expectancy (years)<input id="expectancyInput" name="expectancy" type="number" min="1" max="150" step="1" required inputmode="numeric" aria-describedby="horizonHint"></label>
+    <p class="hint" id="horizonHint">Default: 80 years. A personal planning horizon, not a prediction. Choose a whole number from 1 to 150.</p>
+    <p class="hint">Saved only in this browser. You can restore the default profile at any time.</p>
+    <p class="error" id="profileError" role="alert"></p>
+    <div class="form-actions"><button type="button" class="quiet-button" id="resetProfile">Restore defaults</button><button type="submit" class="primary">Save overview</button></div>
+  </form>
+</dialog>
+<dialog id="detailsDialog" aria-labelledby="detailsHeading">
+  <div class="dialog-heading"><h2 id="detailsHeading">The seasons, unfolded</h2><button type="button" class="close-button" data-close aria-label="Close seasons and reflections">×</button></div>
+  <p class="dialog-intro">A way to colour the picture. Your chapters can look different. Tap any season to explore it.</p>
+  <div id="seasonDetails"></div>
+  <details name="life-notes"><summary>Reflections for this week</summary><div class="detail-body"><p>What deserves more of your attention right now?</p><p>What is one small thing you could do this week for someone or something that matters?</p><p>There is no score to keep. Return whenever a little perspective would help.</p></div></details>
+  <details name="life-notes"><summary>How to read this view</summary><div class="detail-body"><p>Each square is a week, month, or year from your birth date. Rich colours show completed periods; the red square is your current period; lighter colours show future periods within your chosen horizon.</p><p>Months follow calendar anniversaries and years follow birthdays. Weeks cover seven calendar days; the final week may be partial. Row lengths adjust to fit your screen, and the caption tells you how many periods each row contains.</p><p id="horizonExplanation"></p><p>Your horizon is editable. It does not estimate how long you will live, or how much you can do at any age.</p></div></details>
+</dialog>
 <script>
-  // ── CONSTANTS ──
-  const DOB         = new Date(1989, 6, 5); // 5 July 1989 (month is 0-indexed)
-  const EXPECTANCY  = 78;
-  const TOTAL_WEEKS = EXPECTANCY * 52;
+  const DEFAULT_PROFILE = Object.freeze({ name: 'Leo Xu', birthDate: '1989-07-05', expectancy: 80 });
+  const PROFILE_KEY = 'life-overview-profile-v1';
+  let DOB = new Date(1989, 6, 5);
+  let EXPECTANCY = 80;
+  let profile = { ...DEFAULT_PROFILE };
+  const $ = id => document.getElementById(id);
 
-  // ── LIVE CALCULATIONS ──
-  const now         = new Date();
-  const msPerWeek   = 7 * 24 * 60 * 60 * 1000;
-  const msAlive     = now - DOB;
-  const weeksLived  = Math.floor(msAlive / msPerWeek);
-  const weeksLeft   = TOTAL_WEEKS - weeksLived;
-  const daysLeft    = Math.floor(weeksLeft * 7);
-  const pct         = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(1);
-  const ageNow      = ((msAlive / (365.25 * 24 * 60 * 60 * 1000))).toFixed(1);
-
-  // Quality-adjusted (to 65)
-  const age65date   = new Date(DOB.getTime() + 65 * 365.25 * 24 * 60 * 60 * 1000);
-  const qualLeft    = Math.max(0, Math.floor((age65date - now) / msPerWeek));
-
-  // Prime end (age 40 = 5 July 2029)
-  const age40date   = new Date(DOB.getTime() + 40 * 365.25 * 24 * 60 * 60 * 1000);
-  const primeLeft   = Math.max(0, Math.floor((age40date - now) / msPerWeek));
-
-  // ── FILL DOM ──
-  document.getElementById('subtitleLine').textContent  = `Age ${ageNow} · Melbourne · Expectancy 78`;
-  document.getElementById('weeksLived').textContent    = weeksLived.toLocaleString();
-  document.getElementById('weeksLeft').textContent     = weeksLeft.toLocaleString();
-  document.getElementById('daysLeft').textContent      = daysLeft.toLocaleString();
-  document.getElementById('pctLabel').textContent      = `${pct}% elapsed`;
-  document.getElementById('primeLeft').textContent     = primeLeft.toLocaleString();
-  document.getElementById('primeCountdown').textContent= primeLeft.toLocaleString();
-  document.getElementById('qualityLeft').textContent   = qualLeft.toLocaleString();
-
-  // Calendar dates avoid daylight-saving drift at period boundaries.
   function calendarDay(date) {
     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
   }
@@ -454,13 +138,17 @@
     return new Date(first.getFullYear(), first.getMonth(), Math.min(DOB.getDate(), lastDay));
   }
 
+  function completedMonths(today) {
+    let months = (today.getFullYear() - DOB.getFullYear()) * 12 + today.getMonth() - DOB.getMonth();
+    if (calendarDay(today) < calendarDay(anniversary(months))) months--;
+    return months;
+  }
+
   function lifeView(unit, today) {
     const horizon = anniversary(EXPECTANCY * 12);
     const totalDays = calendarDay(horizon) - calendarDay(DOB);
     const elapsedDays = Math.max(0, calendarDay(today) - calendarDay(DOB));
-    let elapsedMonths = (today.getFullYear() - DOB.getFullYear()) * 12
-      + today.getMonth() - DOB.getMonth();
-    if (calendarDay(today) < calendarDay(anniversary(elapsedMonths))) elapsedMonths--;
+    const elapsedMonths = completedMonths(today);
     const total = unit === 'weeks' ? Math.ceil(totalDays / 7)
       : unit === 'months' ? EXPECTANCY * 12 : EXPECTANCY;
     const elapsed = unit === 'weeks' ? Math.floor(elapsedDays / 7)
@@ -472,6 +160,16 @@
       progress: Math.min(100, elapsedDays / totalDays * 100) };
   }
 
+  function validProfile(value, today = new Date()) {
+    if (!value || typeof value.name !== 'string' || value.name.length > 60
+      || !Number.isInteger(value.expectancy) || value.expectancy < 1 || value.expectancy > 150
+      || typeof value.birthDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.birthDate)) return false;
+    const [year, month, day] = value.birthDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return year >= 1900 && date.getFullYear() === year && date.getMonth() === month - 1
+      && date.getDate() === day && calendarDay(date) <= calendarDay(today);
+  }
+
   function bracket(age) {
     if (age < 18) return 'childhood';
     if (age < 40) return 'prime';
@@ -481,89 +179,142 @@
     return 'late';
   }
 
+  const seasons = [
+    { key:'childhood', title:'Childhood', start:0, end:18, text:'The early chapters: growing, learning, and discovering the world. These years can shape us, without deciding every chapter that follows.' },
+    { key:'prime', title:'Prime', start:18, end:40, text:'A season often associated with exploration and building: relationships, skills, work, and a sense of direction. There is no deadline for finding your way.' },
+    { key:'peak', title:'Peak Power', start:40, end:55, text:'Experience can bring perspective and depth. Consider what you want to develop, share, or begin. New beginnings belong at every age.' },
+    { key:'autumn', title:'Autumn', start:55, end:65, text:'An invitation to take stock and make room for what matters. Your priorities, opportunities, and pace are yours to define.' },
+    { key:'twilight', title:'Twilight', start:65, end:73, text:'Connection, curiosity, contribution, and rest can take new forms. Health and circumstances vary; an age band cannot describe a whole person.' },
+    { key:'late', title:'Late Season', start:73, end:Infinity, text:'More chapters for connection, meaning, and moments worth noticing. This season continues to the horizon you choose, and life may continue beyond it.' }
+  ];
   let selectedView = 'weeks';
-  const viewNames = { weeks: 'Weeks', months: 'Months', years: 'Years' };
-  const grid = document.getElementById('weeksGrid');
+  const viewNames = { weeks:'Weeks', months:'Months', years:'Years' };
+  const grid = $('weeksGrid');
   const buttons = document.querySelectorAll('.view-switch button');
+
+  function updateSeasons() {
+    const fragment = document.createDocumentFragment();
+    seasons.forEach(season => {
+      if (season.start >= EXPECTANCY) return;
+      const end = Math.min(season.end, EXPECTANCY);
+      const detail = document.createElement('details');
+      detail.name = 'life-notes';
+      const summary = document.createElement('summary');
+      const dot = document.createElement('span');
+      dot.className = 'season-dot'; dot.style.background = `var(--${season.key})`; dot.setAttribute('aria-hidden','true');
+      const title = document.createElement('span'); title.textContent = season.title;
+      const range = document.createElement('span'); range.className = 'range'; range.textContent = `Ages ${season.start}–${end}`;
+      summary.append(dot, title, range);
+      const body = document.createElement('div'); body.className = 'detail-body'; body.textContent = season.text;
+      detail.append(summary, body); fragment.append(detail);
+    });
+    $('seasonDetails').replaceChildren(fragment);
+    $('horizonExplanation').textContent = `This overview starts on ${DOB.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'})} and ends at your selected age of ${EXPECTANCY}.`;
+  }
+
+  function fitGrid() {
+    const space = $('gridSpace');
+    const total = grid.childElementCount;
+    if (!total) return;
+    const width = space.clientWidth, height = space.clientHeight;
+    const gap = selectedView === 'weeks' ? 1 : selectedView === 'months' ? 2 : 4;
+    const options = selectedView === 'weeks' ? [52,104,156,208]
+      : selectedView === 'months' ? [12,24,36,48,60] : [5,10,20];
+    let best = { size:0, cols:options[0], rows:Math.ceil(total/options[0]) };
+    options.forEach(cols => {
+      const rows = Math.ceil(total / cols);
+      const size = Math.max(0.1, Math.min((width-gap*(cols-1))/cols,(height-gap*(rows-1))/rows,selectedView==='years'?44:20));
+      if (size > best.size) best = { size, cols, rows };
+    });
+    grid.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
+    grid.style.gridTemplateRows = `repeat(${best.rows}, minmax(0, 1fr))`;
+    grid.style.gap = gap+'px';
+    grid.style.width = Math.max(1,best.cols*best.size+gap*(best.cols-1))+'px';
+    grid.style.height = Math.max(1,best.rows*best.size+gap*(best.rows-1))+'px';
+    $('yearLabels').textContent = `1 square = 1 ${selectedView.slice(0,-1)} · ${best.cols} ${selectedView} per row`;
+  }
 
   function renderView(unit) {
     if (!Object.hasOwn(viewNames, unit)) unit = 'weeks';
     selectedView = unit;
-    const state = lifeView(unit, new Date());
+    const today = new Date();
+    const state = lifeView(unit, today);
     const name = viewNames[unit];
-    document.getElementById('viewTitle').textContent = `Life in ${name}`;
-    document.title = `Life in ${name} · Leo`;
-    document.getElementById('weeksLived').textContent = state.lived.toLocaleString();
-    document.getElementById('weeksLeft').textContent = state.ahead.toLocaleString();
-    document.getElementById('daysLeft').textContent = state.daysAhead.toLocaleString();
-    document.getElementById('livedLabel').textContent = `${name} Completed`;
-    document.getElementById('aheadLabel').textContent = `Future ${name}`;
-    document.getElementById('pctLabel').textContent = `${state.progress.toFixed(1)}% elapsed`;
-    document.getElementById('progressFill').style.width = state.progress + '%';
-    const summary = `${state.lived.toLocaleString()} completed · ${state.current >= 0 ? '1 current · ' : ''}${state.ahead.toLocaleString()} future ${unit}`;
-    document.getElementById('gridSummary').textContent = summary;
-    grid.setAttribute('aria-label', `Life in ${name}: ${summary}. Red marks the current ${unit.slice(0, -1)}.`);
+    $('viewTitle').textContent = `Life in ${name}`;
+    $('profileName').textContent = profile.name || 'Your life';
+    document.title = `Life in ${name} · ${profile.name || 'Your life'}`;
+    const ageYears = Math.floor(completedMonths(today)/12);
+    $('subtitleLine').textContent = `Age ${ageYears} · ${EXPECTANCY}-year horizon`;
+    $('horizonLabel').textContent = `Age ${EXPECTANCY}`;
+    $('weeksLived').textContent = state.lived.toLocaleString();
+    $('weeksLeft').textContent = state.ahead.toLocaleString();
+    $('daysLeft').textContent = state.daysAhead.toLocaleString();
+    $('livedLabel').textContent = `${name} completed`;
+    $('aheadLabel').textContent = `Future ${name}`;
+    $('pctLabel').textContent = `${state.progress.toFixed(1)}% of horizon`;
+    $('progressFill').style.width = state.progress+'%';
+    const summary = state.current >= 0 ? `${state.lived.toLocaleString()} completed · 1 current · ${state.ahead.toLocaleString()} future ${unit}` : 'Your selected horizon is complete. You can extend it in Personalise.';
+    $('gridSummary').textContent = summary;
+    grid.setAttribute('aria-label',`Life in ${name}: ${summary}. ${state.current >= 0 ? 'Red marks the current '+unit.slice(0,-1)+'.' : ''}`);
     grid.dataset.view = unit;
     const fragment = document.createDocumentFragment();
-    const formatDate = date => date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    for (let i = 0; i < state.total; i++) {
-      const start = unit === 'weeks' ? new Date(DOB.getFullYear(), DOB.getMonth(), DOB.getDate() + i * 7)
-        : anniversary(unit === 'months' ? i : i * 12);
-      const age = unit === 'weeks' ? i * 7 / 365.2425 : unit === 'months' ? i / 12 : i;
+    for (let i=0; i<state.total; i++) {
+      const start = unit==='weeks' ? new Date(DOB.getFullYear(),DOB.getMonth(),DOB.getDate()+i*7) : anniversary(unit==='months'?i:i*12);
+      const age = unit==='weeks'?i*7/365.2425:unit==='months'?i/12:i;
       const cell = document.createElement('div');
-      const status = i === state.current ? 'current' : i < state.lived ? 'completed' : 'future';
-      cell.className = `week-cell ${i === state.current ? 'current' : `${i < state.lived ? 'wl' : 'wf'}-${bracket(age)}`}`;
-      cell.title = `${name.slice(0, -1)} ${i + 1} · ${formatDate(start)} · ${status}`;
-      cell.setAttribute('aria-hidden', 'true');
-      fragment.appendChild(cell);
+      const status = i===state.current?'current':i<state.lived?'completed':'future';
+      cell.className = `week-cell ${i===state.current?'current':`${i<state.lived?'wl':'wf'}-${bracket(age)}`}`;
+      cell.title = `${name.slice(0,-1)} ${i+1} · ${start.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})} · ${status}`;
+      cell.setAttribute('aria-hidden','true'); fragment.append(cell);
     }
     grid.replaceChildren(fragment);
-    document.getElementById('yearLabels').textContent = unit === 'weeks'
-      ? 'Each square = 1 week · 52 per row · final week may be partial'
-      : unit === 'months' ? 'Each square = 1 month · each row = 1 year'
-      : 'Each square = 1 year · each full row = 10 years';
-    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === unit)));
+    buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===unit)));
+    fitGrid();
   }
 
-  buttons.forEach(button => button.addEventListener('click', () => {
+  function applyProfile(value, persist) {
+    profile = { name:value.name.trim(), birthDate:value.birthDate, expectancy:value.expectancy };
+    const [year,month,day] = profile.birthDate.split('-').map(Number);
+    DOB = new Date(year,month-1,day); EXPECTANCY = profile.expectancy;
+    if (persist) {
+      try { localStorage.setItem(PROFILE_KEY,JSON.stringify(profile)); $('saveNotice').textContent = 'Saved in this browser.'; }
+      catch (_) { $('saveNotice').textContent = 'Applied for this visit. Browser storage is unavailable.'; }
+    }
+    renderView(selectedView); updateSeasons();
+  }
+
+  buttons.forEach(button=>button.addEventListener('click',()=>{
     renderView(button.dataset.view);
-    try { localStorage.setItem('life-overview-view', selectedView); } catch (_) { /* View still works without storage. */ }
+    try { localStorage.setItem('life-overview-view',selectedView); } catch (_) {}
   }));
   try {
-    const saved = localStorage.getItem('life-overview-view');
-    if (Object.hasOwn(viewNames, saved)) selectedView = saved;
-  } catch (_) { /* Use weeks when storage is unavailable. */ }
-  renderView(selectedView);
-  // Refresh after returning to the page and across local date boundaries.
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) renderView(selectedView);
+    const savedView = localStorage.getItem('life-overview-view');
+    if (Object.hasOwn(viewNames,savedView)) selectedView=savedView;
+    const savedProfile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if (validProfile(savedProfile)) profile=savedProfile;
+  } catch (_) { /* Defaults remain usable if storage is unavailable or corrupt. */ }
+  applyProfile(profile,false);
+
+  const profileDialog = $('profileDialog'), detailsDialog = $('detailsDialog');
+  $('editProfile').addEventListener('click',()=>{
+    $('nameInput').value=profile.name; $('birthInput').value=profile.birthDate;
+    $('birthInput').min='1900-01-01';
+    const today=new Date();
+    $('birthInput').max=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    $('expectancyInput').value=profile.expectancy; $('profileError').textContent=''; profileDialog.showModal();
   });
-  setInterval(() => renderView(selectedView), 60000);
-
-  // ── ROTATING QUOTES ──
-  const QUOTES = [
-    { text: "It is not that we have a short time to live, but that we waste a great deal of it.", source: "— Seneca · On the Shortness of Life" },
-    { text: "人生如白驹过隙，忽然而已。\nLife passes like a white horse glimpsed through a crack — and suddenly, it is gone.", source: "— 庄子 · Zhuangzi" },
-    { text: "The price of anything is the amount of life you exchange for it.", source: "— Henry David Thoreau" },
-    { text: "逝者如斯夫，不舍昼夜。\nIt flows on like this, never ceasing, day or night.", source: "— 孔子 · Confucius, on time passing" },
-    { text: "Most people die at 25 and aren't buried until 75.", source: "— Benjamin Franklin" },
-    { text: "天行健，君子以自强不息。\nHeaven moves with strength; the noble person strives without cease.", source: "— 易经 · I Ching" },
-    { text: "You only live once, but if you do it right, once is enough.", source: "— Mae West" },
-    { text: "少壮不努力，老大徒伤悲。\nIf you do not work hard in youth, you will grieve uselessly in old age.", source: "— 汉乐府 · Han Dynasty folk verse" },
-    { text: "The key is not to prioritise what's on your schedule, but to schedule your priorities.", source: "— Stephen Covey" },
-    { text: "志当存高远。\nLet your ambition reach the heights.", source: "— 诸葛亮 · Zhuge Liang" },
-    { text: "Time is the most valuable thing a man can spend.", source: "— Theophrastus" },
-    { text: "岁月不待人。\nThe years and months wait for no one.", source: "— 陶渊明 · Tao Yuanming" },
-    { text: "Do not squander time, for that is the stuff life is made of.", source: "— Benjamin Franklin" },
-    { text: "花有重开日，人无再少年。\nFlowers bloom again; youth does not return.", source: "— 关汉卿 · Guan Hanqing" },
-  ];
-
-  // Pick a different quote each day (consistent within a day, different each open on a new day)
-  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-  const q = QUOTES[dayIndex % QUOTES.length];
-  document.getElementById('quoteText').innerHTML = q.text.replace(/\n/g, '<br>');
-  document.getElementById('quoteSource').textContent = q.source;
-
+  $('openDetails').addEventListener('click',()=>detailsDialog.showModal());
+  document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
+  $('profileForm').addEventListener('submit',event=>{
+    event.preventDefault();
+    const value={name:$('nameInput').value.trim(),birthDate:$('birthInput').value,expectancy:Number($('expectancyInput').value)};
+    if (!validProfile(value)) { $('profileError').textContent='Enter a valid birth date from 1900 to today and a whole-number horizon from 1 to 150 years.'; return; }
+    applyProfile(value,true); profileDialog.close();
+  });
+  $('resetProfile').addEventListener('click',()=>{ applyProfile(DEFAULT_PROFILE,true); profileDialog.close(); });
+  new ResizeObserver(fitGrid).observe($('gridSpace'));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderView(selectedView);});
+  setInterval(()=>renderView(selectedView),60000);
 </script>
 </body>
 </html>
