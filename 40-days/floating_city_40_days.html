@@ -321,6 +321,56 @@
       h1 { font-size: 27px; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+    .mobileHeader, .mobileDock, .marketPager, .shortName { display: none; }
+    .itemIcon { display: inline; }
+    .mobileStatus > summary, .gameMenu > summary { cursor: pointer; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    .tradeQuantityButtons { display: flex; gap: 8px; margin-bottom: 14px; }
+    @media (max-width: 900px) {
+      html, body { height: 100%; overflow: hidden; }
+      .app { height: 100dvh; height: var(--app-height, 100dvh); max-width: 720px; padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 8px; }
+      .desktopHeader, .desktopStatus, .desktopTravel, .desktopJournal { display: none; }
+      .mobileHeader { display: block; flex-shrink: 0; position: relative; z-index: 3; }
+      .mobileTop { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 44px; margin-bottom: 6px; }
+      .mobileTitle { font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mobileTitle small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+      .mobileTopControls { display: flex; gap: 5px; flex-shrink: 0; align-items: center; }
+      .mobileTopControls button, .gameMenu > summary { min-height: 44px; min-width: 44px; padding: 6px 8px; font-size: 13px; border: 1px solid #475569; border-radius: 9px; background: #1e293b; text-align: center; }
+      .statusStrip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: #182438; border: 1px solid #334155; border-radius: 10px; min-height: 44px; align-items: center; padding: 4px; }
+      .statusChip { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .statusChip span { overflow: hidden; text-overflow: ellipsis; }
+      .expandHint { font-size: 9px; margin-left: 2px; color: #94a3b8; }
+      .mobilePanel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px; padding: 14px; background: #101c30; border: 1px solid #64748b; border-radius: 14px; box-shadow: 0 16px 32px #0009; max-height: calc(var(--app-height, 100dvh) - 115px); overflow-y: auto; }
+      .mobilePanel .stats { margin-top: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mobilePanel .value { font-size: 16px; }
+      .gameMenu .mobilePanel { top: 44px; }
+      .menuButtons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .mobileStatus[open] .statusStrip { border-color: var(--accent); }
+      .grid { display: flex; flex: 1; min-height: 0; }
+      .marketPanel { width: 100%; padding: 8px; display: flex; flex-direction: column; gap: 4px; min-height: 0; box-shadow: none; }
+      .marketHeading { font-size: 14px; margin: 0; min-height: 24px; flex-wrap: nowrap; }
+      .marketHeading .small { max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+      .marketList { display: grid; gap: 2px; flex: 1; min-height: 0; grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); }
+      .marketCard { padding: 0 4px 0 7px; border-radius: 7px; grid-template-columns: minmax(0, 1fr) minmax(53px, .55fr) 82px; gap: 4px; min-height: 0; }
+      .marketCard strong { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.2; }
+      .marketCard .fullName, .marketCard .reference, .marketCard .unitSize { display: none; }
+      .marketCard .shortName { display: inline; }
+      .marketCard .small { font-size: 10px; line-height: 1.2; margin-top: 2px; }
+      .marketCard .price { font-size: 12px; text-align: right; white-space: nowrap; }
+      .marketCard .tradeActions { grid-column: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+      .marketCard .tradeActions button { padding: 0; min-height: 44px; min-width: 0; font-size: 12px; border-radius: 6px; background: #25364c; }
+      .marketCard .tradeActions button:first-child { color: #b7f3cd; }
+      .marketCard .tradeActions button:last-child { color: #fde68a; }
+      .marketPager { display: flex; justify-content: space-between; align-items: center; min-height: 32px; gap: 6px; color: #94a3b8; font-size: 10px; }
+      .marketPager button { min-height: 32px; padding: 2px 10px; font-size: 11px; }
+      .mobileDock { display: grid; flex-shrink: 0; grid-template-columns: 38px minmax(0, 1fr) 76px; gap: 6px; align-items: center; }
+      .mobileDock select { min-width: 0; width: 100%; height: 44px; font-size: 14px; border: 1px solid #475569; background: #1e293b; border-radius: 9px; padding: 6px; color: white; }
+      .mobileDock button { padding: 6px; min-height: 44px; font-size: 12px; }
+      dialog { top: calc(var(--viewport-offset, 0px) + 8px); bottom: auto; margin: 0 auto; max-height: calc(var(--app-height, 100dvh) - 16px); }
+      dialog .toolbar { position: sticky; top: -14px; z-index: 2; background: #0f172a; padding: 5px 0; }
+      .toast { bottom: max(64px, env(safe-area-inset-bottom)); font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -332,6 +382,13 @@
 'use strict';
 const SAVE_KEY = 'floating_city_40_days_save';
 const BOARD_KEY = 'floating_city_40_days_leaderboard_v1';
+const LEADERBOARD_API = 'https://floating-city-world-leaderboard.rosy-betta-9856.chatgpt.site';
+let sharedRows = [];
+let sharedStatus = 'idle';
+let sharedRecordedRun = null;
+let sharedRequest = 0;
+let submittingScore = false;
+const runTokens = new Map();
 const VERSION = 2;
 const goods = [
   { id: 'blindbox', name: ['限量潮玩盲盒', 'Limited blind boxes'], min: 15, max: 90, size: 1, icon: '🎁' },
@@ -375,6 +432,13 @@ let modal = null;
 let currentTrade = null;
 let lastRoll = null;
 let noticeTimer;
+let marketPage = 0;
+const shortNames = [['潮玩盲盒', 'Blind boxes'], ['稀有卡牌', 'Rare cards'], ['偶像周边', 'K-pop merch'], ['联名球鞋', 'Sneakers'], ['游戏掌机', 'Handhelds'], ['无人机', 'Drones'], ['AI眼镜', 'AI glasses'], ['算力显卡', 'AI GPUs'], ['比特币凭证', 'Bitcoin notes']];
+const compactMoney = n => `${n < 0 ? '-' : ''}¥${new Intl.NumberFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.abs(n))}`;
+function marketPageSize() { return matchMedia('(max-width: 900px)').matches ? Math.min(9, Math.max(1, Math.floor(((visualViewport?.height || innerHeight) - 244) / 46))) : 9; }
+function changeMarketPage(delta) { marketPage += delta; render(); }
+function closePanels() { document.querySelectorAll('.mobileHeader details').forEach(el => el.open = false); }
+function travelSelected() { const value = $('destination').value; if (value !== '') travel(Number(value)); }
 const $ = id => document.getElementById(id);
 const t = (zh, en) => lang === 'zh' ? zh : en;
 const nameOf = item => t(...item.name);
@@ -423,22 +487,32 @@ function render() {
     [t('债务', 'Debt'), money(state.debt), 'badText'], [t('健康', 'Health'), `${state.health}/100`, ''],
     [t('仓位', 'Storage'), `${usedSpace()}/${state.capacity}`, ''], [t('净资产', 'Net worth'), money(netWorth()), netWorth() >= 0 ? 'goodText' : 'badText']
   ];
-  $('app').innerHTML = `<header><div><div class="eyebrow">${t('40天 / 环球交易', '40 DAYS / WORLD TOUR')}</div><h1>${t('浮城四十日', 'Floating City: 40 Days')}</h1><div class="subtitle">${t('十座世界名城。四十天。你能走多远？', 'Ten world cities. Forty days. How far can you go?')}</div></div>
-    <div class="topButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('排行榜', 'Leaderboard'), "openModal('board')")}${button(t('English', '中文'), 'toggleLanguage()')}</div></header>
-    <div class="grid"><aside class="panel"><div class="sectionTitle">${t('你的旅程', 'Your journey')}<span class="small">${state.ended ? t('已结束', 'Finished') : t('进行中', 'In progress')}</span></div>
+  const pageSize = marketPageSize();
+  marketPage = Math.max(0, Math.min(marketPage, Math.ceil(goods.length / pageSize) - 1));
+  const visibleGoods = goods.map((g, i) => ({g, i})).slice(marketPage * pageSize, (marketPage + 1) * pageSize);
+  const statusHtml = `<div class="sectionTitle">${t('你的旅程', 'Your journey')}<span class="small">${state.ended ? t('已结束', 'Finished') : t('进行中', 'In progress')}</span></div>
     <div class="stats">${stats.map(([label, value, cls]) => `<div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join('')}</div>
     <div class="bar" role="meter" aria-label="${t('仓位使用', 'Storage used')}" aria-valuemin="0" aria-valuemax="${state.capacity}" aria-valuenow="${usedSpace()}"><div class="barFill" style="width:${Math.min(100, usedSpace() / state.capacity * 100)}%"></div></div>
     <p class="small">⌂ ${nameOf(homes[state.home])} · ${t('房产价值', 'Property value')} ${money(homes[state.home].price)}</p>
     <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), 'workGig()', state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), 'rest()', state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}</div>
     <p class="hint">${t('每天银行 +2%，债务 +10%。旅行、工作、休息消耗一天。交易、买房和骰子不耗时。', 'Each day: bank +2%, debt +10%. Travel, work and rest take a day. Trading, property and dice take no time.')}</p>
-    <p class="hint">${t('统一使用虚构游戏货币 ¥，所有商品和价格均为虚构。', 'All cities use fictional game currency ¥. Goods and prices are fictional.')}</p></aside>
-    <main class="panel"><div class="sectionTitle">${t('全球交易市场', 'Global market')}<span class="small">${newsText()}</span></div><div class="marketList">${goods.map((g, i) => {
+    <p class="hint">${t('统一使用虚构游戏货币 ¥，所有商品和价格均为虚构。', 'All cities use fictional game currency ¥. Goods and prices are fictional.')}</p>`;
+  $('app').innerHTML = `<header class="desktopHeader"><div><div class="eyebrow">${t('40天 / 环球交易', '40 DAYS / WORLD TOUR')}</div><h1>${t('浮城四十日', 'Floating City: 40 Days')}</h1><div class="subtitle">${t('十座世界名城。四十天。你能走多远？', 'Ten world cities. Forty days. How far can you go?')}</div></div>
+    <div class="topButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('排行榜', 'Leaderboard'), "openModal('board')")}${button(t('English', '中文'), 'toggleLanguage()')}</div></header>
+    
+    <div class="mobileHeader"><div class="mobileTop"><div class="mobileTitle">${nameOf(locations[state.location])}<small>${t('第', 'Day ')}${state.day}/40</small></div><div class="mobileTopControls"><button type="button" class="boardShortcut" aria-label="${t('全球排行榜', 'World leaderboard')}" onclick="openModal('board')">🏆</button>${button(t('EN', '中'), 'toggleLanguage()')}<details class="gameMenu"><summary aria-label="${t('游戏菜单', 'Game menu')}">☰</summary><div class="mobilePanel"><div class="sectionTitle">${t('游戏菜单', 'Game menu')}</div><div class="menuButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('旅程记录', 'Journal'), "openModal('journal')")}</div></div></details></div></div>
+    <details class="mobileStatus"><summary aria-label="${t('展开完整状态和操作', 'Expand status and actions')}"><div class="statusStrip"><div class="statusChip" title="${t('现金', 'Cash')}: ${money(state.cash)}">💵 <span>${compactMoney(state.cash)}</span></div><div class="statusChip" title="${t('健康', 'Health')}">♥ <span>${state.health}</span></div><div class="statusChip" title="${t('仓位', 'Storage')}">▣ <span>${usedSpace()}/${state.capacity}</span></div><div class="statusChip" title="${t('净资产', 'Net worth')}: ${money(netWorth())}">◆ <span>${compactMoney(netWorth())}</span><span class="expandHint">⌄</span></div></div></summary><div class="mobilePanel">${statusHtml}</div></details></div>
+    <div class="grid"><aside class="panel desktopStatus">${statusHtml}</aside><main class="panel marketPanel"><div class="sectionTitle marketHeading">${t('全球交易市场', 'Global market')}<span class="small">${newsText()}</span></div><div class="marketList" style="--rows:${pageSize}">${visibleGoods.map(({g, i}) => {
       const average = Math.round((g.min + g.max) / 2);
       const signal = state.prices[i] < average * .65 ? t('偏低', 'Low') : state.prices[i] > average * 1.35 ? t('偏高', 'High') : t('正常', 'Normal');
-      return `<article class="marketCard"><div><strong>${g.icon} ${nameOf(g)}</strong><span class="small">${t('占位', 'Space')} ${g.size} · ${t('持有', 'Owned')} ${state.inv[i]}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal} · ${t('参考', 'Ref.')} ${money(average)}</span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
+      return `<article class="marketCard"><div><strong><span class="itemIcon" aria-hidden="true">${g.icon}</span><span class="fullName">${nameOf(g)}</span><span class="shortName">${t(...shortNames[i])}</span></strong><span class="small"><span class="unitSize">${t('占位', 'Space')} ${g.size} · </span> ${t('持有', 'Owned')} ${state.inv[i]}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal}<span class="reference"> · ${t('参考', 'Ref.')} ${money(average)}</span></span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
     }).join('')}</div>
-    <div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>
-    <div class="sectionTitle spacer">${t('旅程记录', 'Travel journal')}</div><div class="log">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div></main></div>`;
+    <div class="marketPager">${button('‹', 'changeMarketPage(-1)', marketPage === 0)}<span>${t('商品', 'Items')} ${marketPage * pageSize + 1}–${Math.min((marketPage + 1) * pageSize, goods.length)} / ${goods.length} · ${t('持有数量显示在名称下方', 'Holdings shown below each item')}</span>${button('›', 'changeMarketPage(1)', (marketPage + 1) * pageSize >= goods.length)}</div><div class="desktopTravel"><div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>
+    </div><div class="desktopJournal"><div class="sectionTitle spacer">${t('旅程记录', 'Travel journal')}</div><div class="log">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div></div></main></div>
+    <nav class="mobileDock" aria-label="${t('旅行', 'Travel')}"><button type="button" aria-label="${t('旅程记录', 'Travel journal')}" onclick="openModal('journal')">☷</button><select id="destination" aria-label="${t('下一站城市', 'Next destination')}" ${state.ended ? 'disabled' : ''}><option value="">${t('选择下一站 · 1天', 'Next city · 1 day')}</option>${locations.map((loc,i) => `<option value="${i}" ${i===state.location ? 'disabled' : ''}>${loc.flag} ${nameOf(loc)}${i===state.location ? t('（当前）', ' (here)') : ''}</option>`).join('')}</select>${button(t('出发 →', 'Travel →'), 'travelSelected()', state.ended, 'primary')}</nav>`;
+  document.querySelectorAll('.mobileHeader summary').forEach(summary => summary.addEventListener('click', () => {
+    document.querySelectorAll('.mobileHeader details').forEach(details => { if (details !== summary.parentElement) details.open = false; });
+  }));
 }
 function closeModal() {
   if ($('dialog').open) $('dialog').close();
@@ -447,11 +521,13 @@ function closeModal() {
   lastRoll = null;
 }
 function openModal(kind) {
+  closePanels();
   if (kind === 'board' && state.ended) kind = 'ending';
   if (state.ended && ['homes', 'dice', 'trade'].includes(kind)) return;
   modal = kind;
   renderModal();
   if (!$('dialog').open) $('dialog').showModal();
+  if (kind === 'board' || kind === 'ending') refreshLeaderboard();
 }
 function toggleLanguage() {
   const values = {};
@@ -464,19 +540,61 @@ function toggleLanguage() {
     Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
   }
 }
-function boardEntries() {
+function localBoardEntries() {
   try {
     const rows = JSON.parse(localStorage.getItem(BOARD_KEY) || '[]');
     if (!Array.isArray(rows) || !rows.every(r => r && typeof r.runId === 'string' && typeof r.name === 'string' && r.name.length <= 24 && Number.isSafeInteger(r.score) && typeof r.date === 'string' && Number.isFinite(Date.parse(r.date)))) throw Error('board');
     return rows.sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
   } catch (_) { return null; }
 }
-function boardHtml() {
-  const rows = boardEntries();
-  if (rows === null) return `<p>${t('排行榜无法读取。请检查浏览器存储设置；旧数据不会被覆盖。', 'Leaderboard unavailable. Check browser storage settings; existing data will not be overwritten.')}</p>`;
-  if (!rows.length) return `<p>${t('还没有记录，成为第一位上榜玩家！', 'No records yet. Be the first name on the board!')}</p>`;
+function boardEntries() { return sharedRows; }
+function rowsHtml(rows) {
+  if (!rows?.length) return `<p>${t('还没有记录，成为第一位上榜玩家！', 'No records yet. Be the first name on the board!')}</p>`;
   return `<ol class="board">${rows.map((r, i) => `<li><span>${i + 1}</span><span>${escapeHtml(r.name)}<br><span class="small">${escapeHtml(new Date(r.date).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US'))}</span></span><span class="score">${money(r.score)}</span></li>`).join('')}</ol>`;
 }
+function boardHtml() {
+  const status = sharedStatus === 'error' ? t('连接失败，下面的成绩可能不是最新。请重试；未提交的成绩不会被标记为已发布。', 'Connection failed. Listed scores may be out of date. Retry; unsent scores are not marked as published.') : sharedStatus === 'loading' ? t('正在读取全球排行榜…', 'Loading world leaderboard…') : t('全球共享 · 前100名 · 按最终净资产排名', 'Shared worldwide · Top 100 · Ranked by final net worth');
+  return `<p class="small" role="status">${status}</p>${sharedStatus === 'error' ? button(t('重试连接', 'Retry connection'), 'refreshLeaderboard()') : ''}${rowsHtml(sharedRows)}`;
+}
+async function leaderboardRequest(path, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${LEADERBOARD_API}${path}`, { ...options, signal: controller.signal, credentials: 'omit' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+  } finally { clearTimeout(timer); }
+}
+function renderBoardPreservingInput() {
+  if (!['board', 'ending'].includes(modal)) return;
+  const input = $('playerName'), value = input?.value, focused = document.activeElement === input;
+  renderModal();
+  if ($('playerName') && value !== undefined) { $('playerName').value = value; if (focused) $('playerName').focus({preventScroll:true}); }
+}
+async function refreshLeaderboard() {
+  const request = ++sharedRequest, runId = state.runId;
+  sharedStatus = 'loading'; renderBoardPreservingInput();
+  try {
+    const data = await leaderboardRequest(`/api/leaderboard?runId=${encodeURIComponent(runId)}`);
+    if (request !== sharedRequest) return;
+    if (!Array.isArray(data.entries) || !data.entries.every(r => r && typeof r.runId === 'string' && typeof r.name === 'string' && Number.isSafeInteger(r.score) && Number.isFinite(Date.parse(r.date)))) throw Error('Invalid board');
+    sharedRows = data.entries; sharedStatus = 'ready';
+    sharedRecordedRun = data.recorded ? runId : null;
+  } catch (_) { if (request === sharedRequest) sharedStatus = 'error'; }
+  if (request === sharedRequest) renderBoardPreservingInput();
+}
+function runToken(runId) {
+  if (runTokens.has(runId)) return runTokens.get(runId);
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('floating_city_score_tokens') || '{}'); } catch (_) {}
+  let token = saved?.[runId];
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) token = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, '0')).join('');
+  runTokens.set(runId, token);
+  try { localStorage.setItem('floating_city_score_tokens', JSON.stringify(Object.fromEntries([...Object.entries(saved || {}).slice(-49), [runId, token]]))); } catch (_) {}
+  return token;
+}
+
 function endingTitle() {
   if (state.health <= 0) return t('倒在半路', 'The road ends early');
   if (state.debt > 0) return t('债务压顶', 'Buried in debt');
@@ -489,21 +607,27 @@ function renderModal() {
   if (modal === 'intro') {
     title = t('四十天，环游世界', 'Forty days. A world of opportunity.');
     body = `<p>${t('从上海出发，带着 ¥2,000 和 ¥5,500 债务。在十座城市间交易潮流商品，买房扩仓，争夺财富榜。', 'Start in Shanghai with ¥2,000 and ¥5,500 of debt. Trade modern collectibles and tech across ten cities, buy property and build your fortune.')}</p><p>${t('活下来、还清债务，在第40天结束时结算。存档可下载为本地JSON文件。', 'Survive, repay your debt and settle at the end of day 40. Download your save as a local JSON file.')}</p>${button(t('开始旅程', 'Start journey'), 'closeModal()', false, 'primary')}`;
+  } else if (modal === 'journal') {
+    title = t('旅程记录', 'Travel journal');
+    body = `<div class="journalEntries">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div>`;
   } else if (modal === 'trade') {
     const { type, index } = currentTrade;
     const g = goods[index], max = tradeLimit(type, index);
     title = `${type === 'buy' ? t('买入', 'Buy') : t('卖出', 'Sell')} · ${nameOf(g)}`;
-    body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max || ''}" required autofocus /><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
+    body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max || ''}" required autofocus /><div class="tradeQuantityButtons">${button(t('最少', 'Min'), "$('tradeQty').value=1", !max)}${button(t('最大', 'Max'), `$('tradeQty').value=${max}`, !max)}</div><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
   } else if (modal === 'homes') {
     title = t('全球房产 · 升级住所', 'Property market · Trade up');
     body = `<p>${t('只保留一套住所。旧房按原价抵扣，支付差价升级；房产计入净资产，仓位为总容量。', 'Own one home. Trade in your current home at its purchase value and pay the difference. Property counts toward net worth; storage is total capacity.')}</p><div class="homes">${homes.map((home, i) => `<article class="home"><strong>${nameOf(home)}</strong><p>${money(home.price)}<br>${t('总仓位', 'Total storage')}: ${home.capacity}</p>${button(i === state.home ? t('当前住所', 'Current home') : i < state.home ? t('已超越', 'Earlier tier') : `${t('升级', 'Upgrade')} · ${money(home.price - homes[state.home].price)}`, `buyHome(${i})`, i <= state.home || state.cash < home.price - homes[state.home].price, 'primary')}</article>`).join('')}</div>`;
   } else if (modal === 'dice') {
     title = t('幸运骰子', 'Lucky dice');
     body = `<p>${t('掷出4、5、6获胜，返还下注的2倍（含本金）；1、2、3输掉下注。胜率50%，不消耗天数，只使用游戏现金。', 'Roll 4, 5 or 6 to receive 2× your stake including the original bet. Roll 1, 2 or 3 and lose the stake. A 50% win chance, no day cost, game cash only.')}</p><p>${t('可用现金', 'Available cash')}: ${money(state.cash)}</p><div class="dice" aria-hidden="true">${lastRoll ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][lastRoll.roll - 1] : '⚄'}</div><p role="status">${lastRoll ? `${t('点数', 'Roll')}: ${lastRoll.roll} · ${lastRoll.roll >= 4 ? t('获胜，净赚', 'Won, net gain') : t('未获胜，损失', 'Lost')} ${money(lastRoll.bet)}` : ''}</p><form onsubmit="event.preventDefault();rollDice()"><label for="bet">${t('下注金额（整数）', 'Your stake (whole units)')}</label><input id="bet" type="number" inputmode="numeric" min="1" max="${state.cash}" step="1" required value="${Math.min(state.cash, lastRoll?.bet || 100) || ''}" /><button class="primary" ${!state.cash ? 'disabled' : ''}>${t('下注并掷骰', 'Bet & roll')}</button></form>`;
+  } else if (modal === 'localBoard') {
+    title = t('旧设备成绩', 'Device records');
+    body = `<p>${t('这些是旧版保存在本浏览器的成绩，不会自动发布到全球榜。', 'These older records are stored in this browser and are not automatically published worldwide.')}</p>${rowsHtml(localBoardEntries())}`;
   } else if (modal === 'board' || modal === 'ending') {
     title = modal === 'ending' ? endingTitle() : t('财富排行榜', 'Wealth leaderboard');
-    const already = boardEntries()?.some(r => r.runId === state.runId);
-    body = `${modal === 'ending' ? `<p>${t('最终净资产', 'Final net worth')}: <strong class="value goodText">${money(netWorth())}</strong><br>${t('现金', 'Cash')} ${money(state.cash)} · ${t('银行', 'Bank')} ${money(state.bank)} · ${t('债务', 'Debt')} ${money(state.debt)}</p>${already ? `<p>${t('本局成绩已记录。', 'This run has been recorded.')}</p>` : `<form onsubmit="event.preventDefault();submitScore()"><label for="playerName">${t('留下你的名字（最多24字符）', 'Your name (up to 24 characters)')}</label><input id="playerName" type="text" maxlength="24" required autocomplete="nickname" placeholder="${t('玩家名称', 'Player name')}" /><button class="primary">${t('记录成绩', 'Record score')}</button></form>`}${button(t('再玩一次', 'Play again'), 'newGame(false)')}<h3>${t('财富排行榜', 'Wealth leaderboard')}</h3>` : ''}${boardHtml()}<p class="hint">${t('此排行榜持久保存在本浏览器中。清除网站数据会删除记录；不同设备之间不会自动同步。', 'Records persist in this browser. Clearing site data deletes them; other devices do not sync automatically.')}</p>`;
+    const already = sharedRecordedRun === state.runId || boardEntries().some(r => r.runId === state.runId);
+    body = `${modal === 'ending' ? `<p>${t('最终净资产', 'Final net worth')}: <strong class="value goodText">${money(netWorth())}</strong><br>${t('现金', 'Cash')} ${money(state.cash)} · ${t('银行', 'Bank')} ${money(state.bank)} · ${t('债务', 'Debt')} ${money(state.debt)}</p>${already ? `<p>${t('本局成绩已记录。', 'This run has been recorded.')}</p>` : `<form onsubmit="event.preventDefault();submitScore()"><label for="playerName">${t('留下你的名字（最多24字符）', 'Your name (up to 24 characters)')}</label><input id="playerName" type="text" maxlength="24" required autocomplete="nickname" placeholder="${t('玩家名称', 'Player name')}" /><button class="primary" id="submitScoreButton" ${submittingScore ? 'disabled' : ''}>${submittingScore ? t('正在发布…', 'Publishing…') : t('发布全球成绩', 'Publish score')}</button></form>`}${button(t('再玩一次', 'Play again'), 'newGame(false)')}<h3>${t('财富排行榜', 'Wealth leaderboard')}</h3>` : ''}${boardHtml()}<p class="hint">${t('成绩保存在网站数据库中，所有玩家都能看到。玩家自行提交成绩。', 'Records are saved to the website database and visible to everyone. Community scores are submitted by players.')} ${button(t('旧设备成绩', 'Device records'), "openModal('localBoard')")}</p>`;
   }
   $('dialog').innerHTML = `<div class="toolbar">${button(t('English', '中文'), 'toggleLanguage()')}${button(t('关闭', 'Close'), 'closeModal()')}</div><h2 id="dialogTitle">${title}</h2>${body}`;
 }
@@ -622,22 +746,32 @@ function endGame(reason) {
   addLog(`旅程结束，最终净资产 ¥${netWorth()}。`, `Journey ended. Final net worth: ¥${netWorth()}.`);
   render(); openModal('ending');
 }
-function submitScore() {
-  if (!state.ended) return;
+async function submitScore() {
+  if (!state.ended || submittingScore) return;
   const name = $('playerName').value.trim();
-  if (!name || name.length > 24) return notify('请输入1至24字符的名称。', 'Enter a name between 1 and 24 characters.');
-  const rows = boardEntries();
-  if (rows === null) return notify('无法读取排行榜，成绩尚未保存。', 'Leaderboard unavailable. Your score has not been saved.');
-  if (rows.some(row => row.runId === state.runId)) { state.submitted = true; renderModal(); return; }
-  rows.push({ runId: state.runId, name, score: netWorth(), date: new Date().toISOString() });
+  if (!name || name.length > 24 || /[\u0000-\u001f\u007f]/u.test(name)) return notify('请输入1至24字符的名称。', 'Enter a name between 1 and 24 characters.');
+  const run = JSON.parse(JSON.stringify(state));
+  const token = runToken(run.runId);
+  submittingScore = true; renderBoardPreservingInput();
   try {
-    localStorage.setItem(BOARD_KEY, JSON.stringify(rows));
-    state.submitted = true;
-    // Keep a recoverable copy of the completed run as well as its board entry.
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(saveEnvelope())); } catch (_) {}
-    renderModal(); notify('成绩已永久记录到本浏览器。', 'Score recorded in this browser.');
-  } catch (_) { notify('存储不可用或已满，成绩未保存。可保存游戏文件后重试。', 'Storage unavailable or full. Save your game file and retry later.'); }
+    await leaderboardRequest('/api/runs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({runId:run.runId, token})});
+    const final = {cash:run.cash,bank:run.bank,debt:run.debt,home:run.home,day:run.day,health:run.health,ended:run.ended,endReason:run.endReason,inventoryEmpty:run.inv.every(n => n === 0)};
+    const data = await leaderboardRequest('/api/leaderboard', {method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body:JSON.stringify({runId:run.runId,name,final})});
+    if (!data.ok || data.entry?.runId !== run.runId) throw Error('Invalid response');
+    if (state.runId === run.runId) { state.submitted = true; sharedRecordedRun = run.runId; }
+    try {
+      const rows = localBoardEntries() || [];
+      if (!rows.some(r => r.runId === run.runId)) rows.push(data.entry);
+      localStorage.setItem(BOARD_KEY, JSON.stringify(rows));
+      if (state.runId === run.runId) localStorage.setItem(SAVE_KEY, JSON.stringify(saveEnvelope()));
+    } catch (_) {}
+    notify('成绩已发布，所有玩家都能看到！', 'Score published for everyone to see!');
+    await refreshLeaderboard();
+  } catch (_) {
+    notify('成绩尚未发布。请检查网络并重试，或保存游戏文件稍后继续。', 'Score not published. Check your connection and retry, or save your game file for later.');
+  } finally { submittingScore = false; renderBoardPreservingInput(); }
 }
+
 function saveEnvelope() {
   return { game: 'floating-city-40-days', version: VERSION, savedAt: new Date().toISOString(), language: lang, goods: goods.map(g => g.id), cities: locations.map(l => l.id), state };
 }
@@ -727,6 +861,17 @@ document.addEventListener('keydown', event => {
   if (event.target.closest('input, textarea, select, [contenteditable]') || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
   if (event.key.toLowerCase() === 's') { event.preventDefault(); saveGame(); }
 });
+let resizeFrame;
+function resizeGame() {
+  document.documentElement.style.setProperty('--app-height', `${visualViewport?.height || innerHeight}px`);
+  document.documentElement.style.setProperty('--viewport-offset', `${visualViewport?.offsetTop || 0}px`);
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => { if (state) render(); });
+}
+window.addEventListener('resize', resizeGame);
+window.visualViewport?.addEventListener('resize', resizeGame);
+window.visualViewport?.addEventListener('scroll', resizeGame);
+resizeGame();
 newGame(false);
 openModal('intro');
 
