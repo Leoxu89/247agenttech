@@ -1,28 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chatbase Chatbot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A collection of useful tools, playful experiments, and independent projects by 247 Agent Tech.">
+  <meta name="theme-color" content="#f5f3ed">
+  <title>247 Agent Tech — Projects & Experiments</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232a4139'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Georgia' font-size='30' fill='%23f5f3ed'%3E247%3C/text%3E%3C/svg%3E">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
+    :root { color-scheme: light; --paper: #f5f3ed; --ink: #252e29; --muted: #697168; --line: #d7dbd1; --green: #2a5945; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    a:focus-visible { outline: 3px solid var(--green); outline-offset: 6px; border-radius: 3px; }
+    .skip { position: absolute; left: 24px; top: -80px; padding: 12px; background: var(--paper); z-index: 2; }
+    .skip:focus { top: 12px; }
+    .wrap { width: min(1080px, calc(100% - 96px)); margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 32px 0; border-bottom: 1px solid var(--line); gap: 20px; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+    .mark { display: grid; place-items: center; width: 38px; height: 38px; background: var(--ink); color: var(--paper); border-radius: 50%; font: 17px Georgia, serif; }
+    .nav { font-size: 12px; color: var(--muted); }
+    .nav:hover { color: var(--green); }
+    .intro { padding: 88px 0 70px; display: grid; grid-template-columns: 1fr 200px; align-items: center; gap: 32px; }
+    .eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--green); }
+    h1 { font: normal clamp(46px, 5.5vw, 70px)/1.08 Georgia, "Times New Roman", serif; letter-spacing: -2.5px; margin: 22px 0 24px; }
+    h1 em { color: var(--green); font-weight: normal; }
+    .intro p { max-width: 440px; color: var(--muted); font-size: 15px; line-height: 1.85; margin: 0; }
+    .orbit { width: 180px; height: 180px; color: #728775; justify-self: end; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--ink); padding-bottom: 17px; gap: 20px; }
+    h2 { font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; margin: 0; font-weight: 600; }
+    .section-head span { font: 12px Georgia, serif; color: var(--muted); }
+    .project { display: grid; grid-template-columns: 36px 64px 1fr 120px 32px; gap: 22px; align-items: center; padding: 30px 12px 30px 0; border-bottom: 1px solid var(--line); transition: background .2s; }
+    a.project:hover { background: #ebece4; }
+    .number { align-self: start; padding-top: 5px; color: var(--muted); font: 12px Georgia, serif; }
+    .icon { height: 60px; width: 60px; display: grid; place-items: center; border-radius: 15px; }
+    .chat { color: #3c654b; background: #e2e8dc; }
+    .game { color: #987440; background: #eee5d6; }
+    .calc { color: #5f718a; background: #e1e6ea; }
+    .icon svg { width: 28px; height: 28px; }
+    h3 { font: normal 28px/1.2 Georgia, "Times New Roman", serif; letter-spacing: -.6px; margin: 0 0 8px; }
+    .desc { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .category { color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; text-align: right; }
+    .arrow { width: 32px; height: 32px; display: grid; place-items: center; font-size: 22px; transition: transform .2s; }
+    a.project:hover .arrow { transform: translate(3px, -3px); color: var(--green); }
+    .next { display: flex; align-items: center; gap: 20px; margin: 29px 0 76px 58px; color: var(--muted); }
+    .plus { display: grid; place-items: center; width: 60px; height: 50px; border: 1px dashed #c7cdc2; border-radius: 12px; font-size: 25px; font-weight: 200; flex: none; }
+    .next p { margin: 0; font-size: 12px; line-height: 1.8; }
+    .next b { color: #525e52; font-size: 13px; font-weight: 500; }
+    footer { border-top: 1px solid var(--line); padding: 25px 0 30px; display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--muted); }
+    footer span:last-child { font: italic 13px Georgia, serif; }
+    @media (max-width: 650px) {
+      .wrap { width: calc(100% - 40px); }
+      header { padding: 23px 0; }
+      .nav { font-size: 11px; }
+      .intro { padding: 60px 0 48px; grid-template-columns: 1fr; gap: 0; }
+      h1 { letter-spacing: -1.8px; }
+      .orbit { display: none; }
+      .intro p { font-size: 14px; }
+      .project { grid-template-columns: 46px 1fr 24px; gap: 16px; padding: 26px 0; }
+      .number, .category { display: none; }
+      .icon { width: 46px; height: 46px; border-radius: 12px; align-self: start; }
+      .icon svg { width: 24px; height: 24px; }
+      h3 { font-size: 25px; }
+      .desc { font-size: 12px; }
+      .next { margin: 26px 0 54px; gap: 16px; }
+      .plus { width: 46px; }
+      footer { font-size: 10px; flex-wrap: wrap; }
     }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
   </style>
 </head>
 <body>
-  <iframe
-    src="https://www.chatbase.co/chatbot-iframe/sByvz9dfrxqZnwqHxVpBG"
-    frameborder="0"
-    allow="microphone"
-  ></iframe>
+  <a class="skip" href="#projects">Skip to projects</a>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./" aria-label="247 Agent Tech home"><span class="mark" aria-hidden="true">247</span> Agent Tech</a>
+      <a class="nav" href="#projects">Explore projects <span aria-hidden="true">↘</span></a>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="welcome">
+        <div>
+          <span class="eyebrow">An independent collection</span>
+          <h1 id="welcome">Small ideas.<br><em>Possibilities ahead.</em></h1>
+          <p>A home for useful tools, playful experiments, and things built out of curiosity. Pick a project and explore.</p>
+        </div>
+        <svg class="orbit" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+          <circle cx="100" cy="100" r="80" stroke="currentColor" stroke-opacity=".25"/>
+          <ellipse cx="100" cy="100" rx="80" ry="31" transform="rotate(-40 100 100)" stroke="currentColor" stroke-opacity=".6"/>
+          <ellipse cx="100" cy="100" rx="31" ry="80" transform="rotate(-40 100 100)" stroke="currentColor" stroke-opacity=".6"/>
+          <circle cx="100" cy="100" r="6" fill="#2a5945"/>
+          <circle cx="151" cy="39" r="5" fill="#2a5945"/>
+          <path d="M100 8v11M100 181v11M8 100h11M181 100h11" stroke="currentColor" stroke-opacity=".5"/>
+        </svg>
+      </section>
+      <section id="projects" aria-labelledby="projects-title">
+        <div class="section-head"><h2 id="projects-title">The project index</h2><span>01 — 03</span></div>
+        <!-- Add future projects by copying a project link and updating its number, URL, title and description. -->
+        <a class="project" href="chatbot/">
+          <span class="number" aria-hidden="true">01</span>
+          <span class="icon chat" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 5h18a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H13l-7 5v-5a3 3 0 0 1-2-3V8a3 3 0 0 1 3-3Z"/><path d="M10 12h12M10 17h8"/></svg></span>
+          <div><h3>Chatbot</h3><p class="desc">A conversation is a good place to start.<br>Ask a question and see where it takes you.</p></div>
+          <span class="category">AI · Conversation</span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="project" href="40-days/">
+          <span class="number" aria-hidden="true">02</span>
+          <span class="icon game" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="7" width="22" height="21" rx="3"/><path d="M5 13h22M11 4v6M21 4v6"/><path d="M11 18h3v5M14 21h-5M20 18a2 2 0 0 1 2 2v1a2 2 0 0 1-4 0v-1a2 2 0 0 1 2-2Z"/></svg></span>
+          <div><h3>40 Day <span lang="zh" style="font: 14px sans-serif; color: var(--muted); white-space: nowrap;">浮城四十日</span></h3><p class="desc">Ten cities. Forty days. Make every move count.<br>A browser game of trading, survival, and a little luck.</p></div>
+          <span class="category">Game · Strategy</span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="project" href="retirement.html">
+          <span class="number" aria-hidden="true">03</span>
+          <span class="icon calc" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5v22h23M10 21l6-7 5 3 7-10M22 7h6v6"/></svg></span>
+          <div><h3>Retirement &amp; Happiness</h3><p class="desc">Explore the balance between money and time.<br>A calculator for thinking about your next chapter.</p></div>
+          <span class="category">Tool · Life planning</span><span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <div class="next"><span class="plus" aria-hidden="true">+</span><p><b>Room for the next idea.</b><br>More projects will find a home here.</p></div>
+      </section>
+    </main>
+    <footer><span>© 2026 247 Agent Tech</span><span>Always curious. Always building.</span></footer>
+  </div>
 </body>
 </html>
