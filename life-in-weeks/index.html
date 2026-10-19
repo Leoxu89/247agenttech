@@ -218,12 +218,15 @@ details { border-top:1px solid var(--line); }summary { display:flex; gap:10px; a
     if (!total) return;
     const width = space.clientWidth, height = space.clientHeight;
     const gap = selectedView === 'weeks' ? 1 : selectedView === 'months' ? 2 : 4;
-    const options = selectedView === 'weeks' ? [52,104,156,208]
-      : selectedView === 'months' ? [12,24,36,48,60] : [5,10,20];
+    // Dense views need a row length that matches the actual panel proportions.
+    // Fixed year-sized rows left weeks narrow and months surrounded by empty space.
+    // Keep the established yearly composition; search every viable row length otherwise.
+    const options = selectedView === 'years' ? [5,10,20]
+      : Array.from({ length:Math.min(total,Math.max(1,Math.floor(width/(gap+1)))) },(_,i)=>i+1);
     let best = { size:0, cols:options[0], rows:Math.ceil(total/options[0]) };
     options.forEach(cols => {
       const rows = Math.ceil(total / cols);
-      const size = Math.max(0.1, Math.min((width-gap*(cols-1))/cols,(height-gap*(rows-1))/rows,selectedView==='years'?44:20));
+      const size = Math.max(0.1, Math.min((width-gap*(cols-1))/cols,(height-gap*(rows-1))/rows,selectedView==='years'?44:Infinity));
       if (size > best.size) best = { size, cols, rows };
     });
     grid.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
