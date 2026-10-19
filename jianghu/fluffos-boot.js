@@ -1,0 +1,1 @@
+window.FLUFFOS_BOOT={mount:"/mudlib",config:"mudlib.cfg"};
