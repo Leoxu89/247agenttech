@@ -19,8 +19,8 @@ Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
   Promise.all([
-    fetch('mudlib-manifest.json').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
-    fetch('mudlib.data.gz').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
+    fetch('mudlib-manifest.json?v=2').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
+    fetch('mudlib.data.gz?v=2').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot().catch(e => { window.saveUnavailable = String(e); return []; })
   ]).then(([entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);

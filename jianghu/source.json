@@ -3,5 +3,10 @@
   "commit": "c1b87db0014c85514e053b2a149a2efccb9914e3",
   "driver": "v2026.1001.0",
   "game_source_changes": [],
-  "config_overlay": "mudlib directory: /mudlib"
+  "overlays": [
+    "adm/daemons/pocketui.lpc",
+    "adm/etc/preload: append pocketui"
+  ],
+  "config_overlay": "mudlib directory: /mudlib",
+  "ui_version": "2.0"
 }

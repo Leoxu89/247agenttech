@@ -389,7 +389,7 @@
     body.compact #inputbar { padding-bottom: 0; }
   }
 </style>
-<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="mobile.css?v=2">
 </head>
 <body>
 <header>
@@ -644,7 +644,7 @@
 <script src="vendor/addon-fit.js"></script>
 <script src="telnet.js"></script>
 <script src="fluffos-boot.js"></script>
-<script src="mudlib.js"></script>
+<script src="mudlib.js?v=2"></script>
 <script src="fluffos.js"></script>
 <script>
 'use strict';
@@ -1423,8 +1423,16 @@ if (!window.FLUFFOS_BOOT) {
 }
 const BOOT = window.FLUFFOS_BOOT || { mount: '/testsuite', config: 'etc/config.test' };
 
-fetch('fluffos.wasm.gz').then(r => { if (!r.ok) throw Error('引擎下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }).then(bytes => { Module.instantiateWasm=(imports,receive)=>{ WebAssembly.instantiate(bytes,imports).then(result=>receive(result.instance)).catch(e=>Module.onAbort(e)); return {}; }; return createFluffOS(Module); }).then((M) => {
-  Module = M;
+fetch('fluffos.wasm.gz').then(r => {
+  if (!r.ok) throw Error('游戏内核下载失败');
+  return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+}).then(bytes => {
+  Module.instantiateWasm=(imports,receive)=>{
+    WebAssembly.instantiate(bytes,imports).then(result=>receive(result.instance)).catch(e=>Module.onAbort(e));
+    return {};
+  };
+  return createFluffOS(Module);
+}).then((M) => {
   driver = M;
   BootProgress.set('booting driver…', null);
   M.FS.chdir(BOOT.mount);
@@ -1557,6 +1565,6 @@ fetch('fluffos.wasm.gz').then(r => { if (!r.ok) throw Error('引擎下载失败'
     'mount: ' + BOOT.mount + '\nconfig: ' + BOOT.config);
 });
 </script>
-<script src="mobile.js"></script>
+<script src="mobile.js?v=2"></script><link rel="stylesheet" href="pocket.css?v=2"><script src="pocket.js?v=2"></script>
 </body>
 </html>
