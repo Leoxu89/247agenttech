@@ -19,9 +19,9 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('pocketui.lpc?v=5a32d09bc7e2').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
-    fetch('mudlib-manifest.json?v=5a32d09bc7e2').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
-    fetch('mudlib.data.gz?v=5a32d09bc7e2').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
+  Promise.all([fetch('pocketui.lpc?v=38c42e97b685').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+    fetch('mudlib-manifest.json?v=38c42e97b685').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
+    fetch('mudlib.data.gz?v=38c42e97b685').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot().catch(e => { window.saveUnavailable = String(e); return []; })
   ]).then(([adapter, entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);

@@ -9,7 +9,7 @@ let mode='near',filter='',seenKey='',previewTarget=null;
 function region(key){return W.rooms[key]?.region||'未知区域';}
 function name(key){return W.rooms[key]?.name||'未录入场景';}
 function learn(state){if(!state?.ready)return;const r=state.room;for(const exit of r.exits){if(!exit.to)continue;for(const edge of exit.next||[]){const old=W.rooms[edge.to];W.rooms[edge.to]={...old,name:edge.name||old?.name||'前方道路',region:old?.region||W.regions[edge.to.split('/')[2]]||W.rooms[r.key]?.region||'江湖',exits:old?.exits||{}};}const oldNext=W.rooms[exit.to];if(exit.next)W.rooms[exit.to]={...oldNext,name:exit.name,region:oldNext?.region||W.regions[exit.to.split('/')[2]]||'江湖',exits:Object.fromEntries(exit.next.map(e=>[e.direction,e.to]))};}
-const old=W.rooms[r.key];W.rooms[r.key]={...old,name:r.name,region:old?.region||W.regions[r.key.split('/')[2]]||'江湖',exits:Object.fromEntries(r.exits.filter(e=>e.to).map(e=>[e.direction,e.to]))};}
+const old=W.rooms[r.key];W.rooms[r.key]={...old,area:old?.area||r.key.split('/')[2],name:r.name,region:old?.region||W.regions[r.key.split('/')[2]]||'江湖',exits:Object.fromEntries(r.exits.filter(e=>e.to).map(e=>[e.direction,e.to]))};}
 function find(target){const s=api().getState();learn(s);return N.path(W.rooms,s.room.key,target);}
 function route(target,label){
  const A=api(),s=A.getState();if(!s?.ready)return;

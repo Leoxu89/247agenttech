@@ -1,12 +1,16 @@
 // Zoomable source-backed atlas. Coordinates are schematic, exits stay authoritative.
 (()=>{
 let zoom=1,cx=500,cy=380,initialized=false;
-function render(parent,state){const A=PocketAPI,W=PocketWorld;parent.append(A.el('p','p-hint','拖动浏览，双指缩放；点亮点选择场景并寻路。无原始坐标的地区按道路排列，地图为示意图。'));
+function render(parent,state){const A=PocketAPI,W=PocketWorld;parent.append(A.el('p','p-hint','拖动浏览，双指缩放；点亮点选择场景并寻路。无原始坐标的地区按道路排列，地区与道路为示意位置。'));
  const viewport=A.el('div','p-world-viewport'),canvas=A.el('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label','可缩放世界地图，包含全部场景及当前位置');viewport.append(canvas);parent.append(viewport);
  const caption=A.el('p','p-world-caption'),controls=A.el('div','p-world-controls');parent.append(controls,caption);
  const areas=new Map(),all=Object.entries(W.rooms);for(const [id,r]of all){if(!areas.has(r.area))areas.set(r.area,[]);areas.get(r.area).push([id,r]);}
- const groups=[...areas.entries()].map(([id,rs],i)=>{const coords=rs.map(([,r])=>r.xy).filter(Boolean),x=coords.length?coords.reduce((a,b)=>a+b[0],0)/coords.length:Math.cos(i*2.4)*100000,y=coords.length?coords.reduce((a,b)=>a+b[1],0)/coords.length:Math.sin(i*2.4)*100000;return{id,name:rs[0][1].region,rs,x:500+Math.asinh(x/20000)*135,y:380-Math.asinh(y/20000)*115};});
- const points=[];for(const g of groups){g.rs.forEach(([id,r],i)=>{const xy=r.xy,x=xy?500+Math.asinh(xy[0]/20000)*135:g.x+Math.cos(i*2.399)*Math.sqrt(i)*2,y=xy?380-Math.asinh(xy[1]/20000)*115:g.y+Math.sin(i*2.399)*Math.sqrt(i)*2;points.push({id,r,x,y});});}
+ const groups=[...areas.entries()].map(([id,rs],i)=>{const coords=rs.map(([,r])=>r.xy).filter(Boolean),x=coords.length?coords.reduce((a,b)=>a+b[0],0)/coords.length:Math.cos(i*2.4)*100000,y=coords.length?coords.reduce((a,b)=>a+b[1],0)/coords.length:Math.sin(i*2.4)*100000;const span=axis=>{const sorted=coords.map(p=>p[axis]).sort((a,b)=>a-b);return Math.max(1,(sorted[Math.floor((sorted.length-1)*.9)]||0)-(sorted[Math.floor((sorted.length-1)*.1)]||0));};return{id,name:rs[0][1].region,rs,coordX:x,coordY:y,spanX:span(0),spanY:span(1),x:500+Math.asinh(x/20000)*135,y:380-Math.asinh(y/20000)*115};});
+ // Original areas mix local and global coordinate systems. Separate region
+ // anchors, then place their rooms relative to each region's own center.
+ for(const g of groups){g.ax=g.x;g.ay=g.y;}
+ for(let k=0;k<130;k++){for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){const a=groups[i],b=groups[j];let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<78){if(d<.1){dx=Math.cos(i*2.4);dy=Math.sin(i*2.4);d=1;}const m=(78-d)/d*.18;a.x-=dx*m;a.y-=dy*m;b.x+=dx*m;b.y+=dy*m;}}for(const g of groups){g.x=Math.max(35,Math.min(965,g.x));g.y=Math.max(35,Math.min(725,g.y));}}
+ const points=[];for(const g of groups){g.rs.forEach(([id,r],i)=>{const xy=r.xy,limit=v=>Math.max(-32,Math.min(32,v)),x=xy?g.x+limit((xy[0]-g.coordX)/g.spanX*48):g.x+Math.cos(i*2.399)*Math.min(28,Math.sqrt(i)*1.5),y=xy?g.y+limit(-(xy[1]-g.coordY)/g.spanY*48):g.y+Math.sin(i*2.399)*Math.min(28,Math.sqrt(i)*1.5);points.push({id,r,x,y});});}
  const lookup=new Map(points.map(p=>[p.id,p])),here=lookup.get(state.room.key),ctx=canvas.getContext('2d');let width=1,height=350,hits=[];
  if(!initialized&&here){cx=500;cy=380;initialized=true;}
  function screen(p){return[(p.x-cx)*zoom+width/2,(p.y-cy)*zoom+height/2];}
