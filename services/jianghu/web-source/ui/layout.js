@@ -1,0 +1,8 @@
+(()=>{
+function sync(){const vv=window.visualViewport;const h=Math.max(160,vv?.height||innerHeight);document.documentElement.style.setProperty('--app-height',h+'px');document.documentElement.style.setProperty('--app-top',(vv?.offsetTop||0)+'px');document.body.style.top='0px';document.body.style.height='100dvh';document.body.classList.remove('compact');}
+window.PocketLayout={sync};window.addEventListener('resize',sync);window.visualViewport?.addEventListener('resize',sync);window.visualViewport?.addEventListener('scroll',sync);
+document.addEventListener('focusin',e=>{if(e.target.matches('input,textarea,select,[contenteditable=true]')){document.body.classList.add('p-keyboard');sync();setTimeout(()=>e.target.scrollIntoView({block:'nearest'}),80);}});
+document.addEventListener('focusout',()=>{setTimeout(()=>{if(!document.activeElement?.matches('input,textarea,select,[contenteditable=true]'))document.body.classList.remove('p-keyboard');sync();},50);});
+function command(){const A=window.PocketAPI,b=A.show('输入指令');b.append(A.el('p','p-hint','常用动作均可用按钮操作。输入完可点发送，或随时关闭返回。'));const f=A.el('form','p-command-form'),input=A.el('input');input.setAttribute('aria-label','备用游戏指令');input.placeholder='输入游戏指令';input.autocomplete='off';input.autocapitalize='none';input.spellcheck=false;f.append(input);const send=A.el('button','p-primary','发送');send.type='submit';f.append(send,A.button('收起键盘',()=>input.blur()));f.onsubmit=e=>{e.preventDefault();const cmd=input.value.trim();if(cmd&&!/[\r\n]/.test(cmd)){input.blur();A.readCommand(cmd,'指令回应');}};b.append(f);}
+window.PocketCommand={open:command};sync();
+})();

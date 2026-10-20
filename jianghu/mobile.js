@@ -129,8 +129,8 @@ document.getElementById('save-game').onclick = async () => {
   } catch (e) { label.textContent = '存档失败'; console.error(e); }
   setTimeout(() => { label.disabled = false; label.textContent = '保存江湖'; }, 2500);
 };
-setInterval(() => { if (driver && connectSession) persistWorld().catch(() => {}); }, 15000);
-document.addEventListener('visibilitychange', () => { if (document.hidden && driver) persistWorld().catch(() => {}); });
+setInterval(() => { if (!window.POCKET_V4 && driver && connectSession) persistWorld().catch(() => {}); }, 15000);
+document.addEventListener('visibilitychange', () => { if (!window.POCKET_V4 && document.hidden && driver) persistWorld().catch(() => {}); });
 actionTab('walk');
 // Use the same lightless green as the surrounding client, retaining ANSI colors.
 for (const s of sessions) s.term.options.theme = {...s.term.options.theme, background:'#0f1d1b', foreground:'#d2d8bd'};

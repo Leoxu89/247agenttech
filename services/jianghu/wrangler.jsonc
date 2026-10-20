@@ -1,0 +1,17 @@
+{
+  "name": "jianghu-account-service",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jianghu-players",
+      "database_id": "8b565091-746f-4d30-9fa1-14fa32cea528",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://247agenttech.com,http://localhost:8765,http://127.0.0.1:8765"
+  },
+  "account_id": "15c427602336fc78571a09909a819f40"
+}

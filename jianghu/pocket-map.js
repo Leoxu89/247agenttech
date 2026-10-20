@@ -20,7 +20,7 @@ function route(target,label){
  const info=W.factions.find(f=>f.room===target);if(info)b.append(A.el('p','p-hint',info.note));
  if(steps===null){
   b.append(A.el('p','p-hint','当前未找到连续可行走的道路。岛屿、渡船、暗道或机关可能需要特殊通行；地图会继续标出位置。'));
-  const f=W.factions.find(f=>f.room===target);
+  const f=W.factions.find(f=>f.room===target)||W.factions.find(f=>f.approach&&W.rooms[f.room]?.area===W.rooms[target]?.area);
   if(f?.approach&&find(f.approach))b.append(A.button('先去 '+name(f.approach),()=>route(f.approach,'接引处 · '+label)));
   return;
  }
@@ -71,21 +71,22 @@ function atlas(parent,s){
 function render(parent,s){
  const A=api();learn(s);parent.append(A.el('h2','','江湖地图'));
  const current=A.el('div','p-map-location');current.append(A.el('small','','当前位置'),A.el('strong','',`${region(s.room.key)} · ${s.room.name}`));parent.append(current);
- const tabs=A.el('div','p-map-tabs');for(const [id,label] of [['near','附近道路'],['world','门派地图']])tabs.append(A.button(label,()=>{mode=id;A.showView('map');},mode===id?'active':''));parent.append(tabs);
- const slot=A.el('div','p-map-slot');parent.append(slot);(mode==='near'?near:atlas)(slot,s);
+ const tabs=A.el('div','p-map-tabs');for(const [id,label] of [['near','附近'],['world','世界'],['factions','门派']])tabs.append(A.button(label,()=>{mode=id;A.showView('map');},mode===id?'active':''));parent.append(tabs);
+ const slot=A.el('div','p-map-slot');parent.append(slot);(mode==='near'?near:mode==='world'?PocketWorldMap.render:atlas)(slot,s);
 }
 function update(s){
- learn(s);walker.tick(s,Date.now());
+ learn(s);walker.tick(s,Date.now());globalThis.PocketTransit?.update(s);
  let bar=document.getElementById('p-route-status');
  if(!bar){bar=api().el('aside','p-route-status');bar.id='p-route-status';document.getElementById('p-vitals').after(bar);}
  bar.hidden=walker.status==='idle';if(bar.hidden)return;
  const key=[walker.status,walker.index,walker.name,walker.reason].join('|');if(bar.dataset.state===key)return;bar.dataset.state=key;bar.replaceChildren();
  const A=api(),line=A.el('div');line.append(A.el('strong','',walker.status==='arrived'?'已到达 · '+walker.name:`${walker.status==='walking'?'自动寻路':'寻路暂停'} · ${walker.name}`),A.el('small','',walker.status==='paused'?walker.reason:`${walker.index} / ${walker.steps.length} 步`));bar.append(line);
  if(walker.status==='walking')bar.append(A.button('暂停',()=>{walker.pause();update(s);}));
+ if(walker.status==='interaction')bar.append(A.button('点选通行',()=>PocketTransit.open()));
  if(walker.status==='paused')bar.append(A.button('继续',()=>route(walker.steps.at(-1).to,walker.name)));
  bar.append(A.button(walker.status==='arrived'?'收起':'取消',()=>{walker.cancel();update(s);}));
  if(walker.status==='arrived')A.note('已到目的地，点场景人物可继续交谈或拜师');
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)walker.pause('离开页面，自动行走已暂停');});
-globalThis.PocketMap={render,update,route,pause:()=>walker.pause('已切换手动操作'),walker};
+globalThis.PocketMap={render,update,route,pause:()=>{PocketTransit?.cancel();walker.pause('已切换手动操作');},walker};
 })();

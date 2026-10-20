@@ -1,0 +1,1 @@
+{"name":"jianghu-account-service","private":true,"type":"module","scripts":{"test":"node --test test/*.test.mjs","dev":"node dev.mjs"},"devDependencies":{"wrangler":"^4.151.2"}}

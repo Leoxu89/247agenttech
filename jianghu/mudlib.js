@@ -9,6 +9,7 @@ function openSaves() {
   });
 }
 function readSnapshot() {
+  if(window.POCKET_V4)return PocketStore.bootFiles();
   return openSaves().then(db => new Promise((resolve, reject) => {
     const req = db.transaction('saves').objectStore('saves').get('world');
     req.onsuccess = () => resolve(req.result || []);
@@ -18,11 +19,11 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([
-    fetch('mudlib-manifest.json?v=7ae64c1f26fd').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
-    fetch('mudlib.data.gz?v=7ae64c1f26fd').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
+  Promise.all([fetch('pocketui.lpc?v=5a32d09bc7e2').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+    fetch('mudlib-manifest.json?v=5a32d09bc7e2').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
+    fetch('mudlib.data.gz?v=5a32d09bc7e2').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot().catch(e => { window.saveUnavailable = String(e); return []; })
-  ]).then(([entries, buffer, saved]) => {
+  ]).then(([adapter, entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);
     for (const [path, start, size] of entries) {
       const full = '/mudlib/' + path;
@@ -33,12 +34,14 @@ Module.preRun.push(function () {
       Module.FS.mkdirTree(path.slice(0, path.lastIndexOf('/')));
       Module.FS.writeFile(path, data);
     }
+    Module.FS.writeFile('/mudlib/adm/daemons/pocketui.lpc',adapter);
     window.snapshotRestored = saved.length;
     Module.removeRunDependency('xkx-image');
   }).catch(e => { document.getElementById('bootText').textContent = '载入失败：' + e.message + '。请刷新重试。'; console.error(e); });
 });
 
 window.persistWorld = async function () {
+  if(window.POCKET_V4)return window.PocketSaves?.capture('auto');
   if (!snapshotDB) throw Error('浏览器未允许本地存档');
   const files = [];
   const walk = path => {

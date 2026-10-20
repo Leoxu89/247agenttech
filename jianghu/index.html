@@ -389,7 +389,7 @@
     body.compact #inputbar { padding-bottom: 0; }
   }
 </style>
-<link rel="stylesheet" href="mobile.css?v=7ae64c1f26fd">
+<script src="storage.js?v=5a32d09bc7e2"></script><script src="cloud-config.js?v=5a32d09bc7e2"></script><link rel="stylesheet" href="mobile.css?v=5a32d09bc7e2">
 </head>
 <body>
 <header>
@@ -642,10 +642,10 @@
 </script>
 <script src="vendor/xterm.js"></script>
 <script src="vendor/addon-fit.js"></script>
-<script src="telnet.js"></script>
-<script src="fluffos-boot.js"></script>
-<script src="mudlib.js?v=7ae64c1f26fd"></script>
-<script src="fluffos.js"></script>
+<script src="telnet.js?v=5a32d09bc7e2"></script>
+<script src="fluffos-boot.js?v=5a32d09bc7e2"></script>
+<script src="mudlib.js?v=5a32d09bc7e2"></script>
+<script src="fluffos.js?v=5a32d09bc7e2"></script>
 <script>
 'use strict';
 
@@ -1111,7 +1111,7 @@ function applyInputState(s) {
     cmdWrap.classList.toggle('disabled', cmdReal.disabled);
     renderCmd();
     refit(s);
-    if (!cmdReal.disabled && view === s) cmdReal.focus();
+    if (!window.POCKET_V4 && !cmdReal.disabled && view === s) cmdReal.focus();
   }
 }
 
@@ -1286,7 +1286,7 @@ function refitVisible() {
   if (activeGame.charMode) activeGame.fit.fit();
   else refit(activeGame);
 }
-function syncVisualViewport() {
+function syncVisualViewport() { if(window.POCKET_V4){window.PocketLayout?.sync();return;}
   const vv = window.visualViewport;
   if (!vv) return;
   document.body.style.top = vv.offsetTop + 'px';
@@ -1300,7 +1300,7 @@ function syncVisualViewport() {
 // an iPhone SE), tablets and typical desktop windows keep the roomier
 // two-row layout.
 const COMPACT_MAX_HEIGHT = 620;
-function updateCompact() {
+function updateCompact() { if(window.POCKET_V4){document.body.classList.remove("compact");return;}
   const vv = window.visualViewport;
   const h = vv ? vv.height : window.innerHeight;
   document.body.classList.toggle('compact', h < COMPACT_MAX_HEIGHT);
@@ -1527,7 +1527,7 @@ fetch('fluffos.wasm.gz').then(r => {
   const tick = () => {
     let delay = 50;
     try {
-      delay = M.ccall('fluffos_tick', 'number', ['number'], [performance.now()]);
+      if (!window.PocketEnginePaused) delay = M.ccall('fluffos_tick', 'number', ['number'], [performance.now()]);
     } finally {
       // Nested setTimeout is clamped to ~4ms by browsers, which is the real
       // floor here; the upper bound keeps a long idle delay from making the
@@ -1556,7 +1556,7 @@ fetch('fluffos.wasm.gz').then(r => {
   // 'connected (conn N)' status; finish() only clears the overlay.)
   BootProgress.finish();
   cmdPlaceholder.textContent = placeholderForViewport();
-  if (!mqCoarse.matches) cmdReal.focus();
+  if (!window.POCKET_V4 && !mqCoarse.matches) cmdReal.focus();
   tabAdd.disabled = false;
 }).catch((e) => {
   BootProgress.finish();
@@ -1565,6 +1565,6 @@ fetch('fluffos.wasm.gz').then(r => {
     'mount: ' + BOOT.mount + '\nconfig: ' + BOOT.config);
 });
 </script>
-<script src="mobile.js?v=7ae64c1f26fd"></script><link rel="stylesheet" href="pocket.css?v=7ae64c1f26fd"><script src="world-map.js?v=7ae64c1f26fd"></script><script src="navigation.js?v=7ae64c1f26fd"></script><script src="pocket-map.js?v=7ae64c1f26fd"></script><script src="pocket.js?v=7ae64c1f26fd"></script>
+<script src="mobile.js?v=5a32d09bc7e2"></script><link rel="stylesheet" href="pocket.css?v=5a32d09bc7e2"><script src="world-map.js?v=5a32d09bc7e2"></script><script src="navigation.js?v=5a32d09bc7e2"></script><script src="pocket-map.js?v=5a32d09bc7e2"></script><script src="accounts.js?v=5a32d09bc7e2"></script><script src="saves.js?v=5a32d09bc7e2"></script><script src="layout.js?v=5a32d09bc7e2"></script><script src="life.js?v=5a32d09bc7e2"></script><script src="transit.js?v=5a32d09bc7e2"></script><script src="world.js?v=5a32d09bc7e2"></script><script src="pocket.js?v=5a32d09bc7e2"></script>
 </body>
 </html>

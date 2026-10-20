@@ -1,0 +1,31 @@
+// Zoomable source-backed atlas. Coordinates are schematic, exits stay authoritative.
+(()=>{
+let zoom=1,cx=500,cy=380,initialized=false;
+function render(parent,state){const A=PocketAPI,W=PocketWorld;parent.append(A.el('p','p-hint','拖动浏览，双指缩放；点亮点选择场景并寻路。无原始坐标的地区按道路排列，地图为示意图。'));
+ const viewport=A.el('div','p-world-viewport'),canvas=A.el('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label','可缩放世界地图，包含全部场景及当前位置');viewport.append(canvas);parent.append(viewport);
+ const caption=A.el('p','p-world-caption'),controls=A.el('div','p-world-controls');parent.append(controls,caption);
+ const areas=new Map(),all=Object.entries(W.rooms);for(const [id,r]of all){if(!areas.has(r.area))areas.set(r.area,[]);areas.get(r.area).push([id,r]);}
+ const groups=[...areas.entries()].map(([id,rs],i)=>{const coords=rs.map(([,r])=>r.xy).filter(Boolean),x=coords.length?coords.reduce((a,b)=>a+b[0],0)/coords.length:Math.cos(i*2.4)*100000,y=coords.length?coords.reduce((a,b)=>a+b[1],0)/coords.length:Math.sin(i*2.4)*100000;return{id,name:rs[0][1].region,rs,x:500+Math.asinh(x/20000)*135,y:380-Math.asinh(y/20000)*115};});
+ const points=[];for(const g of groups){g.rs.forEach(([id,r],i)=>{const xy=r.xy,x=xy?500+Math.asinh(xy[0]/20000)*135:g.x+Math.cos(i*2.399)*Math.sqrt(i)*2,y=xy?380-Math.asinh(xy[1]/20000)*115:g.y+Math.sin(i*2.399)*Math.sqrt(i)*2;points.push({id,r,x,y});});}
+ const lookup=new Map(points.map(p=>[p.id,p])),here=lookup.get(state.room.key),ctx=canvas.getContext('2d');let width=1,height=350,hits=[];
+ if(!initialized&&here){cx=500;cy=380;initialized=true;}
+ function screen(p){return[(p.x-cx)*zoom+width/2,(p.y-cy)*zoom+height/2];}
+ function draw(){width=viewport.clientWidth||350;height=viewport.clientHeight||350;const dpr=devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);ctx.fillStyle='#14271f';ctx.fillRect(0,0,width,height);hits=[];ctx.font='11px system-ui';ctx.textAlign='center';
+  if(zoom>3){ctx.strokeStyle='#38503b';ctx.lineWidth=.6;for(const p of points){const [x,y]=screen(p);if(x< -100||x>width+100||y< -100||y>height+100)continue;for(const to of Object.values(p.r.exits)){const q=lookup.get(to);if(!q)continue;const [xx,yy]=screen(q);if(Math.hypot(xx-x,yy-y)>250)continue;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(xx,yy);ctx.stroke();}}}
+  const labels=[];for(const p of points){const [x,y]=screen(p);if(x<0||y<0||x>width||y>height)continue;ctx.fillStyle='#72916d';ctx.beginPath();ctx.arc(x,y,zoom>6?3:1.4,0,Math.PI*2);ctx.fill();hits.push({...p,sx:x,sy:y});if(zoom>9&&!labels.some(l=>Math.abs(l[0]-x)<62&&Math.abs(l[1]-y)<22)){ctx.fillStyle='#b9c9a9';ctx.fillText(p.r.name.slice(0,8),x,y-7);labels.push([x,y]);}}
+  if(zoom<10)for(const g of groups){const [x,y]=screen(g);if(x<20||x>width-20||y<12||y>height-12)continue;if(labels.some(l=>Math.abs(l[0]-x)<50&&Math.abs(l[1]-y)<22))continue;ctx.fillStyle='#c6bc8e';ctx.fillText(g.name,x,y);labels.push([x,y]);}
+  for(const f of W.factions){const p=lookup.get(f.room);if(!p)continue;const [x,y]=screen(p);if(x<0||x>width||y<0||y>height)continue;ctx.fillStyle='#cfa966';ctx.fillRect(x-3,y-3,6,6);if(zoom>3&&zoom<10){ctx.fillText(f.name,x,y-8);}}
+  if(here){const [x,y]=screen(here);ctx.strokeStyle='#ffdf82';ctx.fillStyle='#ffdf82';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.fillText('你在这里',x,Math.max(12,y-13));}
+  caption.textContent=`缩放 ${zoom.toFixed(1)}× · ${all.length} 个场景 · ${state.room.name}（金色圆点）`;
+ }
+ const change=n=>{zoom=Math.min(45,Math.max(.45,zoom*n));draw();};controls.append(A.button('− 缩小',()=>change(1/1.6)),A.button('+ 放大',()=>change(1.6)),A.button('定位我',()=>{if(here){cx=here.x;cy=here.y;zoom=12;}draw();}),A.button('全图',()=>{cx=500;cy=380;zoom=.65;draw();}));
+ const pointers=new Map();let previous=null,origin=null,moved=false;
+ const local=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+ canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,local(e));if(pointers.size===1){origin=local(e);moved=false;}previous=null;};
+ canvas.onpointermove=e=>{if(!pointers.has(e.pointerId))return;const old=pointers.get(e.pointerId),p=local(e);pointers.set(e.pointerId,p);if(Math.hypot(p.x-(origin?.x||0),p.y-(origin?.y||0))>7)moved=true;if(pointers.size===1){cx-=(p.x-old.x)/zoom;cy-=(p.y-old.y)/zoom;}else{const [a,b]=[...pointers.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(previous)zoom=Math.max(.45,Math.min(45,zoom*d/previous));previous=d;}draw();};
+ canvas.onpointerup=e=>{const p=local(e),wasOne=pointers.size===1;pointers.delete(e.pointerId);previous=null;if(!moved&&wasOne){const near=hits.map(h=>({...h,d:Math.hypot(h.sx-p.x,h.sy-p.y)})).sort((a,b)=>a.d-b.d).slice(0,12);const b=A.show('选择地图目的地');if(!near.length){b.append(A.el('p','p-hint','此处没有场景，请移动地图或放大。'));return;}b.append(A.el('p','p-hint','地图上相近的地点可能重叠，请选择具体场景。'));for(const h of near)b.append(A.button(h.r.region+' · '+h.r.name,()=>PocketMap.route(h.id,h.r.name),'p-row'));}};canvas.onpointercancel=e=>{pointers.delete(e.pointerId);previous=null;};canvas.onwheel=e=>{e.preventDefault();change(e.deltaY<0?1.15:1/1.15);};
+ const input=A.el('input','p-map-search');input.type='search';input.placeholder='搜索任意场景或地区';input.setAttribute('aria-label','搜索世界地点');parent.append(input);const results=A.el('div','p-world-list');parent.append(results);
+ input.oninput=()=>{results.replaceChildren();const q=input.value.trim();if(!q)return;const found=points.filter(p=>p.r.name.includes(q)||p.r.region.includes(q));results.append(A.el('p','p-hint',`找到 ${found.length} 个地点，显示前 30 个`));for(const p of found.slice(0,30))results.append(A.button(p.r.region+' · '+p.r.name,()=>{input.blur();cx=p.x;cy=p.y;zoom=14;draw();PocketMap.route(p.id,p.r.name);}));};requestAnimationFrame(draw);
+}
+window.PocketWorldMap={render};
+})();

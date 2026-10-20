@@ -5,9 +5,9 @@ function path(rooms,start,goal,limit=12000){
  const queue=[start],previous=new Map([[start,null]]);
  for(let i=0;i<queue.length&&i<limit;i++){
   const from=queue[i];
-  for(const [direction,to] of Object.entries(rooms[from]?.exits||{})){
+  for(const edge of [...Object.entries(rooms[from]?.exits||{}).map(([direction,to])=>({from,direction,to})),...(rooms[from]?.transitions||[])]){const {direction,to}=edge;
    if(previous.has(to)||!rooms[to])continue;
-   previous.set(to,{from,direction,to});
+   previous.set(to,{...edge,from,direction,to});
    if(to===goal){const steps=[];for(let p=goal;p!==start;){const edge=previous.get(p);steps.unshift(edge);p=edge.from;}return steps;}
    queue.push(to);
   }
@@ -17,15 +17,16 @@ function path(rooms,start,goal,limit=12000){
 class Walker{
  constructor(send){this.send=send;this.status='idle';this.steps=[];this.index=0;this.pending=null;this.reason='';}
  start(steps,name){this.steps=steps;this.index=0;this.name=name;this.pending=null;this.reason='';this.status=steps.length?'walking':'arrived';}
- pause(reason='已暂停，可继续'){if(this.status!=='walking')return;this.status='paused';this.pending=null;this.reason=reason;}
+ pause(reason='已暂停，可继续'){if(!['walking','interaction'].includes(this.status))return;this.status='paused';this.pending=null;this.reason=reason;}
  cancel(){this.status='idle';this.pending=null;this.steps=[];}
  tick(state,now){
   if(this.status!=='walking')return;
   if(!state?.ready){this.pause('角色已离线');return;}
-  if(state.player.fighting||state.player.ghost){this.pause('交战或昏迷中，已暂停');return;}
+  if(state.player.fighting||state.player.ghost||state.unconscious||state.enemies?.length){this.pause('交战或昏迷中，已暂停');return;}
   const step=this.steps[this.index];
   if(!step){this.status='arrived';return;}
   const here=state.room.key;
+  if(step.kind){if(here===step.to){this.index++;this.pending=null;if(this.index===this.steps.length)this.status='arrived';return;}if(!this.pending){this.pending={at:now,transition:true};this.status='interaction';this.reason=step.label;scope.PocketTransit?.begin(step,this);}return;}
   if(this.pending){
    if(here===step.to){this.index++;this.pending=null;this.nextAt=now+650;if(this.index===this.steps.length)this.status='arrived';return;}
    if(here!==step.from){this.pause('位置已改变，请重新规划路线');return;}

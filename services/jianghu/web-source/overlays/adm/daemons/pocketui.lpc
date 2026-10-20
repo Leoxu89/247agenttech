@@ -1,0 +1,312 @@
+// JSON is kept local because the minimal WASM driver omits the JSON package.
+string json_encode(mixed value) {
+    string *parts = ({});
+    string out = "";
+    if (stringp(value)) {
+        for (int i = 0; i < strlen(value); i++) {
+            if (value[i] == 34 || value[i] == 92) out += sprintf("%c%c", 92, value[i]);
+            else if (value[i] < 32) out += sprintf("%cu%04x", 92, value[i]);
+            else out += value[i..i];
+        }
+        return sprintf("%c%s%c", 34, out, 34);
+    }
+    if (pointerp(value)) {
+        foreach (mixed item in value) parts += ({ json_encode(item) });
+        return "[" + implode(parts, ",") + "]";
+    }
+    if (mapp(value)) {
+        foreach (mixed key, mixed item in value) parts += ({ json_encode(key) + ":" + json_encode(item) });
+        return "{" + implode(parts, ",") + "}";
+    }
+    return intp(value) || floatp(value) ? sprintf("%O", value) : "null";
+}
+
+// Read-only browser view. All actions still use the original player commands.
+string plain(mixed s) {
+    string out = "";
+    int escape = 0;
+    if (!stringp(s)) return "";
+    for (int i = 0; i < strlen(s); i++) {
+        if (s[i] == 27) { escape = 1; continue; }
+        if (escape) {
+            if (s[i] >= 64 && s[i] <= 126 && s[i] != 91) escape = 0;
+            continue;
+        }
+        out += s[i..i];
+    }
+    return out;
+}
+
+mapping item_view(object ob, object me, mapping counts) {
+    string id = ob->query("id");
+    string key;
+    mixed aliases = ob->parse_command_id_list();
+    mapping view;
+    mapping skills;
+    mixed topics;
+    mixed goods;
+    object sample;
+    mixed err;
+    if (pointerp(aliases) && sizeof(aliases)) {
+        id = aliases[0];
+        foreach (string alias in aliases) if (strsrch(alias, " ") < 0) { id = alias; break; }
+    }
+    if (!stringp(id) || id == "") id = "object";
+    counts[id] = (counts[id] || 0) + 1;
+    key = id + (counts[id] > 1 ? " " + counts[id] : "");
+    view = ([ "key": file_name(ob), "token": key,
+        "name": plain(ob->name()), "description": plain(ob->query("long")),
+        "qi":ob->query("qi"),"max_qi":ob->query("max_qi"),"jing":ob->query("jing"),"max_jing":ob->query("max_jing"),
+        "hostile":ob->is_fighting(me), "currency":ob->query("money_id"),
+        "race": plain(ob->query("race")), "title": plain(ob->query("title")), "living": ob->is_character(),
+        "food": !!ob->query("food_supply"), "drink": !!ob->query("liquid"),
+        "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"),
+        "worn": !!ob->query("equipped"), "amount": ob->query_amount() || 1,
+        "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}) ]);
+    if (ob->is_character()) {
+        topics = ob->query("inquiry");
+        if (mapp(topics)) view["topics"] = keys(topics);
+        skills = ob->query_skills();
+        if (mapp(skills)) foreach (string sk in keys(skills)) {
+            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk] ]) });
+        }
+        goods = ob->query("vendor_goods");
+        if (pointerp(goods)) foreach (mixed path in goods) {
+            if (!stringp(path)) continue;
+            err = catch(sample = load_object(path));
+            if (!err && objectp(sample)) view["goods"] += ({ ([
+                "name": plain(sample->query("name")), "token": sample->query("id"),
+                "food": !!sample->query("food_supply"), "drink": !!sample->query("liquid") ]) });
+        }
+    }
+    return view;
+}
+
+string snapshot(string *args, int request_id) {
+    object me, room, destination, ahead;
+    mapping data, exits, counts, mine, skills, mapped, branches;
+    mixed err, value;
+    string time;
+    int dark;
+    foreach (object ob in users()) {
+        if (objectp(environment(ob)) && userp(ob) &&
+            (!sizeof(args) || args[0] == "" || ob->query("id") == args[0])) { me = ob; break; }
+    }
+    if (!objectp(me)) return json_encode(([ "ready": 0 ]));
+    room = environment(me);
+    mine = me->query_entire_dbase();
+    time = NATURE_D->game_time();
+    dark = room->query("outdoors") && !present("fire", me) && !wizardp(me) &&
+        (strsrch(time, "亥时") >= 0 || strsrch(time, "子时") >= 0 ||
+         strsrch(time, "丑时") >= 0 || strsrch(time, "寅时") >= 0);
+    data = ([ "ready": 1,
+        "player": ([ "id": me->query("id"), "name": plain(me->query("name")),
+            "title": plain(me->query("title")), "age": me->query("age"),
+            "gender": plain(me->query("gender")), "family": plain(me->query("family/family_name")),
+            "master": plain(me->query("family/master_name")), "hometown": plain(me->query("hometown")),
+            "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
+            "jing": mine["jing"], "max_jing": mine["max_jing"], "neili": mine["neili"],
+            "max_neili": mine["max_neili"], "tili": mine["tili"], "max_tili": mine["max_tili"],
+            "food": mine["food"], "max_food": me->max_food_capacity(),
+            "water": mine["water"], "max_water": me->max_water_capacity(),
+            "exp": mine["combat_exp"], "potential": mine["potential"] - mine["learned_points"],
+            "str": me->query_str(), "int": me->query_int(), "con": me->query_con(),
+            "dex": me->query_dex(), "balance": mine["balance"],
+            "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
+        "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
+        "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
+        "room": ([ "river_to":room->query("to"),"river_about":plain(room->query("yell_about")), "key": file_name(room), "name": plain(room->query("short")),
+            "x": room->query("coor/x"), "y": room->query("coor/y"),
+            "description": plain(room->query("long")), "time": plain(time), "dark": dark,
+            "details": ({}), "exits": ({}), "people": ({}), "items": ({}) ]),
+        "inventory": ({}), "skills": ({}) ]);
+    value = room->query("item_desc");
+    if (mapp(value)) foreach (string detail in keys(value)) {
+        data["room"]["details"] += ({ ([ "token": detail, "name": plain(to_chinese(detail)),
+            "description": stringp(value[detail]) ? plain(value[detail]) : "" ]) });
+    }
+    exits = room->query("exits");
+    if (mapp(exits)) foreach (string direction in keys(exits)) {
+        value = exits[direction];
+        if (!stringp(value)) continue;
+        mixed *next = ({});
+        destination = 0;
+        err = catch(destination = load_object(value));
+        if (!err && objectp(destination)) {
+            branches=destination->query("exits");
+            if (mapp(branches)) foreach (string nd, mixed np in branches) {
+                if (!stringp(np)) continue;
+                ahead=0;
+                if (!catch(ahead=load_object(np)) && objectp(ahead)) next+=({ ([
+                    "direction":nd,"to":file_name(ahead),"name":plain(ahead->query("short")) ]) });
+            }
+        }
+        data["room"]["exits"] += ({ ([ "direction": direction,
+            "name": !err && objectp(destination) ? plain(destination->query("short")) : "前方道路",
+            "next":next, "to": !err && objectp(destination) ? file_name(destination) : value, "closed": room->query_door(direction, "status") & 1 ]) });
+    }
+    counts = ([]);
+    foreach (object ob in all_inventory(room)) {
+        if (ob == me) continue;
+        if(ob->is_character()&&(me->is_fighting(ob)||ob->is_fighting(me))) data["enemies"]+=({item_view(ob,me,([]))});
+        if (!me->visible(ob) || !stringp(ob->short())) continue;
+        if (ob->is_character()) {
+            mapping v=item_view(ob,me,counts);
+            data["room"]["people"]+=({v});
+
+        }
+        else data["room"]["items"] += ({ item_view(ob, me, counts) });
+    }
+    counts = ([]);
+    foreach (object ob in all_inventory(me)) {
+        if (me->visible(ob)) data["inventory"] += ({ item_view(ob, me, counts) });
+    }
+    skills = me->query_skills();
+    mapped = me->query_skill_map();
+    if (mapp(skills)) foreach (string sk in keys(skills)) {
+        string *bases = ({});
+        if (mapp(mapped)) foreach (string base, string special in mapped) if (special == sk) bases += ({ base });
+        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "bases": bases ]) });
+    }
+    value=me->query_temp("last_damage_from");
+    if (objectp(value)) data["death"]["last_attacker"]=plain(value->name());
+    else if(stringp(value)) data["death"]["last_attacker"]=plain(value);
+    data["travel"] = ([ "thd_known":!!me->query("thd/x"),"thd_stage":me->query_temp("thd_temp"),
+        "thd_x":me->query("thd/x"),"thd_y":me->query("thd/y"),
+        "boat_x":me->query_temp("thd_locx"),"boat_y":me->query_temp("thd_locy"),"boat_target":plain(me->query_temp("thd_target")),
+        "sea_ready":!!me->query_temp("出海") ]);
+    return json_encode(data);
+}
+
+int smaller(int a,int b) { return a<b?a:b; }
+int bigger(int a,int b) { return a>b?a:b; }
+
+// Explicit opt-in local test assistance; never raises skills, experience or potential.
+string bless(string *args, int request_id) {
+    object me, fire;
+    string kind;
+    int before, after, cap;
+    foreach (object ob in users()) if (userp(ob) && objectp(environment(ob))) { me=ob; break; }
+    if (!objectp(me) || !sizeof(args)) return json_encode(([ "ok":0, "message":"请先进入江湖" ]));
+    if (me->is_ghost()) return json_encode(([ "ok":0, "message":"此功能不会复活角色" ]));
+    kind=args[0];
+    switch (kind) {
+    case "food":
+        before=me->query("food"); cap=me->max_food_capacity(); after=smaller(cap,before+30);
+        me->set("food",after); break;
+    case "water":
+        before=me->query("water"); cap=me->max_water_capacity(); after=smaller(cap,before+30);
+        me->set("water",after); break;
+    case "qi":
+        before=me->query("qi"); cap=me->query("max_qi");
+        me->set("eff_qi",smaller(cap,me->query("eff_qi")+10));
+        after=smaller(me->query("eff_qi"),before+20); me->set("qi",after); break;
+    case "neili":
+        before=me->query("neili"); cap=bigger(30,me->query("max_neili")); after=smaller(cap,before+10);
+        // Do not lower a legitimately overcharged player's current energy.
+        if (after<before) after=before;
+        me->set("neili",after); break;
+    case "light":
+        if (!present("fire",me)) { fire=new("/clone/misc/fire"); fire->move(me); }
+        return json_encode(([ "ok":1, "message":"随身火折已备好，夜间也能看清周围" ]));
+    default: return json_encode(([ "ok":0, "message":"未知的体验功能" ]));
+    }
+    return json_encode(([ "ok":1, "delta":after-before, "message":after>before ? "已少量补充，可继续体验江湖" : "当前已满，无需补充" ]));
+}
+
+object active_player() {
+    foreach(object ob in users()) if(userp(ob)&&objectp(environment(ob))) return ob;
+    return 0;
+}
+
+mixed clean_value(mixed v,int depth) {
+    mapping out=([]);
+    mixed *arr=({});
+    if(depth>6) return 0;
+    if(intp(v)||floatp(v)||stringp(v)) return v;
+    if(mapp(v)) { foreach(mixed k,mixed value in v) if(stringp(k)&&!objectp(value)&&!functionp(value)) out[k]=clean_value(value,depth+1); return out; }
+    if(pointerp(v)) { foreach(mixed value in v) if(!objectp(value)&&!functionp(value)) arr+=({clean_value(value,depth+1)}); return arr; }
+    return 0;
+}
+
+mixed *inventory_state(object holder,int depth) {
+    mixed *out=({});
+    if(depth>3) return out;
+    foreach(object ob in all_inventory(holder)) {
+        if(ob->is_character()) continue;
+        out+=({ (["base":base_name(ob),"state":clean_value(ob->query_entire_dbase(),0),
+            "amount":ob->query_amount(),"equipped":ob->query("equipped"),"items":inventory_state(ob,depth+1)]) });
+    }
+    return out;
+}
+
+void restore_items(object holder,mixed *items,int depth) {
+    object ob;
+    mixed err;
+    if(depth>3||!pointerp(items)||sizeof(items)>150) return;
+    foreach(mixed item in items) {
+        if(!mapp(item)||!stringp(item["base"])||!mapp(item["state"])) continue;
+        if(strsrch(item["base"],"/clone/")!=0&&strsrch(item["base"],"/d/")!=0) continue;
+        if(strsrch(item["base"],"..")>=0) continue;
+        ob=0;err=catch(ob=new(item["base"]));
+        if(err||!objectp(ob)) continue;
+        if(ob->is_character()) { destruct(ob);continue; }
+        foreach(string key,mixed value in item["state"]) if(key!="equipped") ob->set(key,value);
+        ob->delete("equipped");
+        if(function_exists("set_amount",ob)&&item["amount"]>0) ob->set_amount(item["amount"]);
+        ob->move(holder);
+        restore_items(ob,item["items"],depth+1);
+        if(item["equipped"]=="worn") catch(ob->wear());
+        else if(item["equipped"]=="wielded") catch(ob->wield());
+    }
+}
+
+string checkpoint(string *args,int request_id) {
+    object me=active_player(),link;
+    string room;
+    if(!objectp(me)) return json_encode((["ok":0,"message":"请先进入江湖"]));
+    if(me->is_ghost()||me->query_temp("noliving")||me->is_fighting()) return json_encode((["ok":0,"message":"战斗、昏迷或死亡时不会覆盖安全存档"]));
+    foreach(object ob in all_inventory(environment(me))) if(ob!=me&&ob->is_character()&&ob->is_fighting(me)) return json_encode((["ok":0,"message":"有人正在攻击你，保留此前的检查点"]));
+    room=file_name(environment(me));
+    if(strsrch(room,"/d/")!=0||strsrch(room,"#")>=0) return json_encode((["ok":0,"message":"渡船等临时场景中保留上一个检查点"]));
+    me->set("startroom",room);
+    link=me->query_temp("link_ob");
+    if(!objectp(link)||!link->save()||!me->save()) return json_encode((["ok":0,"message":"原版角色文件未能保存"]));
+    return json_encode((["ok":1,"id":me->query("id"),"room":(["key":room,"name":plain(environment(me)->query("short"))]),
+        "inventory":save_variable(inventory_state(me,0))]));
+}
+
+string restore_checkpoint(string *args,int request_id) {
+    object me=active_player(),dest;
+    mixed items,err;
+    if(!objectp(me)||sizeof(args)<3||args[0]!=me->query("id")) return json_encode((["ok":0,"message":"角色不符"]));
+    if(strsrch(args[1],"/d/")!=0||strsrch(args[1],"..")>=0||strsrch(args[1],"#")>=0||strlen(args[2])>400000) return json_encode((["ok":0,"message":"存档位置不符"]));
+    err=catch(dest=load_object(args[1]));
+    if(err||!objectp(dest)||dest->is_character()) return json_encode((["ok":0,"message":"存档地点已不可用"]));
+    err=catch(items=restore_variable(args[2]));
+    if(err||!pointerp(items)) return json_encode((["ok":0,"message":"行囊记录损坏"]));
+    foreach(object ob in all_inventory(me)) if(!ob->is_character()) { catch(ob->unequip());destruct(ob); }
+    restore_items(me,items,0);
+    me->move(dest);
+    return json_encode((["ok":1]));
+}
+
+string engage(string *args,int request_id) {
+    object me=active_player(),enemy;
+    if(!objectp(me)||!sizeof(args)||me->is_ghost()||me->query_temp("noliving")) return json_encode((["ok":0,"message":"当前无法迎战"]));
+    if(environment(me)->query("no_fight")) return json_encode((["ok":0,"message":"此处禁止交战"]));
+    foreach(object ob in all_inventory(environment(me))) if(file_name(ob)==args[0]&&ob->is_character()&&(ob->is_fighting(me)||me->is_fighting(ob))) enemy=ob;
+    if(!objectp(enemy)) return json_encode((["ok":0,"message":"这个对手已离开战斗"]));
+    me->fight_ob(enemy);
+    me->delete("env/no_fight");
+    return json_encode((["ok":1,"message":"已迎战，按原版轮次持续攻击；可随时尝试逃跑"]));
+}
+
+void create() {
+    seteuid(getuid());
+    js_export("pocket_state", (: snapshot :));
+    js_export("pocket_bless", (: bless :));
+    js_export("pocket_checkpoint", (: checkpoint :));
+    js_export("pocket_restore", (: restore_checkpoint :));
+    js_export("pocket_engage", (: engage :));
+}
