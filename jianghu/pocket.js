@@ -41,10 +41,12 @@ const human=!item.race||item.race==='人类';
 if(human){
  const topics=section(body,'打听消息');const list=[...new Set(['name','here',...(item.topics||[])])];for(const topic of list)topics.append(button(({name:'你是谁',here:'此地情况',ling:'推荐令',job:'工作',work:'工作',join:'入门',skill:'武学'})[topic]||topic,()=>readCommand(`ask ${item.token} about ${topic}`,item.name+' · 打听')));
  actions.append(button('拜师',()=>{const b=show('拜'+item.name+'为师');b.append(el('p','','是否能入门由对方及原版门派规则决定。'),button('行拜师礼',()=>command('bai '+item.token)));}));
+ if(item.tuition){const tuition=section(body,'武馆缴费学艺');const paid=item.tuition.paid,over=state.player.exp>=item.tuition.limit;tuition.append(el('p','p-hint',paid?'已取得本次武馆教学许可，可点“请教学艺”。':over?`当前经验已达到 ${item.tuition.limit}，此人不再接受新学费。`:'原版学费为5两白银，支付后可向武馆教头学习；重新登录后可能需要再缴。'));if(!paid&&!over){tuition.append(button('缴纳学费 · 5两白银',()=>{const b=show('缴纳武馆学费');b.append(el('p','','向'+item.name+'支付5两白银，用于本次武馆学艺。'),button('确认支付5两白银',()=>command(`give 5 silver to ${item.token}`)),button('取消',close));}));}}
  if(item.skills?.length)actions.append(button('请教学艺',()=>{const b=show('向'+item.name+'请教');b.append(el('p','p-hint','每次请教 10 次；需要满足关系、潜能和银两等原版条件。'));for(const sk of item.skills)b.append(button(`${skillName(sk)} · ${sk.level}级`,()=>command(`learn ${item.token} ${sk.id} 10`),'p-row'));}));
  }
  if(item.goods?.length){const shop=section(body,'购买物品');for(const g of item.goods)shop.append(button(g.name,()=>command('buy '+g.token)));}
  if(state.inventory.length)actions.append(button('交付物品',()=>{const b=show('交给'+item.name);for(const i of state.inventory)b.append(button(i.name,()=>command(`give ${i.token} to ${item.token}`),'p-row'));}));
+ actions.append(button('攻击 / 杀死',()=>{const b=show('与'+item.name+'生死交战');b.append(el('p','','这会按原版杀敌规则发起生死战，可能杀死对方，也可能导致自己死亡。安全区和受保护人物仍受原版限制。'),button('确认发起生死战',()=>command('kill '+item.token)),button('取消',close));}));
  actions.append(button('切磋',()=>{const b=show('与'+item.name+'切磋');b.append(el('p','','交战会消耗气血，请留意自身状态。'),button('开始切磋',()=>command('fight '+item.token)),button('取消',close));}));
 }}
 function render(){if(!state?.ready&&document.getElementById('p-account-form'))return;renderVitals();const content=$('#p-content');content.replaceChildren();root.classList.toggle('p-ready',!!state?.ready);document.body.classList.toggle('p-playing',!!state?.ready);
@@ -75,12 +77,12 @@ for(const b of root.querySelectorAll('[data-view]'))b.onclick=()=>{view=b.datase
 $('#p-more').onclick=()=>{const b=show('江湖随身册');b.append(button('账号与存档',()=>PocketSaves.manager()),button('江湖地图与门派导航',()=>{close();showView('map');}),button('天神体验',showBless),button('保存进度',()=>{close();save();}),button('江湖记录 / 对话',showLogs),button('备用指令输入',()=>PocketCommand.open()),button('退出账号',()=>PocketAccounts.logout().catch(e=>note(e.message))));};
 function showView(next){view=next;$('#p-feedback').hidden=true;render();$('#p-content').dataset.room=state?.room?.key||'';$('#p-content').scrollTop=0;}
 function showBless(){
- const b=show('天神体验');if(!state?.ready){b.append(el('p','p-hint','请先进入江湖，再使用体验补给。'));return;}b.append(el('p','p-hint','每次少量补充，不限次数，最多补至当前容量；不会增加经验、武学或潜能。'));
+ const b=show('天神体验');if(!state?.ready){b.append(el('p','p-hint','请先进入江湖，再使用体验补给。'));return;}b.append(el('p','p-hint','每次少量补充，不限次数。钱、经验和潜能用于体验成长；不直接提高武学等级。'));
  const status=el('p','p-bless-status','选择你需要的帮助');status.setAttribute('role','status');b.append(status);const grid=section(b,'随手补给');
- for(const [id,label]of [['food','吃饭 · 食物 +30'],['water','喝水 · 饮水 +30'],['qi','恢复气血 +20'],['neili','补充内力 +10'],['light','备一支火折 · 夜间照明']]){
-  const btn=button(label,async()=>{btn.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));await refresh();const p=state.player;status.textContent=(result.delta!==undefined?'本次 +'+result.delta+' · ':'')+result.message+'。食物 '+p.food+' / 饮水 '+p.water+' / 气血 '+p.qi+' / 内力 '+p.neili;persistWorld().catch(()=>{});}catch(e){status.textContent='本次未能补充，请重试';}finally{btn.disabled=false;}});grid.append(btn);
+ for(const [id,label]of [['food','吃饭 · 食物 +30'],['water','喝水 · 饮水 +30'],['qi','恢复气血 +20'],['neili','补充内力 +10'],['money','获得白银 · +1两'],['exp','增加经验 · +1,000'],['potential','增加潜能 · +100'],['light','备一支火折 · 夜间照明']]){
+  const btn=button(label,async()=>{btn.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));await refresh();const p=state.player;status.textContent=(result.delta!==undefined?'本次 +'+result.delta+' · ':'')+result.message+'。食物 '+p.food+' / 饮水 '+p.water+' / 气血 '+p.qi+' / 内力 '+p.neili+' / 经验 '+p.exp+' / 潜能 '+p.potential;persistWorld().catch(()=>{});}catch(e){status.textContent='本次未能补充，请重试';}finally{btn.disabled=false;}});grid.append(btn);
  }
- b.append(el('p','p-hint','气血最多恢复至当前上限，并少量修复受伤。未修内功时可借用最多 30 点临时内力，不提高内功修为。火折使用原版照明物品。'));
+ b.append(el('p','p-hint','气血最多恢复至当前上限，并少量修复受伤。未修内功时可借用最多 30 点临时内力，不提高内功修为。火折使用原版照明物品。增加经验可能超过武馆收学费（教头50,000）或派工作（100,000）的新手门槛，请按需要少量添加。'));
 }
 globalThis.PocketAPI={getState:()=>state,meter,skillName,showBless,el,button,section,show,close,note,command,readCommand,refresh,showView};
 setInterval(refresh,750);render();refresh();

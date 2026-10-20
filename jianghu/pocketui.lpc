@@ -64,6 +64,10 @@ mapping item_view(object ob, object me, mapping counts) {
         "worn": !!ob->query("equipped"), "amount": ob->query_amount() || 1,
         "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}) ]);
     if (ob->is_character()) {
+        if (member_array(base_name(ob),({"/d/wuguan/npc/wg_jiaotou1","/d/wuguan/npc/wg_jiaotou2","/d/wuguan/npc/wg_chen","/d/wuguan/npc/chen"}))>=0) {
+            view["tuition"] = (["paid":!!me->query_temp("marks/yangzhou_paied"),
+                "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
+        }
         topics = ob->query("inquiry");
         if (mapp(topics)) view["topics"] = keys(topics);
         skills = ob->query_skills();
@@ -181,9 +185,9 @@ string snapshot(string *args, int request_id) {
 int smaller(int a,int b) { return a<b?a:b; }
 int bigger(int a,int b) { return a>b?a:b; }
 
-// Explicit opt-in local test assistance; never raises skills, experience or potential.
+// Explicit opt-in testing assistance, with modest repeatable progression grants.
 string bless(string *args, int request_id) {
-    object me, fire;
+    object me, fire, money;
     string kind;
     int before, after, cap;
     foreach (object ob in users()) if (userp(ob) && objectp(environment(ob))) { me=ob; break; }
@@ -206,6 +210,14 @@ string bless(string *args, int request_id) {
         // Do not lower a legitimately overcharged player's current energy.
         if (after<before) after=before;
         me->set("neili",after); break;
+    case "money":
+        money=new("/clone/money/silver"); money->set_amount(1);
+        if (!money->move(me)) { destruct(money); return json_encode((["ok":0,"message":"随身负重已满，请先整理行囊"])); }
+        return json_encode((["ok":1,"delta":1,"message":"已获得一两白银，可在行囊查看"]));
+    case "exp":
+        before=me->query("combat_exp"); after=before+1000; me->set("combat_exp",after); break;
+    case "potential":
+        before=me->query("potential"); after=before+100; me->set("potential",after); break;
     case "light":
         if (!present("fire",me)) { fire=new("/clone/misc/fire"); fire->move(me); }
         return json_encode(([ "ok":1, "message":"随身火折已备好，夜间也能看清周围" ]));
