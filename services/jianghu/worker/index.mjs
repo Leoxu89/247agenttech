@@ -69,9 +69,11 @@ export default {async fetch(req,env){
    }
    await limit(env.DB,'register:'+ip,8,3600);
    if(await env.DB.prepare('SELECT id FROM users WHERE username=?').bind(username).first())fail(409,'这个用户名已有人使用');
+   const name=data.name||'行舟';
+   if(!/^[\u3400-\u9fff]{2,5}$/.test(name)||name.includes('爸')||["你", "你", "我", "他", "她", "它", "妈", "爸", "　", "翔少爷", "方舟子", "草鱼", "时空", "丁", "木人", "赫连铁树", "单正", "韦小宝", "火云", "仙子", "风儿", "凡狗", "演若达多", "寒江雪", "【我★爱】", "紫志龙"].includes(name))fail(400,'姓名需为2–5个汉字，并避开原版保留的名字，请换一个名字');
    const id=crypto.randomUUID(),salt=b64(bytes(16));
    const nativeId='u'+Array.from(bytes(7),b=>String.fromCharCode(97+b%26)).join('');
-   const profile={name:/^[\u3400-\u9fff]{2,6}$/.test(data.name||'')?data.name:'行舟',gender:data.gender==='f'?'f':'m',home:['1','2','3','4','5'].includes(String(data.home))?String(data.home):'3',native:{id:nativeId,password:b64(bytes(24))}};
+   const profile={name,gender:data.gender==='f'?'f':'m',home:['1','2','3','4','5'].includes(String(data.home))?String(data.home):'3',native:{id:nativeId,password:b64(bytes(24))}};
    const user={id,username,revision:0,profile:await seal(profile,env.AUTH_SECRET)};await env.DB.prepare('INSERT INTO users(id,username,salt,password_hash,profile,created_at) VALUES(?,?,?,?,?,?)').bind(id,username,salt,await passwordHash(password,salt,env.AUTH_SECRET),user.profile,new Date().toISOString()).run();return response(await newSession(user,env),201);
   }
   const user=await session(req,env);

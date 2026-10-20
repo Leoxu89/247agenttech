@@ -6,6 +6,8 @@ async function request(path,body,token,origin='https://247agenttech.com'){
 test('real SQLite: user isolation, authentication, encrypted saves, history, conflicts and restoration',async()=>{
  assert.equal((await request('/health',null,null,'https://evil.invalid')).status,403);
  assert.equal((await request('/saves')).status,401);
+ assert.equal((await request('/register',{username:'badlength',password:'PrivateFixture-2026',name:'东西南北天地'})).status,400);
+ assert.equal((await request('/register',{username:'badreserved',password:'PrivateFixture-2026',name:'韦小宝'})).status,400);
  const a=await request('/register',{username:'fixture_a',password:'PrivateFixture-A-2026',name:'行舟'});assert.equal(a.status,201);assert.ok(a.data.token);
  const b=await request('/register',{username:'fixture_b',password:'PrivateFixture-B-2026'});assert.equal(b.status,201);
  assert.equal((await request('/login',{username:'fixture_a',password:'incorrect-password'})).status,401);

@@ -19,7 +19,7 @@ function render(parent){
  const username=make('用户名','username','text','username');username.pattern='[A-Za-z][A-Za-z0-9_]{2,23}';username.placeholder='3–24 位英文字母、数字或下划线';username.value=localStorage.getItem('xkx-last-username')||'';
  const password=make('密码','password','password','current-password');password.minLength=10;password.maxLength=128;password.placeholder='至少 10 位';
  const extra=api.el('div','p-auth-extra');form.append(extra);
- const label=api.el('label');label.append(api.el('span','','角色姓名'));const nickname=api.el('input');nickname.name='name';nickname.autocomplete='off';nickname.placeholder='2–6 个汉字';nickname.pattern='[\u3400-\u9fff]{2,6}';label.append(nickname);extra.append(label);
+ const label=api.el('label');label.append(api.el('span','','角色姓名'));const nickname=api.el('input');nickname.name='name';nickname.autocomplete='off';nickname.placeholder='2–5 个汉字';nickname.pattern='[\u3400-\u9fff]{2,5}';label.append(nickname);extra.append(label);
  const choice=(label,name,values)=>{const l=api.el('label');l.append(api.el('span','',label));const select=api.el('select');select.name=name;for(const [value,text]of values){const option=api.el('option','',text);option.value=value;select.append(option);}l.append(select);extra.append(l);return select;};
  const gender=choice('性别','gender',[['m','男性'],['f','女性']]);const home=choice('出生地区','home',[['3','江南'],['1','北方'],['2','西北'],['4','西南'],['5','东南']]);
  const status=api.el('p','p-auth-status',error);status.setAttribute('role','status');form.append(status);

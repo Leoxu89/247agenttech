@@ -24,6 +24,8 @@ for old in out.glob('mudlib-chunk.*.bin'):old.unlink()
 shutil.copy2(ROOT/'jianghu-web/overlays/adm/daemons/pocketui.lpc',out/'pocketui.lpc')
 p=out/'mudlib.js'
 s=p.read_text().replace("fetch('mudlib.data?", "fetch('mudlib.data.gz?").replace("return r.arrayBuffer();", "return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();")
+cache=json.loads((src/'source.json').read_text())['cache']
+s=s.replace('mudlib.data.gz?v='+cache,'mudlib.data.gz?v=dd69ee13e5f03e21').replace('mudlib-manifest.json?v='+cache,'mudlib-manifest.json?v=456192d88f90c897')
 s=s.replace("Promise.all([", "Promise.all([fetch('pocketui.lpc?v="+(json.loads((src/'source.json').read_text())['cache'])+"').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),",1)
 s=s.replace(".then(([entries, buffer, saved]) =>", ".then(([adapter, entries, buffer, saved]) =>")
 s=s.replace("window.snapshotRestored = saved.length;", "Module.FS.writeFile('/mudlib/adm/daemons/pocketui.lpc',adapter);\n    window.snapshotRestored = saved.length;")
