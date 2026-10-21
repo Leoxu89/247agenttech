@@ -45,17 +45,19 @@ async function legacy(id){
  await S.write('a:'+selected.id+':head',save);S.select(selected);location.reload();
 }
 function text(chunk){if(!flow)return;flow.buffer+=chunk.replace(/\x1b\[[0-9;]*[A-Za-z]/g,'');const f=flow;
+ if(flow.expectExisting&&(/将会创造|重新创造这个人物/.test(f.buffer))){error='原版角色文件未能恢复，已停止创建，原存档仍保留。请返回登录并选择云端历史恢复。';flow=null;return;}
  const answers=[['使用 '+f.native.id+' 这个名字将会创造','y'],['您的中文名字：',f.name],['请设定您的密码：',f.native.password],['请再输入一次您的密码',f.native.password],['请输入数字（1~5）',f.home],['请输入您的膂力点数','20'],['请输入您的悟性点数','20'],['请输入您的根骨点数','20'],['您同意这一组天赋吗','y'],['请选择你的人物性格属性','0'],['您的电子邮件地址：','player@example.invalid'],['您要扮演男性(m)',f.gender],['请输入密码：',f.native.password]];
  for(const [prompt,answer]of answers)if(f.buffer.includes(prompt)){f.buffer='';setTimeout(()=>{if(flow===f)sendGameCommand(answer);},100);break;}
  if(f.buffer.includes('密码错误')||f.buffer.includes('密码不符')){error='角色登录记录不一致，请返回账号登录恢复云端版本';flow=null;}
 }
 async function update(state){
  const selected=S.active();if(!selected?.pending)return;
- if(state?.ready){flow=null;selected.pending=false;S.select(selected);const head=await S.read('a:'+selected.id+':head');
-  if(head?.room?.key&&head.inventory){const r=JSON.parse(await driver.fluffos.callLPC('pocket_restore',state.player.id,head.room.key,head.inventory));if(!r.ok)A().note(r.message);}
-  await PocketSaves.loadCloudSlots();PocketSaves.onLogin();await A().refresh();return;
+ if(state?.ready){flow=null;const head=await S.read('a:'+selected.id+':head');
+  if(head?.growth){const g=head.growth;const mismatch=g.exp!==state.player.exp||g.potential!==state.player.potential||Object.entries(g.skills||{}).some(([id,lv])=>!state.skills.some(k=>k.id===id&&k.level===lv));if(mismatch){window.PocketEnginePaused=true;const b=A().show('存档恢复核验未通过');b.append(A().el('p','p-hint','成长值与保存记录不一致。游戏已暂停，保留原存档，请从云端历史选择完整记录。'),A().button('查看存档历史',()=>PocketSaves.manager()));return;}}
+  if(head?.room?.key&&head.inventory){const r=JSON.parse(await driver.fluffos.callLPC('pocket_restore',state.player.id,head.room.key,head.inventory,head.session||''));if(!r.ok)A().note(r.message);}
+  selected.pending=false;S.select(selected);await PocketSaves.loadCloudSlots();PocketSaves.onLogin();await A().refresh();return;
  }
- if(!nativeStarted&&driver&&connectSession&&!activeGame.disconnected){nativeStarted=true;flow={...selected.profile,buffer:''};sendGameCommand(selected.profile.native.id);setTimeout(()=>{if(flow){flow=null;error='创建或登录未完成，请返回账号登录后重试';A().showView('scene');}},30000);}
+ if(!nativeStarted&&driver&&connectSession&&!activeGame.disconnected){nativeStarted=true;const head=await S.read('a:'+selected.id+':head');flow={...selected.profile,buffer:'',expectExisting:!!head?.files?.length};sendGameCommand(selected.profile.native.id);setTimeout(()=>{if(flow){flow=null;error='创建或登录未完成，请返回账号登录后重试';A().showView('scene');}},30000);}
 }
 async function logout(){await PocketSaves.capture('manual');try{await PocketSaves.flush();}catch(e){A().note('本机进度已保留，云端未同步，暂不退出');return;}const account=S.active();if(!account.legacy)await request('/logout',{});sessionStorage.removeItem('xkx-account');location.reload();}
 window.PocketAccounts={render,text,update,request,base,logout};

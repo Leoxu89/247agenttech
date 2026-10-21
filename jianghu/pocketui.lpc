@@ -61,7 +61,7 @@ mapping item_view(object ob, object me, mapping counts) {
         "race": plain(ob->query("race")), "title": plain(ob->query("title")), "living": ob->is_character(),
         "food": !!ob->query("food_supply"), "drink": !!ob->query("liquid"),
         "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"),
-        "worn": !!ob->query("equipped"), "amount": ob->query_amount() || 1,
+        "worn": !!ob->query("equipped"), "equipped":plain(ob->query("equipped")), "amount": ob->query_amount() || 1,
         "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}) ]);
     if (ob->is_character()) {
         if (member_array(base_name(ob),({"/d/wuguan/npc/wg_jiaotou1","/d/wuguan/npc/wg_jiaotou2","/d/wuguan/npc/wg_chen","/d/wuguan/npc/chen"}))>=0) {
@@ -117,7 +117,8 @@ string snapshot(string *args, int request_id) {
             "job_done":!!(me->query_temp("mark/劈完了")||me->query_temp("mark/浇完了")||me->query_temp("mark/锄完了")||me->query_temp("mark/锯完了")||me->query_temp("mark/扫完了")||me->query_temp("mark/挑完了")),
             "job_returned":!!me->query_temp("mark/还了"),
             "exp": mine["combat_exp"], "potential": mine["potential"] - mine["learned_points"],
-            "str": me->query_str(), "int": me->query_int(), "con": me->query_con(),
+            "int_base":me->query("int"), "job_count":me->query_temp("mark/挑")+me->query_temp("mark/劈")+me->query_temp("mark/浇")+me->query_temp("mark/锄")+me->query_temp("mark/锯")+me->query_temp("mark/扫"),
+            "job_wait":me->query_condition("wuguan_job"), "str": me->query_str(), "int": me->query_int(), "con": me->query_con(),
             "dex": me->query_dex(), "balance": mine["balance"],
             "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
@@ -288,6 +289,8 @@ string checkpoint(string *args,int request_id) {
     link=me->query_temp("link_ob");
     if(!objectp(link)||!link->save()||!me->save()) return json_encode((["ok":0,"message":"原版角色文件未能保存"]));
     return json_encode((["ok":1,"id":me->query("id"),"room":(["key":room,"name":plain(environment(me)->query("short"))]),
+        "growth":(["exp":me->query("combat_exp"),"potential":me->query("potential")-me->query("learned_points"),"skills":me->query_skills()||([])]),
+        "session":save_variable((["job_name":me->query_temp("job_name"),"mark":clean_value(me->query_temp("mark"),0),"tuition":me->query_temp("marks/yangzhou_paied"),"job_wait":me->query_condition("wuguan_job")])),
         "inventory":save_variable(inventory_state(me,0))]));
 }
 
@@ -302,6 +305,15 @@ string restore_checkpoint(string *args,int request_id) {
     if(err||!pointerp(items)) return json_encode((["ok":0,"message":"行囊记录损坏"]));
     foreach(object ob in all_inventory(me)) if(!ob->is_character()) { catch(ob->unequip());destruct(ob); }
     restore_items(me,items,0);
+    if(sizeof(args)>3 && strlen(args[3])<10000) {
+        mixed session;
+        if(!catch(session=restore_variable(args[3])) && mapp(session)) {
+            if(stringp(session["job_name"]) && session["job_name"]!="") me->set_temp("job_name",session["job_name"]);
+            if(mapp(session["mark"])) me->set_temp("mark",session["mark"]);
+            if(session["tuition"]) me->set_temp("marks/yangzhou_paied",1);
+            if(session["job_wait"]>0) me->apply_condition("wuguan_job",session["job_wait"]);
+        }
+    }
     me->move(dest);
     return json_encode((["ok":1]));
 }

@@ -76,7 +76,7 @@ function render(parent,s){
  const slot=A.el('div','p-map-slot');parent.append(slot);(mode==='near'?near:mode==='world'?PocketWorldMap.render:atlas)(slot,s);
 }
 function update(s){
- learn(s);walker.tick(s,Date.now());globalThis.PocketTransit?.update(s);
+ if(!s?.ready){walker.cancel();document.getElementById('p-route-status')?.setAttribute('hidden','');return;}learn(s);walker.tick(s,Date.now());globalThis.PocketTransit?.update(s);
  let bar=document.getElementById('p-route-status');
  if(!bar){bar=api().el('aside','p-route-status');bar.id='p-route-status';document.getElementById('p-vitals').after(bar);}
  bar.hidden=walker.status==='idle';if(bar.hidden)return;
@@ -89,5 +89,5 @@ function update(s){
  if(walker.status==='arrived')A.note('已到目的地，点场景人物可继续交谈或拜师');
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)walker.pause('离开页面，自动行走已暂停');});
-globalThis.PocketMap={render,update,route,pause:()=>{PocketTransit?.cancel();walker.pause('已切换手动操作');},walker};
+globalThis.PocketMap={render,update,route,pause:(reason='已切换手动操作')=>{PocketTransit?.cancel();walker.pause(reason);},walker};
 })();

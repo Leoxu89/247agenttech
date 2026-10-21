@@ -19,10 +19,10 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('pocketui.lpc?v=f6cfbe905a09').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+  Promise.all([fetch('pocketui.lpc?v=ba7f8ebaee21').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
     fetch('mudlib-manifest.json?v=456192d88f90c897').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
     fetch('mudlib.data.gz?v=dd69ee13e5f03e21').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
-    readSnapshot().catch(e => { window.saveUnavailable = String(e); return []; })
+    readSnapshot()
   ]).then(([adapter, entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);
     for (const [path, start, size] of entries) {
@@ -30,6 +30,8 @@ Module.preRun.push(function () {
       Module.FS.mkdirTree(full.slice(0, full.lastIndexOf('/')));
       Module.FS.writeFile(full, bytes.subarray(start, start + size));
     }
+    // Native death and audit logs require these runtime directories.
+    Module.FS.mkdirTree('/mudlib/log/nosave');
     for (const [path, data] of saved) {
       Module.FS.mkdirTree(path.slice(0, path.lastIndexOf('/')));
       Module.FS.writeFile(path, data);
