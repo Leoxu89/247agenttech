@@ -5,16 +5,18 @@ const W=globalThis.PocketWorld,N=globalThis.PocketNavigation;
 const api=()=>globalThis.PocketAPI;
 const dir={north:'北',south:'南',east:'东',west:'西',northeast:'东北',northwest:'西北',southeast:'东南',southwest:'西南',northup:'北上',southup:'南上',eastup:'东上',westup:'西上',northdown:'北下',southdown:'南下',eastdown:'东下',westdown:'西下',up:'上楼',down:'下楼',enter:'进入',out:'出去'};
 const walker=new N.Walker(cmd=>api().command(cmd,false,true));
-let mode='near',filter='',seenKey='',previewTarget=null;
+let mode='near',filter='',seenKey='',previewTarget=null,avoidDanger=true;
+// Verified native spawns: shulin1 poison snake, shulin2 wolf, tiandi4 hostile dog.
+const danger=new Set(['/d/huanghe/shulin1','/d/huanghe/shulin2','/d/huanghe/tiandi4']);
 function region(key){return W.rooms[key]?.region||'未知区域';}
 function name(key){return W.rooms[key]?.name||'未录入场景';}
 function learn(state){if(!state?.ready)return;const r=state.room;for(const exit of r.exits){if(!exit.to)continue;for(const edge of exit.next||[]){const old=W.rooms[edge.to];W.rooms[edge.to]={...old,name:edge.name||old?.name||'前方道路',region:old?.region||W.regions[edge.to.split('/')[2]]||W.rooms[r.key]?.region||'江湖',exits:old?.exits||{}};}const oldNext=W.rooms[exit.to];if(exit.next)W.rooms[exit.to]={...oldNext,name:exit.name,region:oldNext?.region||W.regions[exit.to.split('/')[2]]||'江湖',exits:Object.fromEntries(exit.next.map(e=>[e.direction,e.to]))};}
 const old=W.rooms[r.key];W.rooms[r.key]={...old,area:old?.area||r.key.split('/')[2],name:r.name,region:old?.region||W.regions[r.key.split('/')[2]]||'江湖',exits:Object.fromEntries(r.exits.filter(e=>e.to).map(e=>[e.direction,e.to]))};}
-function find(target){const s=api().getState();learn(s);return N.path(W.rooms,s.room.key,target);}
+function find(target){const s=api().getState();learn(s);const rooms=avoidDanger?Object.fromEntries(Object.entries(W.rooms).filter(([k])=>k===s.room.key||k===target||!danger.has(k))):W.rooms;return N.path(rooms,s.room.key,target);}
 function route(target,label){
  const A=api(),s=A.getState();if(!s?.ready)return;
  walker.pause('正在选择目的地');previewTarget={target,label};
- const steps=find(target),b=A.show('前往 · '+label);
+ const steps=find(target),b=A.show('前往 · '+label);b.append(A.button(avoidDanger?'避险路线 · 已开启':'避险路线 · 已关闭',()=>{avoidDanger=!avoidDanger;route(target,label);}));b.append(A.el('p','p-hint','避险会绕开已核对的黄河毒蛇、野狼和野狗场景，路程可能更长；其他未知危险仍需留意。'));
  b.append(A.el('p','p-hint',`当前位置：${region(s.room.key)} · ${s.room.name}`));
  b.append(A.el('p','',`目的地：${region(target)} · ${name(target)}`));
  const info=W.factions.find(f=>f.room===target);if(info)b.append(A.el('p','p-hint',info.note));

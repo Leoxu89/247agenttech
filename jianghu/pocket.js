@@ -69,7 +69,7 @@ if(view==='map'){globalThis.PocketMap.render(content,state);
  if(r.items.length){const items=section(content,'地上物品');for(const item of r.items)items.append(button(item.name,()=>inspect(item,'ground')));}
  if(r.details.length){const details=section(content,'值得一看');for(const d of r.details)details.append(button(({paizi:'牌子',shibei:'石碑',bei:'碑',painting:'画卷',sign:'告示',gate:'大门',door:'门',tiezi:'武馆入门告示'})[d.token]||d.name||d.token,()=>inspect(d,'detail')));}
  }
- window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
+ window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('挂机打坐',()=>PocketIdle.start({kind:'exercise',label:'打坐修炼内力',room:state.room.key})),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
 }else if(view==='bag'){
  content.append(el('h2','','随身行囊'),el('p','p-hint',`${state.inventory.length} 件物品 · 点物品选择吃喝、穿戴或使用`));for(const item of state.inventory){const b=button('',()=>inspect(item,'bag'),'p-row');b.append(el('strong','',item.name),el('span','',(item.worn?'已装备 · ':'')+(item.amount>1?item.amount+({silver:'两',gold:'两',coin:'文'}[item.currency]||item.unit||'件'):'查看 / 使用')));content.append(b);}if(!state.inventory.length)content.append(el('p','p-empty','行囊空空，先探索附近的场景吧。'));
 }else if(view==='skills'){

@@ -19,7 +19,7 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('pocketui.lpc?v=ba7f8ebaee21').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+  Promise.all([fetch('pocketui.lpc?v=733cf3b7df6b').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
     fetch('mudlib-manifest.json?v=456192d88f90c897').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
     fetch('mudlib.data.gz?v=dd69ee13e5f03e21').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot()
