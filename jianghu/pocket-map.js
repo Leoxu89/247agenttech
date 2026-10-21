@@ -32,8 +32,9 @@ function route(target,label){
  const details=A.el('details','p-route-details');details.append(A.el('summary','',`查看 ${steps.length} 步路线`));for(const [i,e] of steps.entries())details.append(A.el('p','',`${i+1}. ${dir[e.direction]||e.direction} → ${name(e.to)}`));b.append(details);
 }
 function svgEl(tag,attrs={},text){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
+function nearbyExit(exit){const A=api(),s=A.getState();if(!s?.ready)return;const live=s.room.exits.find(e=>e.direction===exit.direction&&e.to===exit.to);if(!live){A.note('出口已变化，请按当前地图重新选择');return;}walker.cancel();globalThis.PocketTransit?.cancel();A.command(live.closed?'open '+live.direction:live.direction);}
 function near(parent,s){
- const A=api(),r=s.room;parent.append(A.el('p','p-hint','金色为你的位置；点节点可前往。下方列出各出口之后的道路，实时跟随位置更新。'));
+ const A=api(),r=s.room;parent.append(A.el('p','p-hint','金色为你的位置；点相邻节点直接走过去，关门时先开门。下方列出各出口之后的道路，实时跟随位置更新。'));
  const svg=svgEl('svg',{viewBox:'0 0 540 420',class:'p-near-map',role:'img','aria-label':'当前位置与附近道路'});
  const vectors={north:[0,-130],south:[0,130],east:[165,0],west:[-165,0],northeast:[155,-112],northwest:[-155,-112],southeast:[155,112],southwest:[-155,112],up:[-75,-175],down:[75,175],enter:[140,-165],out:[-140,165]};
  const used=new Set();
@@ -41,11 +42,11 @@ function near(parent,s){
   svg.append(svgEl('line',{x1:270,y1:210,x2:x,y2:y,class:'p-map-line'}));
   svg.append(svgEl('text',{x:(270+x)/2,y:(210+y)/2-9,'text-anchor':'middle',class:'p-map-dir'},dir[exit.direction]||exit.direction));
   const g=svgEl('g',{class:'p-map-node',role:'button',tabindex:0,'aria-label':'前往'+exit.name});g.append(svgEl('rect',{x:x-63,y:y-24,width:126,height:48,rx:12}),svgEl('text',{x,y:y+6,'text-anchor':'middle'},exit.name.length>8?exit.name.slice(0,8)+'…':exit.name));
-  const go=()=>route(exit.to,exit.name);g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};svg.append(g);
+  const go=()=>nearbyExit(exit);g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};svg.append(g);
  });
  const center=svgEl('g',{class:'p-map-you'});center.append(svgEl('circle',{cx:270,cy:210,r:52}),svgEl('text',{x:270,y:204,'text-anchor':'middle'},r.name.slice(0,8)),svgEl('text',{x:270,y:227,'text-anchor':'middle',class:'p-map-small'},'你在这里'));svg.append(center);parent.append(svg);
  const list=A.section(parent,'出口之后通向哪里');list.className='p-near-list';
- for(const exit of r.exits){const row=A.el('article','p-near-row');row.append(A.button(`${dir[exit.direction]||exit.direction} → ${exit.name}`,()=>route(exit.to,exit.name),'p-row'));
+ for(const exit of r.exits){const row=A.el('article','p-near-row');row.append(A.button(`${dir[exit.direction]||exit.direction} → ${exit.name}`,()=>nearbyExit(exit),'p-row'));
   const further=Object.entries(W.rooms[exit.to]?.exits||{}).filter(([,to])=>to!==r.key).map(([d,to])=>`${dir[d]||d} · ${name(to)}`);
   row.append(A.el('p','p-hint',further.length?'再往前：'+further.join(' ／ '):'前方暂未记录其他道路'));list.append(row);}
 }

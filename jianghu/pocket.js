@@ -39,6 +39,7 @@ if(where==='bag'){
 if(where==='person'){
 const human=!item.race||item.race==='人类';
 if(human){
+ if(item.key?.split('#')[0]==='/d/wuguan/npc/wg_zhangfeng'&&state.player.job_name){const job=section(body,'武馆工作');job.append(el('p','p-hint',state.player.job_returned?'工具已还，可向张风覆命领取奖励。':state.player.job_done?'工作已完成，请先找老李归还工具。':'当前工作：'+state.player.job_name+'，请先做完并归还工具。'));const submit=button('完成工作 · 覆命领奖',()=>readCommand('job ok','武馆工作 · 覆命'));submit.disabled=!state.player.job_done||!state.player.job_returned;job.append(submit);}
  const topics=section(body,'打听消息');const list=[...new Set(['name','here',...(item.topics||[])])];for(const topic of list)topics.append(button(({name:'你是谁',here:'此地情况',ling:'推荐令',job:'工作',work:'工作',join:'入门',skill:'武学'})[topic]||topic,()=>readCommand(`ask ${item.token} about ${topic}`,item.name+' · 打听')));
  actions.append(button('拜师',()=>{const b=show('拜'+item.name+'为师');b.append(el('p','','是否能入门由对方及原版门派规则决定。'),button('行拜师礼',()=>command('bai '+item.token)));}));
  if(item.tuition){const tuition=section(body,'武馆缴费学艺');const paid=item.tuition.paid,over=state.player.exp>=item.tuition.limit;tuition.append(el('p','p-hint',paid?'已取得本次武馆教学许可，可点“请教学艺”。':over?`当前经验已达到 ${item.tuition.limit}，此人不再接受新学费。`:'原版学费为5两白银，支付后可向武馆教头学习；重新登录后可能需要再缴。'));if(!paid&&!over){tuition.append(button('缴纳学费 · 5两白银',()=>{const b=show('缴纳武馆学费');b.append(el('p','','向'+item.name+'支付5两白银，用于本次武馆学艺。'),button('确认支付5两白银',()=>command(`give 5 silver to ${item.token}`)),button('取消',close));}));}}
@@ -56,7 +57,13 @@ for(const b of root.querySelectorAll('[data-view]'))b.classList.toggle('selected
 if(view==='map'){globalThis.PocketMap.render(content,state);
 }else if(view==='scene'){
  const intro=el('section','p-room');intro.append(el('div','p-eyebrow',r.time));const desc=el('details','p-room-description');desc.open=false;desc.append(el('summary','',r.dark?'夜色深沉，难以辨认四周':r.description.replace(/\s+/g,' ').trim()),el('p','',r.description));intro.append(desc);content.append(intro);
- const exits=section(content,'去往何处');for(const exit of r.exits){const b=button('',()=>command(exit.closed?'open '+exit.direction:exit.direction),'p-exit');b.append(el('small','',directions[exit.direction]||exit.direction),el('strong','',exit.name),el('span','',exit.closed?'门已关 · 点此开门':'前往 →'));exits.append(b);}if(!r.exits.length)exits.append(el('p','p-hint','此处没有明显出口。'));
+ const exits=section(content,'去往何处');exits.className='p-compass';const slots={northwest:[1,1],north:[1,2],northeast:[1,3],west:[2,1],east:[2,3],southwest:[3,1],south:[3,2],southeast:[3,3]},cells={},extra=[];
+ for(const [d,[row,col]]of Object.entries(slots)){const cell=el('div','p-compass-slot');cell.style.gridRow=row;cell.style.gridColumn=col;cells[d]=cell;exits.append(cell);}
+ const here=el('div','p-compass-center');here.append(el('small','','当前位置'),el('strong','',r.name));exits.append(here);
+ for(const exit of r.exits){const b=button('',()=>command(exit.closed?'open '+exit.direction:exit.direction),'p-exit');b.dataset.direction=exit.direction;b.append(el('small','',directions[exit.direction]||exit.direction),el('strong','',exit.name),el('span','',exit.closed?'开门 →':'前往 →'));const d=exit.direction.replace(/up$|down$/,'');if(cells[d])cells[d].append(b);else extra.push(b);}
+ if(extra.length){const other=section(content,'上下与进出');for(const b of extra)other.append(b);}
+ if(!r.exits.length)content.append(el('p','p-hint','此处没有明显出口。'));
+
  if(r.dark){content.append(el('p','p-hint','天黑了，需要火折子等照明才能看清人物和物品。'));}else{
  const people=section(content,'眼前人物'+(r.people.length?' · '+r.people.length:''));for(const person of r.people){const b=button('',()=>inspect(person,'person'),'p-person');b.append(el('span','p-avatar',(person.name||'人').slice(-1)),el('strong','',person.name),el('small','',person.title||((!person.race||person.race==='人类')?'点此交谈 / 查看':'点此查看')));people.append(b);}if(!r.people.length)people.append(el('p','p-hint','附近没有其他人物。'));
  if(r.items.length){const items=section(content,'地上物品');for(const item of r.items)items.append(button(item.name,()=>inspect(item,'ground')));}
