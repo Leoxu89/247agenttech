@@ -19,11 +19,11 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('force-header.lpc?v=60fff85cc92f').then(r=>{if(!r.ok)throw Error('内功适配下载失败');return r.text();}),fetch('pocketui.lpc?v=60fff85cc92f').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+  Promise.all([fetch('dbase-overlay.lpc?v=678f388f5497').then(r=>{if(!r.ok)throw Error('精力适配下载失败');return r.text();}),fetch('force-header.lpc?v=678f388f5497').then(r=>{if(!r.ok)throw Error('内功适配下载失败');return r.text();}),fetch('pocketui.lpc?v=678f388f5497').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
     fetch('mudlib-manifest.json?v=456192d88f90c897').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
     fetch('mudlib.data.gz?v=dd69ee13e5f03e21').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot()
-  ]).then(([forceHeader, adapter, entries, buffer, saved]) => {
+  ]).then(([dbaseOverlay, forceHeader, adapter, entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);
     for (const [path, start, size] of entries) {
       const full = '/mudlib/' + path;
@@ -38,6 +38,7 @@ Module.preRun.push(function () {
     }
     Module.FS.writeFile('/mudlib/adm/daemons/pocketui.lpc',adapter);
     Module.FS.writeFile('/mudlib/kungfu/skill/force.h',forceHeader);
+    Module.FS.writeFile('/mudlib/feature/dbase.lpc',dbaseOverlay);
     window.snapshotRestored = saved.length;
     Module.removeRunDependency('xkx-image');
   }).catch(e => { document.getElementById('bootText').textContent = '载入失败：' + e.message + '。请刷新重试。'; console.error(e); });

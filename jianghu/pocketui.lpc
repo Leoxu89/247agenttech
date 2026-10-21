@@ -109,7 +109,7 @@ string snapshot(string *args, int request_id) {
             "gender": plain(me->query("gender")), "family": plain(me->query("family/family_name")),
             "master": plain(me->query("family/master_name")), "hometown": plain(me->query("hometown")),
             "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
-            "jing": mine["jing"], "max_jing": mine["max_jing"], "neili": mine["neili"],
+            "jing": mine["jing"], "max_jing": mine["max_jing"], "jing_locked":!!mine["pocket_jing_locked"], "neili": mine["neili"],
             "max_neili": mine["max_neili"], "tili": mine["tili"], "max_tili": mine["max_tili"],
             "food": mine["food"], "max_food": me->max_food_capacity(),
             "water": mine["water"], "max_water": me->max_water_capacity(),
@@ -199,6 +199,11 @@ string bless(string *args, int request_id) {
     if (me->is_ghost()) return json_encode(([ "ok":0, "message":"此功能不会复活角色" ]));
     kind=args[0];
     switch (kind) {
+    case "jing_lock":
+        cap=!me->query("pocket_jing_locked");
+        me->set("pocket_jing_locked",cap);
+        if(cap) { me->set("eff_jing",me->query("max_jing")); me->set("jing",me->query("max_jing")); }
+        return json_encode((["ok":1,"locked":cap,"message":cap?"精力已补满并锁定，学习不再消耗精神":"已解锁精力，恢复原版精神消耗与自然恢复"]));
     case "food":
         before=me->query("food"); cap=me->max_food_capacity(); after=smaller(cap,before+30);
         me->set("food",after); break;

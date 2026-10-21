@@ -6,9 +6,10 @@
   "overlays": [
     "adm/daemons/pocketui.lpc",
     "kungfu/skill/force.h: identify caller skill",
+    "feature/dbase.lpc: opt-in spirit lock",
     "adm/etc/preload: append pocketui"
   ],
   "config_overlay": "mudlib directory: /mudlib",
   "ui_version": "4.0",
-  "cache": "60fff85cc92f"
+  "cache": "678f388f5497"
 }
