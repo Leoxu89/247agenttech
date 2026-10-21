@@ -19,11 +19,11 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('pocketui.lpc?v=733cf3b7df6b').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+  Promise.all([fetch('force-header.lpc?v=a35be87f4604').then(r=>{if(!r.ok)throw Error('内功适配下载失败');return r.text();}),fetch('pocketui.lpc?v=a35be87f4604').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
     fetch('mudlib-manifest.json?v=456192d88f90c897').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
     fetch('mudlib.data.gz?v=dd69ee13e5f03e21').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot()
-  ]).then(([adapter, entries, buffer, saved]) => {
+  ]).then(([forceHeader, adapter, entries, buffer, saved]) => {
     const bytes = new Uint8Array(buffer);
     for (const [path, start, size] of entries) {
       const full = '/mudlib/' + path;
@@ -37,6 +37,7 @@ Module.preRun.push(function () {
       Module.FS.writeFile(path, data);
     }
     Module.FS.writeFile('/mudlib/adm/daemons/pocketui.lpc',adapter);
+    Module.FS.writeFile('/mudlib/kungfu/skill/force.h',forceHeader);
     window.snapshotRestored = saved.length;
     Module.removeRunDependency('xkx-image');
   }).catch(e => { document.getElementById('bootText').textContent = '载入失败：' + e.message + '。请刷新重试。'; console.error(e); });

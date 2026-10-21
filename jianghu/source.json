@@ -5,9 +5,10 @@
   "game_source_changes": [],
   "overlays": [
     "adm/daemons/pocketui.lpc",
+    "kungfu/skill/force.h: identify caller skill",
     "adm/etc/preload: append pocketui"
   ],
   "config_overlay": "mudlib directory: /mudlib",
   "ui_version": "4.0",
-  "cache": "733cf3b7df6b"
+  "cache": "a35be87f4604"
 }
