@@ -31,8 +31,8 @@ function render(parent){
    const selected={id:data.id,username:data.username,profile:data.profile,token:data.token,revision:data.revision,pending:true};
    // Local unuploaded progress is kept separately; never silently replace it with an older cloud copy.
    const cloud=await request('/saves/head',null,selected),local=await S.read('a:'+selected.id+':head');
-   if(local?.pendingUpload){status.textContent='此设备有未同步进度，云端也可能更新过。继续本机进度会提交为最新版本；也可保留副本后载入云端。';selected.revision=cloud.revision;S.select(selected);submit.hidden=true;form.append(api.button('继续本机未同步进度',()=>location.reload()),api.button('保留副本并载入云端',async()=>{await S.write('a:'+selected.id+':recovery:'+Date.now(),local);await S.write('a:'+selected.id+':head',cloud.save?{...cloud.save,pendingUpload:false,cloudId:cloud.id}:null);location.reload();}));return;}
-   selected.revision=cloud.revision;await S.write('a:'+selected.id+':head',cloud.save?{...cloud.save,pendingUpload:false,cloudId:cloud.id}:null);S.select(selected);location.reload();
+   if(local?.pendingUpload){S.select(selected);await PocketSaves.resolveConflict(local,cloud,selected);return;}
+   selected.revision=cloud.revision;await S.retain(selected,cloud.save?{...cloud.save,savedAt:cloud.savedAt||cloud.save.savedAt,pendingUpload:false,cloudId:cloud.id}:null);S.select(selected);location.reload();
   }catch(err){status.textContent=err.name==='TimeoutError'?'连接超时，本机进度未删除，请重试':err.message;}finally{submitting=false;submit.disabled=false;}
  };
  wrap.append(form);const oldId=localStorage.getItem('xkx-guest-id');if(oldId)wrap.append(api.button('继续本机旧游客（仅本机）',()=>legacy(oldId),'p-legacy-link'));

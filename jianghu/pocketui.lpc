@@ -37,7 +37,7 @@ string plain(mixed s) {
     return out;
 }
 
-mapping item_view(object ob, object me, mapping counts) {
+varargs mapping item_view(object ob, object me, mapping counts, int depth) {
     string id = ob->query("id");
     string key;
     mixed aliases = ob->parse_command_id_list();
@@ -63,7 +63,17 @@ mapping item_view(object ob, object me, mapping counts) {
         "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"),
         "worn": !!ob->query("equipped"), "equipped":plain(ob->query("equipped")), "amount": ob->query_amount() || 1,
         "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}) ]);
-    if (ob->is_character()) {
+    view["container"] = !!ob->is_container();
+    view["corpse"] = !!ob->is_corpse();
+    view["contents"] = ({});
+    if (view["container"] && depth < 1) {
+        mapping inside = ([]);
+        foreach (object child in all_inventory(ob)) {
+            if (me->visible(child) && sizeof(view["contents"]) < 60)
+                view["contents"] += ({ item_view(child,me,inside,depth+1) });
+        }
+    }
+    if (ob->is_character() && !ob->is_corpse()) {
         if (member_array(base_name(ob),({"/d/wuguan/npc/wg_jiaotou1","/d/wuguan/npc/wg_jiaotou2","/d/wuguan/npc/wg_chen","/d/wuguan/npc/chen"}))>=0) {
             view["tuition"] = (["paid":!!me->query_temp("marks/yangzhou_paied"),
                 "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
@@ -120,6 +130,13 @@ string snapshot(string *args, int request_id) {
             "int_base":me->query("int"), "job_count":me->query_temp("mark/挑")+me->query_temp("mark/劈")+me->query_temp("mark/浇")+me->query_temp("mark/锄")+me->query_temp("mark/锯")+me->query_temp("mark/扫"),
             "job_wait":me->query_condition("wuguan_job"), "str": me->query_str(), "int": me->query_int(), "con": me->query_con(),
             "dex": me->query_dex(), "balance": mine["balance"],
+            "shen":mine["shen"], "nickname":plain(mine["nickname"]), "degree":plain(mine["degree"]),
+            "eff_jing":mine["eff_jing"], "jingli":mine["jingli"], "max_jingli":mine["max_jingli"],
+            "jiali":me->query("jiali"), "score":mine["score"], "weight":me->query_weight(),
+            "potential_total":mine["potential"], "learned_points":mine["learned_points"],
+            "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
+            "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
+            "family_title":plain(me->query("family/title")), "fealty":me->query("family/fealty"),
             "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
         "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
@@ -158,7 +175,7 @@ string snapshot(string *args, int request_id) {
         if (ob == me) continue;
         if(ob->is_character()&&(me->is_fighting(ob)||ob->is_fighting(me))) data["enemies"]+=({item_view(ob,me,([]))});
         if (!me->visible(ob) || !stringp(ob->short())) continue;
-        if (ob->is_character()) {
+        if (ob->is_character() && !ob->is_corpse()) {
             mapping v=item_view(ob,me,counts);
             data["room"]["people"]+=({v});
 
@@ -172,9 +189,14 @@ string snapshot(string *args, int request_id) {
     skills = me->query_skills();
     mapped = me->query_skill_map();
     if (mapp(skills)) foreach (string sk in keys(skills)) {
-        string *bases = ({});
+        string *bases = ({}), *available = ({});
+        string *base_ids = ({"force","dodge","parry","sword","blade","unarmed","cuff","strike","finger","hand","claw","staff","whip","leg","hook","spear","hammer","axe","club","stick","throwing"});
+        foreach (string base in base_ids) {
+            mixed allowed;
+            if (!catch(allowed=SKILL_D(sk)->valid_enable(base)) && allowed) available+=({base});
+        }
         if (mapp(mapped)) foreach (string base, string special in mapped) if (special == sk) bases += ({ base });
-        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "bases": bases ]) });
+        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "bases": bases, "enable_bases":available, "basic":member_array(sk,base_ids)>=0 ]) });
     }
     value=me->query_temp("last_damage_from");
     if (objectp(value)) data["death"]["last_attacker"]=plain(value->name());
@@ -212,27 +234,37 @@ string bless(string *args, int request_id) {
         me->set("water",after); break;
     case "qi":
         before=me->query("qi"); cap=me->query("max_qi");
-        me->set("eff_qi",smaller(cap,me->query("eff_qi")+10));
-        after=smaller(me->query("eff_qi"),before+20); me->set("qi",after); break;
+        me->set("eff_qi",smaller(cap,me->query("eff_qi")+100));
+        after=smaller(me->query("eff_qi"),before+100); me->set("qi",after); break;
     case "neili":
-        before=me->query("neili"); cap=bigger(30,me->query("max_neili")); after=smaller(cap,before+10);
+        before=me->query("neili"); cap=bigger(300,me->query("max_neili")); after=smaller(cap,before+100);
         // Do not lower a legitimately overcharged player's current energy.
         if (after<before) after=before;
         me->set("neili",after); break;
     case "money":
-        money=new("/clone/money/silver"); money->set_amount(1);
+        money=new("/clone/money/silver"); money->set_amount(10);
         if (!money->move(me)) { destruct(money); return json_encode((["ok":0,"message":"随身负重已满，请先整理行囊"])); }
-        return json_encode((["ok":1,"delta":1,"message":"已获得一两白银，可在行囊查看"]));
+        return json_encode((["ok":1,"delta":10,"message":"已获得十两白银，可在行囊查看"]));
     case "exp":
-        before=me->query("combat_exp"); after=before+1000; me->set("combat_exp",after); break;
+        before=me->query("combat_exp"); after=before+10000; me->set("combat_exp",after); break;
     case "potential":
-        before=me->query("potential"); after=before+100; me->set("potential",after); break;
+        before=me->query("potential"); after=before+1000; me->set("potential",after); break;
+    case "shen_up":
+        before=me->query("shen"); after=before+1000; me->set("shen",after); break;
+    case "shen_down":
+        before=me->query("shen"); after=before-1000; me->set("shen",after); break;
+    case "jing":
+        before=me->query("jing"); after=me->query("max_jing");
+        me->set("eff_jing",after); me->set("jing",after); break;
+    case "supplies":
+        me->set("food",me->max_food_capacity()); me->set("water",me->max_water_capacity());
+        return json_encode((["ok":1,"message":"食物与饮水已补满"]));
     case "light":
         if (!present("fire",me)) { fire=new("/clone/misc/fire"); fire->move(me); }
         return json_encode(([ "ok":1, "message":"随身火折已备好，夜间也能看清周围" ]));
     default: return json_encode(([ "ok":0, "message":"未知的体验功能" ]));
     }
-    return json_encode(([ "ok":1, "delta":after-before, "message":after>before ? "已少量补充，可继续体验江湖" : "当前已满，无需补充" ]));
+    return json_encode(([ "ok":1, "delta":after-before, "message":after!=before ? "已调整，可继续体验江湖" : "当前已满，无需补充" ]));
 }
 
 object active_player() {
