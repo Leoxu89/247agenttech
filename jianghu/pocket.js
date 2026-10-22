@@ -23,7 +23,7 @@ function readCommand(cmd,title='江湖见闻'){command(cmd);const b=show(title);
 function showLogs(){const body=show('江湖记录');body.append(el('p','p-hint','保留原版对话与动作结果，可上下滑动阅读。'));const pre=el('div','p-log',logs.slice(-30).join('\n\n')||'尚无记录');body.append(pre);}
 $('#p-feedback').onclick=showLogs;
 function meter(label,value,max,kind=''){const box=el('div','p-meter '+kind);const row=el('div');row.append(el('span','',label),el('b','',`${value??0} / ${max??0}`));const track=el('div','p-track');const fill=el('i');fill.style.width=Math.min(100,Math.max(0,100*(value||0)/(max||1)))+'%';track.append(fill);box.append(row,track);return box;}
-function renderVitals(){const node=$('#p-vitals');node.replaceChildren();if(!state?.ready)return;const p=state.player;const label=el('div','p-identity');label.append(el('b','',p.name),el('span','',p.fighting?'正在交战':p.busy?'正在忙碌':p.family||'江湖散人'));node.append(label);const grid=el('div','p-vital-grid');grid.append(meter('气血',p.qi,p.max_qi),meter(p.max_neili?'内力':'体验内力',p.neili,p.max_neili||300,'blue'),meter('食物',p.food,p.max_food,'gold'),meter('饮水',p.water,p.max_water,'blue'));node.append(grid);}
+function renderVitals(){const node=$('#p-vitals');node.replaceChildren();if(!state?.ready)return;const p=state.player;const label=el('div','p-identity');label.append(el('b','',p.name),el('span','',p.fighting?'正在交战':p.busy?'正在忙碌':p.family||'江湖散人'));node.append(label);const grid=el('div','p-vital-grid');grid.append(meter(p.qi_locked?'气血 · 已锁定':'气血',p.qi,p.max_qi),meter((p.max_neili?'内力':'体验内力')+(p.neili_locked?' · 已锁定':''),p.neili,p.max_neili||300,'blue'),meter('食物',p.food,p.max_food,'gold'),meter('饮水',p.water,p.max_water,'blue'));node.append(grid);}
 function skillName(sk){return /[\u3400-\u9fff]/.test(sk.name||'')?sk.name:(globalThis.PocketWorld.skillNames[sk.id]||'未录名武学');}
 function inspect(item,where){
 if(item.token==='mailbox'){const b=show('随身信箱');b.append(el('p','p-description','这是你的江湖信箱。当前是本机单人体验，暂不提供跨玩家寄信。'),button('查看已有信件',()=>readCommand('from','我的信件')));return;}
@@ -96,10 +96,12 @@ function showView(next){view=next;$('#p-feedback').hidden=true;render();$('#p-co
 function showBless(){
  const b=show('天神体验');if(!state?.ready){b.append(el('p','p-hint','请先进入江湖，再使用体验补给。'));return;}b.append(el('p','p-hint','按需补充，不限次数。钱、经验和潜能用于体验成长；不直接提高武学等级。'));
  const status=el('p','p-bless-status','当前正气：'+state.player.shen+' · 选择你需要的帮助');status.setAttribute('role','status');b.append(status);const grid=section(b,'随手补给');
- const lock=button('',async()=>{lock.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless','jing_lock'));if(!result.ok)throw Error(result.message);syncLock(!!result.locked);status.textContent=result.message;await refresh();await PocketSaves.capture('auto');}catch(e){status.textContent=e.message||'未能切换精力锁定，请重试';}finally{lock.disabled=false;}});
- function syncLock(locked){lock.textContent=locked?'解锁精力（精神） · 已锁定':'锁定精力（精神） · 未锁定';lock.setAttribute('aria-pressed',String(locked));}
- syncLock(!!state.player.jing_locked);grid.append(lock);
- b.append(el('p','p-hint','精力即学艺消耗的精神。锁定会补满并保持不减，再点一次解锁；随角色存档保留。潜能、气血和内力仍照常消耗。'));
+ for(const [id,field,label]of [['jing_lock','jing_locked','精力（精神）'],['qi_lock','qi_locked','气血'],['neili_lock','neili_locked','内力']]){
+  const lock=button('',async()=>{lock.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));if(!result.ok)throw Error(result.message);syncLock(!!result.locked);status.textContent=result.message;await refresh();await PocketSaves.capture('auto');}catch(e){status.textContent=e.message||'未能切换锁定，请重试';}finally{lock.disabled=false;}});
+  function syncLock(locked){lock.textContent=(locked?'解锁':'锁定')+label+' · '+(locked?'已锁定':'未锁定');lock.setAttribute('aria-pressed',String(locked));}
+  syncLock(!!state.player[field]);grid.append(lock);
+ }
+ b.append(el('p','p-hint','三个锁定开关独立生效，再点一次解锁，随角色存档保留。气血锁同时保持伤势上限；内力锁不提高永久内力上限，未修内功时借用300点。潜能仍按原版消耗。'));
  for(const [id,label]of [['food','吃饭 · 食物 +30'],['water','喝水 · 饮水 +30'],['qi','恢复气血 / 伤势 +100'],['neili','补充内力 +100'],['money','获得白银 · +10两'],['exp','增加经验 · +10,000'],['potential','增加潜能 · +1,000'],['shen_up','正气 +1,000'],['shen_down','正气 −1,000'],['jing','补满精力（精神）'],['supplies','吃饱喝足 · 补满食水'],['light','备一支火折 · 夜间照明']]){
   const btn=button(label,async()=>{btn.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));await refresh();const p=state.player;status.textContent=(result.delta!==undefined?'本次 '+(result.delta>=0?'+':'')+result.delta+' · ':'')+result.message+'。食物 '+p.food+' / 饮水 '+p.water+' / 气血 '+p.qi+' / 内力 '+p.neili+' / 经验 '+p.exp+' / 潜能 '+p.potential+' / 正气 '+p.shen;if(!result.ok)throw Error(result.message);await PocketSaves.capture('auto');}catch(e){status.textContent='本次未能补充，请重试';}finally{btn.disabled=false;}});grid.append(btn);
  }
@@ -126,7 +128,7 @@ function renderSkills(content,p){content.append(el('h2','','我的武学'),el('p
 function showFullProfile(){const p=state.player,b=show('完整人物状态');
  for(const [title,rows]of [
  ['身份与师承',[['姓名',p.name],['称号',p.title],['绰号',p.nickname],['性别',p.gender],['年龄',p.age+'岁'],['籍贯',p.hometown],['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['辈分',p.family_generation],['门派职衔',p.family_title],['忠诚',p.fealty]]],
- ['身体与战斗',[['气血',p.qi+' / '+p.max_qi],['气血有效上限',p.eff_qi],['精力（精神）',p.jing+' / '+p.max_jing],['精神有效上限',p.eff_jing],['精力锁定',p.jing_locked?'已锁定':'未锁定'],['精力储备',p.jingli+' / '+p.max_jingli],['内力',p.neili+' / '+p.max_neili],['加力',p.jiali],['体力',p.tili+' / '+p.max_tili],['食物',p.food+' / '+p.max_food],['饮水',p.water+' / '+p.max_water],['状态',p.ghost?'死亡':p.fighting?'战斗中':p.busy?'忙碌':'正常']]],
+ ['身体与战斗',[['气血',p.qi+' / '+p.max_qi],['气血有效上限',p.eff_qi],['气血锁定',p.qi_locked?'已锁定':'未锁定'],['精力（精神）',p.jing+' / '+p.max_jing],['精神有效上限',p.eff_jing],['精力锁定',p.jing_locked?'已锁定':'未锁定'],['精力储备',p.jingli+' / '+p.max_jingli],['内力',p.neili+' / '+p.max_neili],['内力锁定',p.neili_locked?'已锁定':'未锁定'],['加力',p.jiali],['体力',p.tili+' / '+p.max_tili],['食物',p.food+' / '+p.max_food],['饮水',p.water+' / '+p.max_water],['状态',p.ghost?'死亡':p.fighting?'战斗中':p.busy?'忙碌':'正常']]],
  ['成长与天赋',[['经验',p.exp],['可用潜能',p.potential],['已用潜能',p.learned_points],['总潜能',p.potential_total],['正气',p.shen],['江湖阅历',p.score],['膂力（先天 / 当前）',p.str_base+' / '+p.str],['悟性（先天 / 当前）',p.int_base+' / '+p.int],['根骨（先天 / 当前）',p.con_base+' / '+p.con],['身法（先天 / 当前）',p.dex_base+' / '+p.dex]]],
  ['财物与历练',[['钱庄存款（文）',p.balance],['当前工作',p.job_name||'无'],['工作进度',p.job_count],['武学数量',state.skills.length],['随身物品',state.inventory.length+'件'],['游玩时间',Math.floor((p.online_seconds||0)/60)+'分钟']]]
  ]){const g=section(b,title);for(const [label,value]of rows){const card=el('div','p-stat');card.append(el('small','',label),el('strong','',String(value??'—')||'—'));g.append(card);}}

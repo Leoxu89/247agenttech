@@ -119,7 +119,7 @@ string snapshot(string *args, int request_id) {
             "gender": plain(me->query("gender")), "family": plain(me->query("family/family_name")),
             "master": plain(me->query("family/master_name")), "hometown": plain(me->query("hometown")),
             "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
-            "jing": mine["jing"], "max_jing": mine["max_jing"], "jing_locked":!!mine["pocket_jing_locked"], "neili": mine["neili"],
+            "jing": mine["jing"], "max_jing": mine["max_jing"], "jing_locked":!!mine["pocket_jing_locked"], "qi_locked":!!mine["pocket_qi_locked"], "neili_locked":!!mine["pocket_neili_locked"], "neili": mine["neili"],
             "max_neili": mine["max_neili"], "tili": mine["tili"], "max_tili": mine["max_tili"],
             "food": mine["food"], "max_food": me->max_food_capacity(),
             "water": mine["water"], "max_water": me->max_water_capacity(),
@@ -221,6 +221,14 @@ string bless(string *args, int request_id) {
     if (me->is_ghost()) return json_encode(([ "ok":0, "message":"此功能不会复活角色" ]));
     kind=args[0];
     switch (kind) {
+    case "qi_lock":
+        cap=!me->query("pocket_qi_locked"); me->set("pocket_qi_locked",cap);
+        if(cap) { me->set("eff_qi",me->query("max_qi")); me->set("qi",me->query("max_qi")); }
+        return json_encode((["ok":1,"locked":cap,"message":cap?"气血及伤势已补满并锁定":"已解锁气血，恢复原版损伤与消耗"]));
+    case "neili_lock":
+        cap=!me->query("pocket_neili_locked"); me->set("pocket_neili_locked",cap);
+        if(cap) me->set("neili",bigger(me->query("neili"),me->query("max_neili")>0?me->query("max_neili"):300));
+        return json_encode((["ok":1,"locked":cap,"message":cap?"内力已补足并锁定，不改变永久内力上限":"已解锁内力，恢复原版消耗"]));
     case "jing_lock":
         cap=!me->query("pocket_jing_locked");
         me->set("pocket_jing_locked",cap);

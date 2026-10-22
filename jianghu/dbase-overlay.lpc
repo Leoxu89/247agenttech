@@ -28,6 +28,17 @@ mixed set(string prop, mixed data) {
       dbase["max_jing"] > 0 && data < dbase["max_jing"])
     data = dbase["max_jing"];
 
+  if (userp(this_object()) && !this_object()->is_ghost() && intp(data)) {
+    if ((prop == "qi" || prop == "eff_qi") && dbase["pocket_qi_locked"] &&
+        dbase["max_qi"] > 0 && data < dbase["max_qi"])
+      data = dbase["max_qi"];
+    if (prop == "neili" && dbase["pocket_neili_locked"]) {
+      int floor = dbase["max_neili"] > 0 ? dbase["max_neili"] : 300;
+      if (dbase["neili"] > floor) floor = dbase["neili"];
+      if (data < floor) data = floor;
+    }
+  }
+
   if (strsrch(prop, '/') != -1)
     return _set(dbase, explode(prop, "/"), data);
 
