@@ -32,6 +32,14 @@ mixed set(string prop, mixed data) {
     if ((prop == "qi" || prop == "eff_qi") && dbase["pocket_qi_locked"] &&
         dbase["max_qi"] > 0 && data < dbase["max_qi"])
       data = dbase["max_qi"];
+    if (prop == "food" && dbase["pocket_food_locked"]) {
+      int cap = this_object()->max_food_capacity();
+      if (cap > 0 && data < cap) data = cap;
+    }
+    if (prop == "water" && dbase["pocket_water_locked"]) {
+      int cap = this_object()->max_water_capacity();
+      if (cap > 0 && data < cap) data = cap;
+    }
     if (prop == "neili" && dbase["pocket_neili_locked"]) {
       int floor = dbase["max_neili"] > 0 ? dbase["max_neili"] : 300;
       if (dbase["neili"] > floor) floor = dbase["neili"];

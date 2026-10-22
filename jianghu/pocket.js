@@ -23,7 +23,7 @@ function readCommand(cmd,title='江湖见闻'){command(cmd);const b=show(title);
 function showLogs(){const body=show('江湖记录');body.append(el('p','p-hint','保留原版对话与动作结果，可上下滑动阅读。'));const pre=el('div','p-log',logs.slice(-30).join('\n\n')||'尚无记录');body.append(pre);}
 $('#p-feedback').onclick=showLogs;
 function meter(label,value,max,kind=''){const box=el('div','p-meter '+kind);const row=el('div');row.append(el('span','',label),el('b','',`${value??0} / ${max??0}`));const track=el('div','p-track');const fill=el('i');fill.style.width=Math.min(100,Math.max(0,100*(value||0)/(max||1)))+'%';track.append(fill);box.append(row,track);return box;}
-function renderVitals(){const node=$('#p-vitals');node.replaceChildren();if(!state?.ready)return;const p=state.player;const label=el('div','p-identity');label.append(el('b','',p.name),el('span','',p.fighting?'正在交战':p.busy?'正在忙碌':p.family||'江湖散人'));node.append(label);const grid=el('div','p-vital-grid');grid.append(meter(p.qi_locked?'气血 · 已锁定':'气血',p.qi,p.max_qi),meter((p.max_neili?'内力':'体验内力')+(p.neili_locked?' · 已锁定':''),p.neili,p.max_neili||300,'blue'),meter('食物',p.food,p.max_food,'gold'),meter('饮水',p.water,p.max_water,'blue'));node.append(grid);}
+function renderVitals(){const node=$('#p-vitals');node.replaceChildren();if(!state?.ready)return;const p=state.player;const label=el('div','p-identity');label.append(el('b','',p.name),el('span','',p.fighting?'正在交战':p.busy?'正在忙碌':p.family||'江湖散人'));node.append(label);const grid=el('div','p-vital-grid');grid.append(meter(p.qi_locked?'气血 · 已锁定':'气血',p.qi,p.max_qi),meter((p.max_neili?'内力':'体验内力')+(p.neili_locked?' · 已锁定':''),p.neili,p.max_neili||300,'blue'),meter(p.food_locked?'食物 · 已锁定':'食物',p.food,p.max_food,'gold'),meter(p.water_locked?'饮水 · 已锁定':'饮水',p.water,p.max_water,'blue'));node.append(grid);}
 function skillName(sk){return /[\u3400-\u9fff]/.test(sk.name||'')?sk.name:(globalThis.PocketWorld.skillNames[sk.id]||'未录名武学');}
 function inspect(item,where){
 if(item.token==='mailbox'){const b=show('随身信箱');b.append(el('p','p-description','这是你的江湖信箱。当前是本机单人体验，暂不提供跨玩家寄信。'),button('查看已有信件',()=>readCommand('from','我的信件')));return;}
@@ -78,7 +78,7 @@ if(view==='map'){globalThis.PocketMap.render(content,state);
  for(const d of r.details)objects.append(button(({paizi:'牌子',shibei:'石碑',bei:'碑',painting:'画卷',sign:'告示',gate:'大门',door:'门',tiezi:'武馆告示'})[d.token]||d.name||d.token,()=>inspect(d,'detail'),'p-scene-object'));
  if(!r.people.length&&!r.items.length&&!r.details.length)objects.append(el('p','p-hint','附近暂无可互动物件。'));
  }
- window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('挂机打坐',()=>PocketIdle.start({kind:'exercise',label:'打坐修炼内力至50',target:50,room:state.room.key})),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
+ window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('挂机打坐',()=>PocketIdle.start({kind:'exercise',label:'持续打坐 · 手动停止',target:0,room:state.room.key})),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
 }else if(view==='bag'){
  content.append(el('h2','','随身行囊'),el('p','p-hint',`${state.inventory.length} 件物品 · 点物品选择吃喝、穿戴或使用`));for(const item of state.inventory){const b=button('',()=>inspect(item,'bag'),'p-row');b.append(el('strong','',item.name),el('span','',(item.worn?'已装备 · ':'')+(item.amount>1||item.currency?item.amount+({silver:'两',gold:'两',coin:'文'}[item.currency]||item.unit||'件'):'查看 / 使用')));content.append(b);}if(!state.inventory.length)content.append(el('p','p-empty','行囊空空，先探索附近的场景吧。'));
 }else if(view==='skills'){
@@ -96,12 +96,12 @@ function showView(next){view=next;$('#p-feedback').hidden=true;render();$('#p-co
 function showBless(){
  const b=show('天神体验');if(!state?.ready){b.append(el('p','p-hint','请先进入江湖，再使用体验补给。'));return;}b.append(el('p','p-hint','按需补充，不限次数。钱、经验和潜能用于体验成长；不直接提高武学等级。'));
  const status=el('p','p-bless-status','当前正气：'+state.player.shen+' · 选择你需要的帮助');status.setAttribute('role','status');b.append(status);const grid=section(b,'随手补给');
- for(const [id,field,label]of [['jing_lock','jing_locked','精力（精神）'],['qi_lock','qi_locked','气血'],['neili_lock','neili_locked','内力']]){
+ for(const [id,field,label]of [['jing_lock','jing_locked','精力（精神）'],['qi_lock','qi_locked','气血'],['neili_lock','neili_locked','内力'],['food_lock','food_locked','食物'],['water_lock','water_locked','饮水']]){
   const lock=button('',async()=>{lock.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));if(!result.ok)throw Error(result.message);syncLock(!!result.locked);status.textContent=result.message;await refresh();await PocketSaves.capture('auto');}catch(e){status.textContent=e.message||'未能切换锁定，请重试';}finally{lock.disabled=false;}});
   function syncLock(locked){lock.textContent=(locked?'解锁':'锁定')+label+' · '+(locked?'已锁定':'未锁定');lock.setAttribute('aria-pressed',String(locked));}
   syncLock(!!state.player[field]);grid.append(lock);
  }
- b.append(el('p','p-hint','三个锁定开关独立生效，再点一次解锁，随角色存档保留。气血锁同时保持伤势上限；内力锁不提高永久内力上限，未修内功时借用300点。潜能仍按原版消耗。'));
+ b.append(el('p','p-hint','五个锁定开关独立生效，再点一次解锁，随角色存档保留。气血锁同时保持伤势上限；内力锁不提高永久内力上限，未修内功时借用300点。食物、饮水锁开启即补满并保持不减；潜能仍按原版消耗。'));
  for(const [id,label]of [['food','吃饭 · 食物 +30'],['water','喝水 · 饮水 +30'],['qi','恢复气血 / 伤势 +100'],['neili','补充内力 +100'],['money','获得白银 · +10两'],['exp','增加经验 · +10,000'],['potential','增加潜能 · +1,000'],['shen_up','正气 +1,000'],['shen_down','正气 −1,000'],['jing','补满精力（精神）'],['supplies','吃饱喝足 · 补满食水'],['light','备一支火折 · 夜间照明']]){
   const btn=button(label,async()=>{btn.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));await refresh();const p=state.player;status.textContent=(result.delta!==undefined?'本次 '+(result.delta>=0?'+':'')+result.delta+' · ':'')+result.message+'。食物 '+p.food+' / 饮水 '+p.water+' / 气血 '+p.qi+' / 内力 '+p.neili+' / 经验 '+p.exp+' / 潜能 '+p.potential+' / 正气 '+p.shen;if(!result.ok)throw Error(result.message);await PocketSaves.capture('auto');}catch(e){status.textContent='本次未能补充，请重试';}finally{btn.disabled=false;}});grid.append(btn);
  }
@@ -128,7 +128,7 @@ function renderSkills(content,p){content.append(el('h2','','我的武学'),el('p
 function showFullProfile(){const p=state.player,b=show('完整人物状态');
  for(const [title,rows]of [
  ['身份与师承',[['姓名',p.name],['称号',p.title],['绰号',p.nickname],['性别',p.gender],['年龄',p.age+'岁'],['籍贯',p.hometown],['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['辈分',p.family_generation],['门派职衔',p.family_title],['忠诚',p.fealty]]],
- ['身体与战斗',[['气血',p.qi+' / '+p.max_qi],['气血有效上限',p.eff_qi],['气血锁定',p.qi_locked?'已锁定':'未锁定'],['精力（精神）',p.jing+' / '+p.max_jing],['精神有效上限',p.eff_jing],['精力锁定',p.jing_locked?'已锁定':'未锁定'],['精力储备',p.jingli+' / '+p.max_jingli],['内力',p.neili+' / '+p.max_neili],['内力锁定',p.neili_locked?'已锁定':'未锁定'],['加力',p.jiali],['体力',p.tili+' / '+p.max_tili],['食物',p.food+' / '+p.max_food],['饮水',p.water+' / '+p.max_water],['状态',p.ghost?'死亡':p.fighting?'战斗中':p.busy?'忙碌':'正常']]],
+ ['身体与战斗',[['气血',p.qi+' / '+p.max_qi],['气血有效上限',p.eff_qi],['气血锁定',p.qi_locked?'已锁定':'未锁定'],['精力（精神）',p.jing+' / '+p.max_jing],['精神有效上限',p.eff_jing],['精力锁定',p.jing_locked?'已锁定':'未锁定'],['精力储备',p.jingli+' / '+p.max_jingli],['内力',p.neili+' / '+p.max_neili],['内力锁定',p.neili_locked?'已锁定':'未锁定'],['加力',p.jiali],['体力',p.tili+' / '+p.max_tili],['食物',p.food+' / '+p.max_food],['食物锁定',p.food_locked?'已锁定':'未锁定'],['饮水',p.water+' / '+p.max_water],['饮水锁定',p.water_locked?'已锁定':'未锁定'],['状态',p.ghost?'死亡':p.fighting?'战斗中':p.busy?'忙碌':'正常']]],
  ['成长与天赋',[['经验',p.exp],['可用潜能',p.potential],['已用潜能',p.learned_points],['总潜能',p.potential_total],['正气',p.shen],['江湖阅历',p.score],['膂力（先天 / 当前）',p.str_base+' / '+p.str],['悟性（先天 / 当前）',p.int_base+' / '+p.int],['根骨（先天 / 当前）',p.con_base+' / '+p.con],['身法（先天 / 当前）',p.dex_base+' / '+p.dex]]],
  ['财物与历练',[['钱庄存款（文）',p.balance],['当前工作',p.job_name||'无'],['工作进度',p.job_count],['武学数量',state.skills.length],['随身物品',state.inventory.length+'件'],['游玩时间',Math.floor((p.online_seconds||0)/60)+'分钟']]]
  ]){const g=section(b,title);for(const [label,value]of rows){const card=el('div','p-stat');card.append(el('small','',label),el('strong','',String(value??'—')||'—'));g.append(card);}}

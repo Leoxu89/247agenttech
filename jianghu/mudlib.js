@@ -19,7 +19,7 @@ function readSnapshot() {
 Module.preRun = Module.preRun || [];
 Module.preRun.push(function () {
   Module.addRunDependency('xkx-image');
-  Promise.all([fetch('dbase-overlay.lpc?v=59c41f232719').then(r=>{if(!r.ok)throw Error('精力适配下载失败');return r.text();}),fetch('force-header.lpc?v=59c41f232719').then(r=>{if(!r.ok)throw Error('内功适配下载失败');return r.text();}),fetch('pocketui.lpc?v=59c41f232719').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
+  Promise.all([fetch('dbase-overlay.lpc?v=724acddb05b3').then(r=>{if(!r.ok)throw Error('精力适配下载失败');return r.text();}),fetch('force-header.lpc?v=724acddb05b3').then(r=>{if(!r.ok)throw Error('内功适配下载失败');return r.text();}),fetch('pocketui.lpc?v=724acddb05b3').then(r=>{if(!r.ok)throw Error('游戏适配下载失败');return r.text();}),
     fetch('mudlib-manifest.json?v=456192d88f90c897').then(r => { if (!r.ok) throw Error('游戏目录下载失败'); return r.json(); }),
     fetch('mudlib.data.gz?v=dd69ee13e5f03e21').then(r => { if (!r.ok) throw Error('游戏内容下载失败'); return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }),
     readSnapshot()

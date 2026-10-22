@@ -121,7 +121,7 @@ string snapshot(string *args, int request_id) {
             "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
             "jing": mine["jing"], "max_jing": mine["max_jing"], "jing_locked":!!mine["pocket_jing_locked"], "qi_locked":!!mine["pocket_qi_locked"], "neili_locked":!!mine["pocket_neili_locked"], "neili": mine["neili"],
             "max_neili": mine["max_neili"], "tili": mine["tili"], "max_tili": mine["max_tili"],
-            "food": mine["food"], "max_food": me->max_food_capacity(),
+            "food_locked":!!mine["pocket_food_locked"], "water_locked":!!mine["pocket_water_locked"], "force_effective":me->query_skill("force"), "food": mine["food"], "max_food": me->max_food_capacity(),
             "water": mine["water"], "max_water": me->max_water_capacity(),
             "job_name":plain(me->query_temp("job_name")),
             "job_done":!!(me->query_temp("mark/劈完了")||me->query_temp("mark/浇完了")||me->query_temp("mark/锄完了")||me->query_temp("mark/锯完了")||me->query_temp("mark/扫完了")||me->query_temp("mark/挑完了")),
@@ -221,6 +221,14 @@ string bless(string *args, int request_id) {
     if (me->is_ghost()) return json_encode(([ "ok":0, "message":"此功能不会复活角色" ]));
     kind=args[0];
     switch (kind) {
+    case "food_lock":
+        cap=!me->query("pocket_food_locked"); me->set("pocket_food_locked",cap);
+        if(cap) me->set("food",me->max_food_capacity());
+        return json_encode((["ok":1,"locked":cap,"message":cap?"食物已补满并锁定":"已解锁食物，恢复原版消耗"]));
+    case "water_lock":
+        cap=!me->query("pocket_water_locked"); me->set("pocket_water_locked",cap);
+        if(cap) me->set("water",me->max_water_capacity());
+        return json_encode((["ok":1,"locked":cap,"message":cap?"饮水已补满并锁定":"已解锁饮水，恢复原版消耗"]));
     case "qi_lock":
         cap=!me->query("pocket_qi_locked"); me->set("pocket_qi_locked",cap);
         if(cap) { me->set("eff_qi",me->query("max_qi")); me->set("qi",me->query("max_qi")); }
