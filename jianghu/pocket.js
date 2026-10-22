@@ -125,9 +125,9 @@ const baseNames={force:'内功',dodge:'轻功',parry:'招架',sword:'剑法',bla
 const handBases=['cuff','strike','finger','leg','hand','claw','unarmed'];
 async function prepareSkills(ids){await command('prepare none',true);if(ids.length)await command('prepare '+ids.join(' '));else close();}
 function skillDetail(skill){const b=show(skillName(skill)),progress=el('div'),status=el('p','p-hint');b.append(progress,status,button('阅读武学说明',()=>readCommand('help '+skill.id,skillName(skill))));
- const paint=()=>{const current=state.skills.find(k=>k.id===skill.id);if(!current)return;progress.replaceChildren(meter('本级熟练度',current.progress||0,current.progress_max||1));status.textContent='当前 '+current.level+' 级 · '+(current.bases?.length?'已激发为 '+current.bases.map(x=>baseNames[x]||x).join('、'):'尚未激发')+(current.prepared?' · 已备招用于空手攻击':'');};paint();liveDetail=paint;
+ const paint=()=>{const current=state.skills.find(k=>k.id===skill.id);if(!current)return;progress.replaceChildren(meter('本级熟练度',current.progress||0,current.progress_max||1));status.textContent='当前 '+current.level+' 级 · '+(current.basic?'基本功，无需激发':current.bases?.length?'已激发为 '+current.bases.map(x=>baseNames[x]||x).join('、'):'尚未激发')+(current.prepared?' · 已备招用于空手攻击':'');};paint();liveDetail=paint;
  if(skill.bases?.length&&skill.practice_supported){const g=section(b,'练习');for(const base of skill.bases)g.append(button('练习'+(baseNames[base]||base),()=>command('practice '+base+' 1')),button('挂机练习'+(baseNames[base]||base),()=>PocketIdle.start({kind:'practice',base,skill:skill.id,label:skillName(skill),room:state.room.key})));}
- else if(skill.bases?.length)b.append(el('p','p-hint','此内功通过请教提升等级，打坐提升永久内力；不提供无效的自练操作。'));
+ else if(skill.bases?.length)b.append(el('p','p-hint','此内功通过请教提升等级；在场景点打坐，可以积累永久内力修为。'));
  if(!skill.basic&&skill.enable_bases?.length){const g=section(b,'激发 / 装备');for(const base of skill.enable_bases)g.append(button('激发为'+(baseNames[base]||base),()=>command('enable '+base+' '+skill.id)));}
  if(skill.bases?.some(base=>handBases.includes(base))){const g=section(b,'空手攻击备招');g.append(button('使用'+skillName(skill)+'进行空手攻击',()=>prepareSkills([skill.id])));for(const other of state.skills.filter(k=>skill.combines?.includes(k.id)&&k.bases?.some(base=>handBases.includes(base))))g.append(button('组合备招 · '+skillName(skill)+' + '+skillName(other),()=>prepareSkills([skill.id,other.id])));}
 }
