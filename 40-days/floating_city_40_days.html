@@ -302,6 +302,10 @@
     .dice { font-size: 60px; text-align: center; margin: 10px; }
     .log { height: 230px; }
     .value { overflow-wrap: anywhere; word-break: normal; }
+    .debtHint, .tutorialHint { font-size: 11px; color: #fcd34d; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+    .debtHint button, .tutorialHint button, .marketHeading button { padding: 3px 7px; min-height: 28px; font-size: 10px; }
+    .holdingProfit { font-size: 9px; overflow-wrap: anywhere; }
+    .marketCard > div { min-width: 0; }
     @media (max-width: 900px) {
       .grid { grid-template-columns: minmax(0, 1fr); }
       header { flex-direction: row; }
@@ -353,7 +357,7 @@
       .grid { display: flex; flex: 1; min-height: 0; align-items: stretch; }
       .marketPanel { width: 100%; padding: 8px; display: flex; flex-direction: column; gap: 4px; min-height: 0; box-shadow: none; }
       .marketHeading { font-size: 14px; margin: 0; min-height: 24px; flex-wrap: nowrap; }
-      .marketHeading .small { max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+      .marketHeading .small { max-width: 65%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
       .marketList { display: grid; gap: 2px; flex: 1; min-height: 0; grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); }
       .marketCard { padding: 0 4px 0 7px; border-radius: 7px; grid-template-columns: minmax(0, 1fr) minmax(53px, .55fr) 82px; gap: 4px; min-height: 0; }
       .marketCard strong { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.2; }
@@ -442,9 +446,38 @@ let currentTrade = null;
 let lastRoll = null;
 let noticeTimer;
 let marketPage = 0;
+let holdingsOnly = false;
+let tutorialStep = -1;
+function startTutorial() { closeModal(); tutorialStep = 0; render(); }
+function skipTutorial() { tutorialStep = -1; render(); }
+function tutorialText() { return [t('① 买入少量偏低商品', '① Buy a small amount at a low price'), t('② 点击城市旅行 · 消耗1天', '② Pick a city · costs 1 day'), t('③ 查看盈亏，选择卖出', '③ Check profit and choose when to sell')][tutorialStep]; }
+function rememberMarket() {
+  if (!state.marketHistory) state.marketHistory = locations.map(() => null);
+  state.marketHistory[state.location] = { day: state.day, prices: [...state.prices] };
+}
+function holdingText(i) {
+  if (!state.inv[i]) return '';
+  const cost = state.costBasis?.[i];
+  return cost == null ? t('成本未知', 'Cost unknown') : `${t('均', 'Avg ')}${money(cost / state.inv[i])} · ${t('浮盈', 'P/L ')}${money(state.inv[i] * state.prices[i] - cost)}`;
+}
+function setTradeFraction(fraction) {
+  $('tradeQty').value = Math.max(1, Math.floor(tradeLimit(currentTrade.type, currentTrade.index) * fraction));
+  updateTradePreview();
+}
+function updateTradePreview() {
+  if (!currentTrade || !$('tradePreview')) return;
+  const { type, index } = currentTrade, qty = Number($('tradeQty').value), max = tradeLimit(type, index);
+  if (!Number.isSafeInteger(qty) || qty < 1 || qty > max) { $('tradePreview').textContent = t('请输入有效数量。', 'Enter a valid quantity.'); return; }
+  const total = qty * state.prices[index], cost = state.costBasis?.[index];
+  $('tradePreview').textContent = `${t('总金额', 'Total')}: ${money(total)} · ${t('交易后现金', 'Cash after')}: ${money(state.cash + (type === 'buy' ? -total : total))}` + (type === 'sell' ? ` · ${t('预计利润', 'Estimated profit')}: ${cost == null ? t('成本未知', 'Cost unknown') : money(total - Math.floor(cost * qty / state.inv[index]))}` : '');
+}
+function previewDayAction(kind) { pendingDayAction = kind; openModal('dayAction'); }
+let pendingDayAction = 'work';
+function confirmDayAction() { const kind = pendingDayAction; closeModal(); if (kind === 'work') workGig(); else rest(); }
+
 const shortNames = [['潮玩盲盒', 'Blind boxes'], ['稀有卡牌', 'Rare cards'], ['偶像周边', 'K-pop merch'], ['联名球鞋', 'Sneakers'], ['游戏掌机', 'Handhelds'], ['无人机', 'Drones'], ['AI眼镜', 'AI glasses'], ['算力显卡', 'AI GPUs'], ['比特币凭证', 'Bitcoin notes']];
 const compactMoney = n => `${n < 0 ? '-' : ''}¥${new Intl.NumberFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Math.abs(n))}`;
-function marketPageSize() { return matchMedia('(max-width: 900px)').matches ? Math.min(9, Math.max(1, Math.floor(((visualViewport?.height || innerHeight) - 352) / 46))) : 9; }
+function marketPageSize() { return matchMedia('(max-width: 900px)').matches ? Math.min(9, Math.max(1, Math.floor(((visualViewport?.height || innerHeight) - 402) / 46))) : 9; }
 function changeMarketPage(delta) { marketPage += delta; render(); }
 function closePanels() { document.querySelectorAll('.mobileHeader details').forEach(el => el.open = false); }
 function secureRandomInt(limit) {
@@ -489,14 +522,15 @@ function addLog(zh, en) {
 }
 function newGame(ask = true) {
   if (ask && state && !state.ended && !confirm(t('开始新游戏会放弃未保存的进度，继续吗？', 'Start a new game and discard unsaved progress?'))) return;
-  closeModal();
-  state = { runId: uid(), day: 1, cash: 2000, bank: 0, debt: 5500, health: 100, home: 0, properties: homes.map(() => 0), capacity: 100, location: 0, prices: [], inv: goods.map(() => 0), log: [], news: 0, ended: false, endReason: null, submitted: false };
+  closeModal(); tutorialStep = -1; holdingsOnly = false; marketPage = 0;
+  state = { runId: uid(), day: 1, cash: 2000, bank: 0, debt: 5500, health: 100, home: 0, properties: homes.map(() => 0), capacity: 100, location: 0, prices: [], costBasis: goods.map(() => 0), marketHistory: locations.map(() => null), inv: goods.map(() => 0), log: [], news: 0, ended: false, endReason: null, submitted: false };
   generatePrices();
   addLog('你抵达上海，带着 ¥2,000 和 ¥5,500 债务。', 'You arrive in Shanghai with ¥2,000 and ¥5,500 of debt.');
   render();
 }
 function generatePrices(shock = null) {
   state.prices = goods.map((g, i) => Math.max(1, Math.round(rand(g.min, g.max) * locations[state.location].bias[i] * (.75 + Math.random() * .5) * (shock?.index === i ? shock.factor : 1))));
+  rememberMarket();
   state.news = shock ? { index: shock.index, up: shock.factor > 1 } : rand(0, 2);
 }
 function newsText() {
@@ -518,25 +552,27 @@ function render() {
   ];
   const pageSize = marketPageSize();
   marketPage = Math.max(0, Math.min(marketPage, Math.ceil(goods.length / pageSize) - 1));
-  const visibleGoods = goods.map((g, i) => ({g, i})).slice(marketPage * pageSize, (marketPage + 1) * pageSize);
+  const filteredGoods = goods.map((g, i) => ({g, i})).filter(({i}) => !holdingsOnly || state.inv[i]);
+  marketPage = Math.max(0, Math.min(marketPage, Math.ceil(filteredGoods.length / pageSize) - 1));
+  const visibleGoods = filteredGoods.slice(marketPage * pageSize, (marketPage + 1) * pageSize);
   const statusHtml = `<div class="sectionTitle">${t('你的旅程', 'Your journey')}<span class="small">${state.ended ? t('已结束', 'Finished') : t('进行中', 'In progress')}</span></div>
     <div class="stats">${stats.map(([label, value, cls]) => `<div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join('')}</div>
     <div class="bar" role="meter" aria-label="${t('仓位使用', 'Storage used')}" aria-valuemin="0" aria-valuemax="${state.capacity}" aria-valuenow="${usedSpace()}"><div class="barFill" style="width:${Math.min(100, usedSpace() / state.capacity * 100)}%"></div></div>
     <p class="small">⌂ ${t('房产', 'Properties')} ${propertyCount()} · ${t('总价值', 'Total value')} ${money(propertyValue())}</p>
-    <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), 'workGig()', state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), 'rest()', state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}${button(t('医院', 'Hospital'), "openModal('hospital')", state.ended)}</div>
+    <div class="actions">${button(t('存银行', 'Deposit'), "bankAction('deposit')", state.ended)}${button(t('取银行', 'Withdraw'), "bankAction('withdraw')", state.ended)}${button(t('还债', 'Repay debt'), "bankAction('repay')", state.ended)}${button(t('购买房产', 'Property market'), "openModal('homes')", state.ended)}${button(t('打零工 · 1天', 'Work · 1 day'), "previewDayAction('work')", state.ended)}${button(t('休息 · 1天', 'Rest · 1 day'), "previewDayAction('rest')", state.ended)}${button(t('骰子赌局', 'Dice game'), "openModal('dice')", state.ended)}${button(t('医院', 'Hospital'), "openModal('hospital')", state.ended)}</div>
     <p class="hint">${t('每天银行 +2%，债务 +10%。旅行、工作、休息消耗一天。交易、买房和骰子不耗时。', 'Each day: bank +2%, debt +10%. Travel, work and rest take a day. Trading, property and dice take no time.')}</p>
     <p class="hint">${t('统一使用虚构游戏货币 ¥，所有商品和价格均为虚构。', 'All cities use fictional game currency ¥. Goods and prices are fictional.')}</p>`;
   $('app').innerHTML = `<header class="desktopHeader"><div><div class="eyebrow">${t('40天 / 环球交易', '40 DAYS / WORLD TOUR')}</div><h1>${t('浮城四十日', 'Floating City: 40 Days')}</h1><div class="subtitle">${t('十座世界名城。四十天。你能走多远？', 'Ten world cities. Forty days. How far can you go?')}</div></div>
     <div class="topButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('排行榜', 'Leaderboard'), "openModal('board')")}${button(t('English', '中文'), 'toggleLanguage()')}</div></header>
     
-    <div class="mobileHeader"><div class="mobileTop"><div class="mobileTitle">${nameOf(locations[state.location])}<small>${t('第', 'Day ')}${state.day}/40</small></div><div class="mobileTopControls"><button type="button" class="boardShortcut" aria-label="${t('全球排行榜', 'World leaderboard')}" onclick="openModal('board')">🏆</button>${button(t('EN', '中'), 'toggleLanguage()')}<details class="gameMenu"><summary aria-label="${t('游戏菜单', 'Game menu')}">☰</summary><div class="mobilePanel"><div class="sectionTitle">${t('游戏菜单', 'Game menu')}</div><div class="menuButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('旅程记录', 'Journal'), "openModal('journal')")}</div></div></details></div></div>
-    <details class="mobileStatus"><summary aria-label="${t('展开完整状态和操作', 'Expand status and actions')}"><div class="statusStrip"><div class="statusChip" title="${t('现金', 'Cash')}: ${money(state.cash)}">💵 <span>${compactMoney(state.cash)}</span></div><div class="statusChip" title="${t('健康', 'Health')}">♥ <span>${state.health}</span></div><div class="statusChip" title="${t('仓位', 'Storage')}">▣ <span>${usedSpace()}/${state.capacity}</span></div><div class="statusChip" title="${t('净资产', 'Net worth')}: ${money(netWorth())}">◆ <span>${compactMoney(netWorth())}</span><span class="expandHint">⌄</span></div></div></summary><div class="mobilePanel">${statusHtml}</div></details></div>
-    <div class="grid"><aside class="panel desktopStatus">${statusHtml}</aside><main class="panel marketPanel"><div class="sectionTitle marketHeading">${t('全球交易市场', 'Global market')}<span class="small">${newsText()}</span></div><div class="marketList" style="--rows:${pageSize}">${visibleGoods.map(({g, i}) => {
+    <div class="mobileHeader"><div class="mobileTop"><div class="mobileTitle">${nameOf(locations[state.location])}<small>${t('第', 'Day ')}${state.day}/40</small></div><div class="mobileTopControls"><button type="button" class="boardShortcut" aria-label="${t('全球排行榜', 'World leaderboard')}" onclick="openModal('board')">🏆</button>${button(t('EN', '中'), 'toggleLanguage()')}<details class="gameMenu"><summary aria-label="${t('游戏菜单', 'Game menu')}">☰</summary><div class="mobilePanel"><div class="sectionTitle">${t('游戏菜单', 'Game menu')}</div><div class="menuButtons">${button(t('新游戏', 'New game'), 'newGame()', false, 'primary')}${button(t('保存文件', 'Save file'), 'saveGame()')}${button(t('读取文件', 'Load file'), 'loadGame()')}${button(t('读取浏览器存档', 'Browser save'), 'loadBrowserSave()')}${button(t('旅程记录', 'Journal'), "openModal('journal')")}${button(t('新手引导', 'Tutorial'), 'startTutorial()')}${button(t('城市行情', 'City notes'), "openModal('cityNotes')")}</div></div></details></div></div>
+    <details class="mobileStatus"><summary aria-label="${t('展开完整状态和操作', 'Expand status and actions')}"><div class="statusStrip"><div class="statusChip" title="${t('现金', 'Cash')}: ${money(state.cash)}">💵 <span>${compactMoney(state.cash)}</span></div><div class="statusChip" title="${t('健康', 'Health')}">♥ <span>${state.health}</span></div><div class="statusChip" title="${t('仓位', 'Storage')}">▣ <span>${usedSpace()}/${state.capacity}</span></div><div class="statusChip" title="${t('净资产', 'Net worth')}: ${money(netWorth())}">${t('净', 'NW')} <span>${compactMoney(netWorth())}</span><span class="expandHint">⌄</span></div></div></summary><div class="mobilePanel">${statusHtml}</div></details></div>
+    <div class="debtHint">${t('债务', 'Debt')} ${compactMoney(state.debt)} · ${t('下一天利息', 'Next interest')} +${money(Math.floor(state.debt * 1.1) - state.debt)} ${button(t('详情', 'Details'), "openModal('rules')")}</div><div class="grid"><aside class="panel desktopStatus">${statusHtml}</aside><main class="panel marketPanel"><div class="sectionTitle marketHeading">${t('全球交易市场', 'Global market')}<span class="small">${button(holdingsOnly ? t('全部商品', 'All items') : t('只看持仓', 'Holdings'), 'holdingsOnly=!holdingsOnly;marketPage=0;render()')}${button(t('城市行情', 'City notes'), "openModal('cityNotes')")}</span></div>${tutorialStep >= 0 ? `<div class="tutorialHint">${tutorialText()} ${button(t('跳过', 'Skip'), 'skipTutorial()')}</div>` : ''}<div class="marketList" style="--rows:${Math.max(1, Math.min(pageSize, visibleGoods.length))}">${!visibleGoods.length ? `<p class="small">${t('暂无持仓，点击“全部商品”开始交易。', 'No holdings. Tap All items to start trading.')}</p>` : ''}${visibleGoods.map(({g, i}) => {
       const average = Math.round((g.min + g.max) / 2);
       const signal = state.prices[i] < average * .65 ? t('偏低', 'Low') : state.prices[i] > average * 1.35 ? t('偏高', 'High') : t('正常', 'Normal');
-      return `<article class="marketCard"><div><strong><span class="itemIcon" aria-hidden="true">${g.icon}</span><span class="fullName">${nameOf(g)}</span><span class="shortName">${t(...shortNames[i])}</span></strong><span class="small"><span class="unitSize">${t('占位', 'Space')} ${g.size} · </span> ${t('持有', 'Owned')} ${state.inv[i]}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal}<span class="reference"> · ${t('参考', 'Ref.')} ${money(average)}</span></span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
+      return `<article class="marketCard"><div><strong><span class="itemIcon" aria-hidden="true">${g.icon}</span><span class="fullName">${nameOf(g)}</span><span class="shortName">${t(...shortNames[i])}</span></strong><span class="small"><span class="unitSize">${t('占位', 'Space')} ${g.size} · </span> ${t('持有', 'Owned')} ${state.inv[i]}${state.inv[i] ? `<br><span class="holdingProfit">${holdingText(i)}</span>` : ''}</span></div><div class="price">${money(state.prices[i])}<span class="small">${signal}<span class="reference"> · ${t('参考', 'Ref.')} ${money(average)}</span></span></div><div class="tradeActions">${button(t('买入', 'Buy'), `openTrade('buy',${i})`, state.ended)}${button(t('卖出', 'Sell'), `openTrade('sell',${i})`, state.ended || !state.inv[i])}</div></article>`;
     }).join('')}</div>
-    <div class="marketPager">${button('‹', 'changeMarketPage(-1)', marketPage === 0)}<span>${t('商品', 'Items')} ${marketPage * pageSize + 1}–${Math.min((marketPage + 1) * pageSize, goods.length)} / ${goods.length} · ${t('持有数量显示在名称下方', 'Holdings shown below each item')}</span>${button('›', 'changeMarketPage(1)', (marketPage + 1) * pageSize >= goods.length)}</div><div class="desktopTravel"><div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>${button(t('🎲 随机下一站 · 1天', '🎲 Random city · 1 day'), 'randomTravel()', state.ended, 'primary')}
+    <div class="marketPager">${button('‹', 'changeMarketPage(-1)', marketPage === 0)}<span>${t('商品', 'Items')} ${(filteredGoods.length ? marketPage * pageSize + 1 : 0)}–${Math.min((marketPage + 1) * pageSize, filteredGoods.length)} / ${filteredGoods.length}</span>${button('›', 'changeMarketPage(1)', (marketPage + 1) * pageSize >= filteredGoods.length)}</div><div class="desktopTravel"><div class="sectionTitle spacer">${t('下一站', 'Your next stop')}<span class="small">${t('每次旅行消耗1天', 'Each trip takes 1 day')}</span></div><div class="map">${locations.map((loc, i) => button(`${loc.flag} ${nameOf(loc)}${i === state.location ? t(' · 当前', ' · Here') : ''}`, `travel(${i})`, state.ended || i === state.location)).join('')}</div>${button(t('🎲 随机下一站 · 1天', '🎲 Random city · 1 day'), 'randomTravel()', state.ended, 'primary')}
     </div><div class="desktopJournal"><div class="sectionTitle spacer">${t('旅程记录', 'Travel journal')}</div><div class="log">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div></div></main></div>
     <nav class="mobileDock" aria-label="${t('选择目的地', 'Choose destination')}"><div class="cityGrid">${locations.map((loc,i) => `<button type="button" onclick="travel(${i})" ${state.ended || i===state.location ? 'disabled' : ''} ${i===state.location ? 'aria-current="location"' : ''}><span aria-hidden="true">${loc.flag}</span> ${nameOf(loc)}</button>`).join('')}</div><div class="travelTools"><button type="button" aria-label="${t('旅程记录', 'Travel journal')}" onclick="openModal('journal')">☷</button>${button(t('🎲 随机下一站 · 1天', '🎲 Random city · 1 day'), 'randomTravel()', state.ended, 'primary')}</div></nav>`;
   document.querySelectorAll('.mobileHeader summary').forEach(summary => summary.addEventListener('click', () => {
@@ -568,6 +604,7 @@ function toggleLanguage() {
     renderModal();
     Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
     if (modal === 'hospital') updateHospitalCost();
+    if (modal === 'trade') updateTradePreview();
   }
 }
 function localBoardEntries() {
@@ -636,7 +673,16 @@ function renderModal() {
   let title = '', body = '';
   if (modal === 'intro') {
     title = t('四十天，环游世界', 'Forty days. A world of opportunity.');
-    body = `<p>${t('从上海出发，带着 ¥2,000 和 ¥5,500 债务。在十座城市间交易潮流商品，买房扩仓，争夺财富榜。', 'Start in Shanghai with ¥2,000 and ¥5,500 of debt. Trade modern collectibles and tech across ten cities, buy property and build your fortune.')}</p><p>${t('活下来、还清债务，在第40天结束时结算。存档可下载为本地JSON文件。', 'Survive, repay your debt and settle at the end of day 40. Download your save as a local JSON file.')}</p>${button(t('开始旅程', 'Start journey'), 'closeModal()', false, 'primary')}`;
+    body = `<p>${t('从上海出发，带着 ¥2,000 和 ¥5,500 债务。在十座城市间交易潮流商品，买房扩仓，争夺财富榜。', 'Start in Shanghai with ¥2,000 and ¥5,500 of debt. Trade modern collectibles and tech across ten cities, buy property and build your fortune.')}</p><p>${t('活下来、还清债务，在第40天结束时结算。存档可下载为本地JSON文件。', 'Survive, repay your debt and settle at the end of day 40. Download your save as a local JSON file.')}</p>${button(t('新手引导 · 三步上手', 'Tutorial · Three steps'), 'startTutorial()', false, 'primary')} ${button(t('直接开始', 'Skip tutorial'), 'closeModal()')}`;
+  } else if (modal === 'rules') {
+    title = t('债务与时间', 'Debt and time');
+    body = `<p>${t('目标：活到第40天，尽早还债，提高最终净资产。净资产包含现金、银行、库存市值和房产，减去债务。', 'Goal: survive 40 days, repay debt early and grow final net worth. Net worth includes cash, bank, inventory and property, minus debt.')}</p><p>${t('旅行、工作、休息各消耗一天：银行+2%，债务+10%，还可能触发随机事件。交易不耗时。偏低/偏高相对基础参考价，不保证下一站盈利。', 'Travel, work and rest cost one day: bank +2%, debt +10%, plus possible random events. Trading takes no time. Low/high compare against base reference prices and do not guarantee future profit.')}</p>${button(t('重新查看新手引导', 'Start tutorial'), 'startTutorial()')}`;
+  } else if (modal === 'dayAction') {
+    title = pendingDayAction === 'work' ? t('打工前确认', 'Before working') : t('休息前确认', 'Before resting');
+    body = `<p>${pendingDayAction === 'work' ? t('收入 ¥180–520，健康减少4–9点。', 'Earn ¥180–520; lose 4–9 health.') : t('恢复10–18点健康，最高100点。', 'Restore 10–18 health, capped at 100.')}</p><p>${t('消耗1天，债务增加', 'Costs 1 day; debt increases by')} ${money(Math.floor(state.debt * 1.1) - state.debt)}。${t('当天仍可能触发随机事件。', 'Random events may also occur.')}</p>${button(t('确认 · 消耗1天', 'Confirm · 1 day'), 'confirmDayAction()', false, 'primary')}`;
+  } else if (modal === 'cityNotes') {
+    title = t('城市行情参考', 'City market notes');
+    body = `<p>${t('当前市场消息', 'Current market news')}: ${newsText()}</p><p>${t('以下是上次亲自访问的价格，不是实时行情。再次抵达时价格会变化。点击主屏幕城市按钮即可旅行，消耗1天。', 'These are prices from your last visit, not live quotes. Prices change on arrival. Tap a city on the main screen to travel, costing 1 day.')}</p>${locations.map((loc, i) => { const record = state.marketHistory?.[i]; const cheap = loc.bias.indexOf(Math.min(...loc.bias)); return `<article class="home"><strong>${loc.flag} ${nameOf(loc)}</strong><p>${t('相对价格倾向偏低', 'Tends to be cheaper')}: ${nameOf(goods[cheap])}</p><p>${record ? `${t('第', 'Day ')}${record.day}${t('天', '')} · ${goods.map((g,j) => `${nameOf(g)} ${money(record.prices[j])}`).join(' · ')}` : t('尚未访问，无历史报价。', 'Not visited; no historical quotes.')}</p></article>`; }).join('')}`;
   } else if (modal === 'journal') {
     title = t('旅程记录', 'Travel journal');
     body = `<div class="journalEntries">${state.log.map(entry => `<p>${t('第', 'Day ')}${entry.day}${t('天：', ': ')}${escapeHtml(entry[lang])}</p>`).join('')}</div>`;
@@ -644,14 +690,14 @@ function renderModal() {
     const { type, index } = currentTrade;
     const g = goods[index], max = tradeLimit(type, index);
     title = `${type === 'buy' ? t('买入', 'Buy') : t('卖出', 'Sell')} · ${nameOf(g)}`;
-    body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max || ''}" required autofocus /><div class="tradeQuantityButtons">${button(t('最少', 'Min'), "$('tradeQty').value=1", !max)}${button(t('最大', 'Max'), `$('tradeQty').value=${max}`, !max)}</div><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
+    body = `<p>${money(state.prices[index])} / ${t('件', 'unit')} · ${t('每件占位', 'Space each')} ${g.size}<br>${t('最多数量', 'Maximum quantity')}: ${max}<br>${t('基础参考价', 'Base reference')}: ${money((g.min + g.max) / 2)} · ${t('偏低/偏高不保证盈利', 'Low/high does not guarantee profit')}</p><form onsubmit="event.preventDefault();doTrade()"><label for="tradeQty">${t('数量', 'Quantity')}</label><input id="tradeQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max ? (type === 'buy' ? 1 : max) : ''}" oninput="updateTradePreview()" required autofocus /><div class="tradeQuantityButtons">${button('1', "$('tradeQty').value=1;updateTradePreview()", !max)}${button('¼', 'setTradeFraction(.25)', !max)}${button('½', 'setTradeFraction(.5)', !max)}${button(t('最大', 'Max'), 'setTradeFraction(1)', !max)}</div><p id="tradePreview" aria-live="polite"></p><div class="tradeBtns"><button class="primary" ${!max ? 'disabled' : ''}>${t('确认交易', 'Confirm trade')}</button>${button(t('取消', 'Cancel'), 'closeModal()')}</div></form>`;
   } else if (modal === 'homes') {
     title = t('全球房产 · 购置资产', 'Property market · Build your portfolio');
     body = `<p>${t('每种房产都能重复购买，可选择购买数量。每次支付全价，房产价值及额外仓位累计，不设购房套数上限。', 'Buy any property repeatedly, with your choice of quantity. Pay the full price each time; property value and extra storage accumulate with no gameplay limit on ownership.')}</p><p>${t('已持有', 'Owned')}: ${propertyCount()} · ${t('总仓位', 'Total storage')}: ${state.capacity}</p><div class="homes">${homes.slice(1).map((home, offset) => { const i = offset + 1, max = Math.floor(state.cash / home.price); return `<article class="home"><strong>${nameOf(home)}</strong><p>${money(home.price)} / ${t('套', 'property')}<br>${t('每套增加仓位', 'Extra storage each')}: +${home.capacity - 100}<br>${t('持有', 'Owned')}: ${state.properties[i]}</p><form onsubmit="event.preventDefault();buyHome(${i})"><label for="homeQty${i}">${t('购买数量', 'Quantity')}</label><input id="homeQty${i}" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="1" required /><button class="primary" ${max < 1 ? 'disabled' : ''}>${t('购买', 'Buy property')}</button></form></article>`; }).join('')}</div>`;
   } else if (modal === 'hospital') {
     title = t('医院', 'Hospital');
     const max = Math.max(0, Math.min(100 - state.health, Math.floor(state.cash / 10000)));
-    body = `<p>${t('每恢复1点健康花费 ¥10,000，不消耗天数。健康最高100点。', 'Restore health for ¥10,000 per point, without spending a day. Maximum health is 100.')}</p><p>${t('当前健康', 'Current health')}: ${state.health}/100 · ${t('现金', 'Cash')}: ${money(state.cash)}<br>${t('最多可恢复', 'Maximum recovery')}: ${max}</p><form onsubmit="event.preventDefault();buyHealth()"><label for="healthQty">${t('恢复点数', 'Health points to restore')}</label><input id="healthQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max ? 1 : ''}" oninput="updateHospitalCost()" required /><p id="hospitalCost" aria-live="polite">${t('费用', 'Cost')}: ${money(max ? 10000 : 0)}</p>${button(t('最大恢复', 'Maximum recovery'), `$('healthQty').value=${max};updateHospitalCost()`, !max)} <button class="primary" ${!max ? 'disabled' : ''}>${t('确认治疗', 'Confirm treatment')}</button></form>${!max ? `<p>${state.health === 100 ? t('健康已满。', 'You are already at full health.') : t('现金不足，每点健康需要 ¥10,000。', 'Not enough cash. Each point costs ¥10,000.')}</p>` : ''}`;
+    body = `<p>${t('现金不足？可选择休息恢复10–18点健康，但会消耗1天并结算利息，还可能遇到随机事件。', 'Short on cash? Rest restores 10–18 health but costs one day, applies interest and may trigger a random event.')} ${button(t('查看休息代价', 'Review rest'), "previewDayAction('rest')", state.health === 100)}</p><p>${t('每恢复1点健康花费 ¥10,000，不消耗天数。健康最高100点。', 'Restore health for ¥10,000 per point, without spending a day. Maximum health is 100.')}</p><p>${t('当前健康', 'Current health')}: ${state.health}/100 · ${t('现金', 'Cash')}: ${money(state.cash)}<br>${t('最多可恢复', 'Maximum recovery')}: ${max}</p><form onsubmit="event.preventDefault();buyHealth()"><label for="healthQty">${t('恢复点数', 'Health points to restore')}</label><input id="healthQty" type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${max ? 1 : ''}" oninput="updateHospitalCost()" required /><p id="hospitalCost" aria-live="polite">${t('费用', 'Cost')}: ${money(max ? 10000 : 0)}</p>${button(t('最大恢复', 'Maximum recovery'), `$('healthQty').value=${max};updateHospitalCost()`, !max)} <button class="primary" ${!max ? 'disabled' : ''}>${t('确认治疗', 'Confirm treatment')}</button></form>${!max ? `<p>${state.health === 100 ? t('健康已满。', 'You are already at full health.') : t('现金不足，每点健康需要 ¥10,000。', 'Not enough cash. Each point costs ¥10,000.')}</p>` : ''}`;
   } else if (modal === 'dice') {
     title = t('幸运骰子', 'Lucky dice');
     body = `<p>${t('掷出4、5、6获胜，返还下注的2倍（含本金）；1、2、3输掉下注。胜率50%，不消耗天数，只使用游戏现金。', 'Roll 4, 5 or 6 to receive 2× your stake including the original bet. Roll 1, 2 or 3 and lose the stake. A 50% win chance, no day cost, game cash only.')}</p><p>${t('可用现金', 'Available cash')}: ${money(state.cash)}</p><div class="dice" aria-hidden="true">${lastRoll ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][lastRoll.roll - 1] : '⚄'}</div><p role="status">${lastRoll ? `${t('点数', 'Roll')}: ${lastRoll.roll} · ${lastRoll.roll >= 4 ? t('获胜，净赚', 'Won, net gain') : t('未获胜，损失', 'Lost')} ${money(lastRoll.bet)}` : ''}</p><form onsubmit="event.preventDefault();rollDice()"><label for="bet">${t('下注金额（整数）', 'Your stake (whole units)')}</label><input id="bet" type="number" inputmode="numeric" min="1" max="${state.cash}" step="1" required value="${Math.min(state.cash, lastRoll?.bet || 100) || ''}" /><button class="primary" ${!state.cash ? 'disabled' : ''}>${t('下注并掷骰', 'Bet & roll')}</button></form>`;
@@ -664,6 +710,7 @@ function renderModal() {
     body = `${modal === 'ending' ? `<p>${t('最终净资产', 'Final net worth')}: <strong class="value goodText">${money(netWorth())}</strong><br>${t('现金', 'Cash')} ${money(state.cash)} · ${t('银行', 'Bank')} ${money(state.bank)} · ${t('债务', 'Debt')} ${money(state.debt)}</p>${already ? `<p>${t('本局成绩已记录。', 'This run has been recorded.')}</p>` : `<form onsubmit="event.preventDefault();submitScore()"><label for="playerName">${t('留下你的名字（最多24字符）', 'Your name (up to 24 characters)')}</label><input id="playerName" type="text" maxlength="24" required autocomplete="nickname" placeholder="${t('玩家名称', 'Player name')}" /><button class="primary" id="submitScoreButton" ${submittingScore ? 'disabled' : ''}>${submittingScore ? t('正在发布…', 'Publishing…') : t('发布全球成绩', 'Publish score')}</button></form>`}${button(t('再玩一次', 'Play again'), 'newGame(false)')}<h3>${t('财富排行榜', 'Wealth leaderboard')}</h3>` : ''}${boardHtml()}<p class="hint">${t('成绩保存在网站数据库中，所有玩家都能看到。玩家自行提交成绩。', 'Records are saved to the website database and visible to everyone. Community scores are submitted by players.')} ${button(t('旧设备成绩', 'Device records'), "openModal('localBoard')")}</p>`;
   }
   $('dialog').innerHTML = `<div class="toolbar">${button(t('English', '中文'), 'toggleLanguage()')}${button(t('关闭', 'Close'), 'closeModal()')}</div><h2 id="dialogTitle">${title}</h2>${body}`;
+  if (modal === 'trade') updateTradePreview();
 }
 function tradeLimit(type, i) {
   return type === 'buy' ? Math.max(0, Math.min(Math.floor(state.cash / state.prices[i]), Math.floor((state.capacity - usedSpace()) / goods[i].size))) : state.inv[i];
@@ -679,10 +726,19 @@ function doTrade() {
   const { type, index } = currentTrade;
   if (!Number.isSafeInteger(qty) || qty < 1 || qty > tradeLimit(type, index)) return notify('请输入有效的交易数量。', 'Enter a valid trade quantity.');
   const amount = qty * state.prices[index];
+  if (!state.costBasis) state.costBasis = state.inv.map(q => q ? null : 0);
+  const previousCost = state.costBasis[index];
+  if (!Number.isSafeInteger(amount) || (type === 'buy' && previousCost != null && !Number.isSafeInteger(previousCost + amount))) return notify('金额超出安全范围。', 'Amount exceeds the safe range.');
+  const allocatedCost = previousCost == null ? null : Math.floor(previousCost * qty / state.inv[index]);
+  if (type === 'buy') state.costBasis[index] = previousCost == null ? null : previousCost + amount;
+  else state.costBasis[index] = state.inv[index] === qty ? 0 : previousCost == null ? null : previousCost - allocatedCost;
   state.cash += type === 'buy' ? -amount : amount;
   state.inv[index] += type === 'buy' ? qty : -qty;
   addLog(`${type === 'buy' ? '买入' : '卖出'} ${qty} 件${goods[index].name[0]}，金额 ¥${amount}。`, `${type === 'buy' ? 'Bought' : 'Sold'} ${qty} ${goods[index].name[1]} for ¥${amount}.`);
+  if (tutorialStep === 0 && type === 'buy') tutorialStep = 1;
+  if (tutorialStep === 2 && type === 'sell') tutorialStep = -1;
   closeModal(); render();
+  notify(`${type === 'buy' ? '买入' : '卖出'} ${qty} · 金额 ${money(amount)}${type === 'sell' ? ` · 利润 ${allocatedCost == null ? '成本未知' : money(amount - allocatedCost)}` : ''}`, `${type === 'buy' ? 'Bought' : 'Sold'} ${qty} · Total ${money(amount)}${type === 'sell' ? ` · Profit ${allocatedCost == null ? 'Cost unknown' : money(amount - allocatedCost)}` : ''}`);
 }
 function bankAction(type) {
   if (state.ended) return;
@@ -751,12 +807,15 @@ function rest() {
 }
 function travel(index) {
   if (state.ended || !locations[index] || index === state.location) return;
+  if (tutorialStep === 1) tutorialStep = 2;
   state.location = index;
   addLog(`抵达${locations[index].name[0]}。`, `Arrived in ${locations[index].name[1]}.`);
   nextDay();
 }
 function nextDay() {
   if (state.ended) return;
+  const previousDebt = state.debt, previousBank = state.bank, previousCash = state.cash, previousHealth = state.health;
+  const logStart = state.log[0];
   state.bank = Math.floor(state.bank * 1.02); state.debt = Math.floor(state.debt * 1.1);
   let shock = null;
   if (Math.random() < .52) {
@@ -785,6 +844,10 @@ function nextDay() {
   if (state.health === 0) return endGame('health');
   if (state.day === 40) return endGame('time');
   state.day++; generatePrices(shock); render();
+  const eventText = state.log[0] !== logStart ? state.log[0] : null;
+  const actionText = logStart && /^(接远程|休息)/.test(logStart.zh) ? logStart : null;
+  addLog(`每日结算：债息 +¥${state.debt - previousDebt}，银行利息 +¥${state.bank - previousBank}。`, `Daily settlement: debt interest +¥${state.debt - previousDebt}, bank interest +¥${state.bank - previousBank}.`);
+  notify(`第${state.day}天 · ${locations[state.location].name[0]}｜债息 +${money(state.debt - previousDebt)}｜银行 +${money(state.bank - previousBank)}${actionText ? `｜${actionText.zh}` : ''}${eventText ? `｜${eventText.zh} 现金变化 ${money(state.cash - previousCash)}，健康变化 ${state.health - previousHealth}` : '｜无额外事件'}`, `Day ${state.day} · ${locations[state.location].name[1]} | Debt interest +${money(state.debt - previousDebt)} | Bank +${money(state.bank - previousBank)}${actionText ? ` | ${actionText.en}` : ''}${eventText ? ` | ${eventText.en} Cash change ${money(state.cash - previousCash)}, health change ${state.health - previousHealth}` : ' | No extra event'}`);
 }
 function endGame(reason) {
   if (state.ended) return;
@@ -867,7 +930,12 @@ function validateState(value) {
   if (!(integer(value.news, 0, 2) || (value.news && typeof value.news === 'object' && integer(value.news.index, 0, goods.length - 1) && typeof value.news.up === 'boolean'))) throw Error('news');
   if (!Array.isArray(value.log) || value.log.length > 80 || !value.log.every(r => r && integer(r.day, 1, 40) && typeof r.zh === 'string' && typeof r.en === 'string' && r.zh.length <= 2000 && r.en.length <= 2000)) throw Error('log');
   // Reconstruct only documented fields, dropping unknown input keys.
-  return Object.fromEntries(['runId', 'day', 'cash', 'bank', 'debt', 'health', 'home', 'properties', 'capacity', 'location', 'prices', 'inv', 'log', 'news', 'ended', 'endReason', 'submitted'].map(key => [key, value[key]]));
+  const result = Object.fromEntries(['runId', 'day', 'cash', 'bank', 'debt', 'health', 'home', 'properties', 'capacity', 'location', 'prices', 'inv', 'log', 'news', 'ended', 'endReason', 'submitted'].map(key => [key, value[key]]));
+  if (value.costBasis !== undefined && (!Array.isArray(value.costBasis) || value.costBasis.length !== goods.length || !value.costBasis.every((n,i) => n === null || (integer(n, 0, Number.MAX_SAFE_INTEGER) && (value.inv[i] > 0 || n === 0))))) throw Error('costBasis');
+  result.costBasis = value.costBasis ? [...value.costBasis] : value.inv.map(q => q ? null : 0);
+  if (value.marketHistory !== undefined && (!Array.isArray(value.marketHistory) || value.marketHistory.length !== locations.length || !value.marketHistory.every(r => r === null || (r && integer(r.day, 1, value.day) && Array.isArray(r.prices) && r.prices.length === goods.length && r.prices.every(n => integer(n, 1, 1000000)))))) throw Error('marketHistory');
+  result.marketHistory = value.marketHistory ? value.marketHistory.map(r => r ? {day:r.day,prices:[...r.prices]} : null) : locations.map(() => null);
+  return result;
 }
 function migrateLegacy(old) {
   const integer = (n, min, max) => Number.isSafeInteger(n) && n >= min && n <= max;
@@ -888,7 +956,7 @@ function applySave(data) {
     legacy = true; next = migrateLegacy(data);
   }
   if (!confirm(legacy ? t('将转换旧版存档：旧商品按顺序替换为新商品，地点映射到世界城市，住所升级为新房产。现金、银行、债务和库存数量保留。继续并替换当前进度吗？', 'Convert this legacy save? Goods are replaced by position, locations mapped to world cities and housing converted. Cash, bank, debt and inventory quantities are preserved. Replace your current progress?') : t('读取此存档并替换当前进度？', 'Load this save and replace your current progress?'))) return;
-  closeModal(); state = next;
+  closeModal(); tutorialStep = -1; holdingsOnly = false; marketPage = 0; state = next; rememberMarket();
   if (legacy) addLog('旧版存档已转换为环球版本。', 'Legacy save converted to the world-tour edition.');
   if (!legacy && ['zh', 'en'].includes(data.language)) lang = data.language;
   render(); if (state.ended) openModal('ending');
