@@ -20,6 +20,20 @@ void set_default_object(mixed ob) {
   ob->add("no_clean_up", 1);
 }
 
+// Original recovery and login code also write whole mappings. Normalize locks at
+// their boundaries, including derived maximum changes, without granting growth.
+void pocket_enforce_locks() {
+  int cap;
+  if (!mapp(dbase) || !userp(this_object()) || this_object()->is_ghost()) return;
+  foreach (string resource in ({"jing","qi"})) if (dbase["pocket_"+resource+"_locked"]) {
+    dbase[resource]=dbase["max_"+resource]; dbase["eff_"+resource]=dbase["max_"+resource];
+  }
+  if (dbase["pocket_food_locked"]) dbase["food"]=this_object()->max_food_capacity();
+  if (dbase["pocket_water_locked"]) dbase["water"]=this_object()->max_water_capacity();
+  cap=dbase["max_neili"]>0?dbase["max_neili"]:300;
+  if (dbase["pocket_neili_locked"] && dbase["neili"]<cap) dbase["neili"]=cap;
+}
+
 mixed set(string prop, mixed data) {
   if (!mapp(dbase)) dbase = ([]);
   // Explicit player-only experience switch. Keep normal costs when unlocked.
@@ -50,7 +64,9 @@ mixed set(string prop, mixed data) {
   if (strsrch(prop, '/') != -1)
     return _set(dbase, explode(prop, "/"), data);
 
-  return dbase[prop] = data;
+  dbase[prop] = data;
+  if (prop=="max_qi" || prop=="max_jing" || prop=="max_neili") pocket_enforce_locks();
+  return dbase[prop];
 }
 
 varargs mixed query(string prop, int raw) {

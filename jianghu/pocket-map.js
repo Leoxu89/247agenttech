@@ -4,7 +4,7 @@
 const W=globalThis.PocketWorld,N=globalThis.PocketNavigation;
 const api=()=>globalThis.PocketAPI;
 const dir={north:'北',south:'南',east:'东',west:'西',northeast:'东北',northwest:'西北',southeast:'东南',southwest:'西南',northup:'北上',southup:'南上',eastup:'东上',westup:'西上',northdown:'北下',southdown:'南下',eastdown:'东下',westdown:'西下',up:'上楼',down:'下楼',enter:'进入',out:'出去'};
-const walker=new N.Walker(cmd=>api().command(cmd,false,true));
+const walker=new N.Walker(cmd=>api().command(cmd,true,true));
 let mode='near',filter='',seenKey='',previewTarget=null,avoidDanger=true;
 // Verified native spawns: shulin1 poison snake, shulin2 wolf, tiandi4 hostile dog.
 const danger=new Set(['/d/huanghe/shulin1','/d/huanghe/shulin2','/d/huanghe/tiandi4']);
@@ -86,7 +86,7 @@ function update(s){
  const A=api(),line=A.el('div');line.append(A.el('strong','',walker.status==='arrived'?'已到达 · '+walker.name:`${walker.status==='walking'?'自动寻路':'寻路暂停'} · ${walker.name}`),A.el('small','',walker.status==='paused'?walker.reason:`${walker.index} / ${walker.steps.length} 步`));bar.append(line);
  if(walker.status==='walking')bar.append(A.button('暂停',()=>{walker.pause();update(s);}));
  if(walker.status==='interaction')bar.append(A.button('点选通行',()=>PocketTransit.open()));
- if(walker.status==='paused')bar.append(A.button('继续',()=>route(walker.steps.at(-1).to,walker.name)));
+ if(walker.status==='paused')bar.append(A.button('继续',()=>{const target=walker.steps.at(-1)?.to;if(!target)return;const steps=find(target);if(steps===null){A.note('道路已变化，请重新选择目的地');return;}walker.start(steps,walker.name);update(A.getState());}));
  bar.append(A.button(walker.status==='arrived'?'收起':'取消',()=>{walker.cancel();update(s);}));
  if(walker.status==='arrived')A.note('已到目的地，点场景人物可继续交谈或拜师');
 }
