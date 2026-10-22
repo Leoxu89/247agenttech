@@ -1,3 +1,4 @@
+int smaller(int a,int b);
 // JSON is kept local because the minimal WASM driver omits the JSON package.
 string json_encode(mixed value) {
     string *parts = ({});
@@ -82,7 +83,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
         if (mapp(topics)) view["topics"] = keys(topics);
         skills = ob->query_skills();
         if (mapp(skills)) foreach (string sk in keys(skills)) {
-            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk] ]) });
+            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "teach_limit":smaller(skills[sk]-2*me->query("betrayer"),SKILL_D(sk)->type()=="knowledge"?skills[sk]:250) ]) });
         }
         goods = ob->query("vendor_goods");
         if (pointerp(goods)) foreach (mixed path in goods) {
@@ -138,7 +139,7 @@ string snapshot(string *args, int request_id) {
             "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
             "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
             "family_title":plain(me->query("family/title")), "fealty":me->query("family/fealty"),
-            "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
+            "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
         "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
         "room": ([ "river_to":room->query("to"),"river_about":plain(room->query("yell_about")), "key": file_name(room), "name": plain(room->query("short")),
@@ -190,14 +191,15 @@ string snapshot(string *args, int request_id) {
     skills = me->query_skills();
     mapped = me->query_skill_map();
     if (mapp(skills)) foreach (string sk in keys(skills)) {
-        string *bases = ({}), *available = ({});
+        string *bases = ({}), *available = ({}), *combines=({});
         string *base_ids = ({"force","dodge","parry","sword","blade","unarmed","cuff","strike","finger","hand","claw","staff","whip","leg","hook","spear","hammer","axe","club","stick","throwing"});
         foreach (string base in base_ids) {
             mixed allowed;
             if (!catch(allowed=SKILL_D(sk)->valid_enable(base)) && allowed) available+=({base});
         }
         if (mapp(mapped)) foreach (string base, string special in mapped) if (special == sk) bases += ({ base });
-        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "progress":(me->query_learned()||([]))[sk], "progress_max":(skills[sk]+1)*(skills[sk]+1)+1, "bases": bases, "enable_bases":available, "basic":member_array(sk,base_ids)>=0 ]) });
+        foreach(string other in keys(skills)) if(other!=sk) { mixed ok; if(!catch(ok=SKILL_D(sk)->valid_combine(other)) && ok) combines+=({other}); }
+        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "progress":(me->query_learned()||([]))[sk], "prepared":member_array(sk,values(me->query_skill_prepare()||([])))>=0, "practice_supported":member_array("force",available)<0 && sizeof(available)>0, "progress_max":(skills[sk]+1)*(skills[sk]+1)+1, "bases": bases, "enable_bases":available, "combines":combines, "basic":member_array(sk,base_ids)>=0 ]) });
     }
     value=me->query_temp("last_damage_from");
     if (objectp(value)) data["death"]["last_attacker"]=plain(value->name());
@@ -267,6 +269,7 @@ string bless(string *args, int request_id) {
     case "exp":
         before=me->query("combat_exp"); after=before+10000*times; me->set("combat_exp",after); break;
     case "potential":
+        me->set("pocket_potential_unlimited",1);
         before=me->query("potential"); after=before+1000*times; me->set("potential",after); break;
     case "shen_up":
         before=me->query("shen"); after=before+1000*times; me->set("shen",after); break;
@@ -342,6 +345,7 @@ string checkpoint(string *args,int request_id) {
     room=file_name(environment(me));
     if(strsrch(room,"/d/")!=0||strsrch(room,"#")>=0) return json_encode((["ok":0,"message":"渡船等临时场景中保留上一个检查点"]));
     me->set("startroom",room);
+    if(me->query("potential")-me->query("learned_points")>100000) me->set("pocket_potential_unlimited",1);
     link=me->query_temp("link_ob");
     if(!objectp(link)||!link->save()||!me->save()) return json_encode((["ok":0,"message":"原版角色文件未能保存"]));
     return json_encode((["ok":1,"id":me->query("id"),"room":(["key":room,"name":plain(environment(me)->query("short"))]),
@@ -374,6 +378,23 @@ string restore_checkpoint(string *args,int request_id) {
     return json_encode((["ok":1]));
 }
 
+// Migrate only the known legacy login-cap mismatch. No XP or skills are edited.
+string recover_potential(string *args,int request_id) {
+    object me=active_player(); mapping skills, seen=([]); string id; int level, expected;
+    if(!objectp(me)||sizeof(args)<2||me->is_ghost()) return json_encode((["ok":0]));
+    skills=me->query_skills()||([]); expected=to_int(args[1]);
+    if(to_int(args[0])!=me->query("combat_exp") || expected<=100000 || expected>2000000000 ||
+       me->query("potential")-me->query("learned_points")!=100000 || sizeof(args)-2!=sizeof(skills)) return json_encode((["ok":0]));
+    foreach(string pair in args[2..]) {
+      if(sscanf(pair,"%s=%d",id,level)!=2 || undefinedp(skills[id]) || skills[id]!=level || seen[id]) return json_encode((["ok":0]));
+      seen[id]=1;
+    }
+    me->set("pocket_potential_migrated",(["at":time(),"from_cap":100000,"restored":expected]));
+    me->set("pocket_potential_unlimited",1);
+    me->set("potential",expected+me->query("learned_points"));
+    return json_encode((["ok":1,"message":"已从原存档恢复超额体验潜能，经验和武学校验保持开启"]));
+}
+
 string engage(string *args,int request_id) {
     object me=active_player(),enemy;
     if(!objectp(me)||!sizeof(args)||me->is_ghost()||me->query_temp("noliving")) return json_encode((["ok":0,"message":"当前无法迎战"]));
@@ -387,6 +408,7 @@ string engage(string *args,int request_id) {
 
 void create() {
     seteuid(getuid());
+    js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_state", (: snapshot :));
     js_export("pocket_bless", (: bless :));
     js_export("pocket_checkpoint", (: checkpoint :));

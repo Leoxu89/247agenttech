@@ -52,10 +52,12 @@ function text(chunk){if(!flow)return;flow.buffer+=chunk.replace(/\x1b\[[0-9;]*[A
 }
 async function update(state){
  const selected=S.active();if(!selected?.pending)return;
- if(state?.ready){flow=null;const head=await S.read('a:'+selected.id+':head');
-  if(head?.growth){const g=head.growth;const mismatch=g.exp!==state.player.exp||g.potential!==state.player.potential||Object.entries(g.skills||{}).some(([id,lv])=>!state.skills.some(k=>k.id===id&&k.level===lv));if(mismatch){window.PocketEnginePaused=true;const b=A().show('存档恢复核验未通过');b.append(A().el('p','p-hint','成长值与保存记录不一致。游戏已暂停，保留原存档，请从云端历史选择完整记录。'),A().button('查看存档历史',()=>PocketSaves.manager()));return;}}
+ if(state?.ready){let recoveredPotential=false;flow=null;const head=await S.read('a:'+selected.id+':head');
+  if(head?.growth){const g=head.growth;const skillMatch=Object.keys(g.skills||{}).length===state.skills.length&&Object.entries(g.skills||{}).every(([id,lv])=>state.skills.some(k=>k.id===id&&k.level===lv));
+   if(g.exp===state.player.exp&&skillMatch&&g.potential>100000&&state.player.potential===100000){const r=JSON.parse(await driver.fluffos.callLPC('pocket_recover_potential',String(g.exp),String(g.potential),...Object.entries(g.skills).map(([id,lv])=>id+'='+lv)));if(r.ok){recoveredPotential=true;const restored=JSON.parse(await driver.fluffos.callLPC('pocket_state'));state.player.potential=restored.player.potential;state.player.potential_total=restored.player.potential_total;A().note(r.message);}}
+   const mismatch=g.exp!==state.player.exp||g.potential!==state.player.potential||!skillMatch;if(mismatch){window.PocketEnginePaused=true;const b=A().show('存档恢复核验未通过');b.append(A().el('p','p-hint','成长值与保存记录不一致。游戏已暂停，保留原存档，请从云端历史选择完整记录。'),A().button('查看存档历史',()=>PocketSaves.manager()));return;}}
   if(head?.room?.key&&head.inventory){const r=JSON.parse(await driver.fluffos.callLPC('pocket_restore',state.player.id,head.room.key,head.inventory,head.session||''));if(!r.ok)A().note(r.message);}
-  selected.pending=false;S.select(selected);await PocketSaves.loadCloudSlots();PocketSaves.onLogin();await A().refresh();return;
+  selected.pending=false;S.select(selected);await PocketSaves.loadCloudSlots();PocketSaves.onLogin();if(recoveredPotential)setTimeout(()=>PocketSaves.capture('auto').catch(e=>A().note(e.message)),500);await A().refresh();return;
  }
  if(!nativeStarted&&driver&&connectSession&&!activeGame.disconnected){nativeStarted=true;const head=await S.read('a:'+selected.id+':head');flow={...selected.profile,buffer:'',expectExisting:!!head?.files?.length};sendGameCommand(selected.profile.native.id);setTimeout(()=>{if(flow){flow=null;error='创建或登录未完成，请返回账号登录后重试';A().showView('scene');}},30000);}
 }

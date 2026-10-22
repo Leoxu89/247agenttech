@@ -31,7 +31,10 @@ void pocket_enforce_locks() {
   if (dbase["pocket_food_locked"]) dbase["food"]=this_object()->max_food_capacity();
   if (dbase["pocket_water_locked"]) dbase["water"]=this_object()->max_water_capacity();
   cap=dbase["max_neili"]>0?dbase["max_neili"]:300;
-  if (dbase["pocket_neili_locked"] && dbase["neili"]<cap) dbase["neili"]=cap;
+  if (dbase["pocket_neili_locked"]) {
+    if (dbase["neili"]<cap) dbase["neili"]=cap;
+    if (dbase["neili"]>cap*2) dbase["neili"]=cap*2;
+  }
 }
 
 mixed set(string prop, mixed data) {
@@ -56,7 +59,7 @@ mixed set(string prop, mixed data) {
     }
     if (prop == "neili" && dbase["pocket_neili_locked"]) {
       int floor = dbase["max_neili"] > 0 ? dbase["max_neili"] : 300;
-      if (dbase["neili"] > floor) floor = dbase["neili"];
+
       if (data < floor) data = floor;
     }
   }

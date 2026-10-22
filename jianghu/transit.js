@@ -8,7 +8,7 @@ function actions(s){const list=[...(PocketWorld.rooms[s.room.key]?.actions||[])]
  if(s.room.key==='/d/shenlong/beach'||s.room.key==='/d/taohua/haitan')list.push({label:'登船返航',command:'enter chuan'});
  if(s.room.key==='/d/beijing/haigang'){list.push({label:'询问船夫 · 出海',command:'ask chuanfu about 出海'},{label:'支付船资 · 一两黄金',command:'give 1 gold to chuanfu'});}
  if(s.room.key==='/d/jiaxing/jiaxinggang')for(const topic of ['桃花岛','价钱','启航'])list.push({label:'询问船老大 · '+topic,command:'ask laoda about '+topic});
- return list;
+ return list.map(a=>({...a,label:a.label.replace(/\b(east|west|north|south|bian|duilian)\b/g,id=>({east:"东门",west:"西门",north:"北门",south:"南门",bian:"匾额",duilian:"对联"})[id])}));
 }
 const chores={
  '/d/wuguan/wg_mufang':{name:'锯木头',tool:'juzi',toolName:'锯子',command:'ju 木头'},
@@ -28,7 +28,7 @@ function render(parent,s){work(parent,s);const list=actions(s);if(!list.length&&
 function begin(step,walker){current={step,walker,at:Date.now()};last='';open();}
 function open(){if(!current)return;draw(api().getState(),true);}
 function draw(s,force=false){if(!current)return;const {step}=current,A=api();const sig=[s.room.key,s.room.exits.map(x=>x.direction+':'+x.to).join(','),step.kind].join('|');if(!force&&sig===last)return;last=sig;const b=A.show('通行确认 · '+step.label);b.append(A.el('p','p-hint','自动寻路已停下，点选完成通行后会沿原路线继续。原版费用、守卫与入门条件仍然有效。'));
- if(step.kind==='gate'){const exit=s.room.exits.find(e=>e.to===step.to);b.append(A.button(exit?'继续进入 · '+exit.name:'敲门',()=>A.command(exit?exit.direction:step.command,true,true)));}
+ if(step.kind==='gate'){const exit=s.room.exits.find(e=>e.to===step.to);if(s.room.key==='/d/quanzhen/damen'&&s.player.class!=='quanzhen')b.append(A.el('p','p-hint','重阳宫只允许正式出家弟子进入。先向门口知客道长打听出家，再点跪下受戒；俗家身份会被守卫拒绝。'),A.button('查看场景与知客道长',()=>{A.close();A.showView('scene');}));b.append(A.button(exit?'继续进入 · '+exit.name:'敲门',()=>A.command(exit?exit.direction:step.command,true,true)));}
  if(step.kind==='river'){
   if(s.room.key===step.from){const enter=s.room.exits.find(e=>e.direction==='enter');b.append(A.el('p','',enter?'渡船已靠岸，请登船。':'请先呼叫船家，待渡船靠岸。'),A.button(enter?'登上渡船':'呼叫渡船',()=>A.command(enter?'enter':'yell boat',true,true)));}
   else{const out=s.room.exits.find(e=>e.to===step.to);b.append(A.el('p','',out?'渡船已到目的地，请下船。':'渡船航行中，通常需等候数十秒；到岸会出现下船按钮。'));if(out)b.append(A.button('下船 · '+out.name,()=>A.command(out.direction,true,true)));}
