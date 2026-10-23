@@ -50,14 +50,17 @@ const human=!item.race||item.race==='人类';
 if(human){
  if(item.key?.split('#')[0]==='/d/wuguan/npc/wg_zhangfeng'&&state.player.job_name){const job=section(body,'武馆工作');job.append(el('p','p-hint',state.player.job_returned?'工具已还，可向张风覆命领取奖励。':state.player.job_done?'工作已完成，请先找老李归还工具。':'当前工作：'+state.player.job_name+'，请先做完并归还工具。'));const submit=button('完成工作 · 覆命领奖',()=>readCommand('job ok','武馆工作 · 覆命'));submit.disabled=!state.player.job_done||!state.player.job_returned;job.append(submit);}
  const topics=section(body,'打听消息');const topicNames={job:'工作',work:'工作',wook:'工作',rumors:'江湖传闻',tool:'工具'};const seenTopics=new Set();const list=['name','here',...(item.topics||[])].filter(t=>{const label=topicNames[t]||t;if(seenTopics.has(label))return false;seenTopics.add(label);return true;});for(const topic of list)topics.append(button(({name:'你是谁',here:'此地情况',ling:'推荐令',job:'工作',work:'工作',join:'入门',skill:'武学',wook:'工作',rumors:'江湖传闻',tool:'工具'})[topic]||topic,()=>readCommand(`ask ${item.token} about ${topic}`,item.name+' · 打听')));
- if(item.accepts_apprentice)actions.append(button('拜师',()=>{const b=show('拜'+item.name+'为师');b.append(el('p','','是否能入门由对方及原版门派规则决定。'),button('行拜师礼',()=>command('bai '+item.token)));}));
+ const masterInfo=PocketMentors.teacherInfo(item);
+ if(masterInfo.teacher)actions.append(button('拜师 / 查看条件',()=>PocketMentors.guide(item)));
+ else if(item.accepts_apprentice)actions.append(button('为何不能拜师',()=>PocketMentors.guide(item)));
+
  if(item.key?.split('#')[0]==='/kungfu/class/wudang/zhixiang'||item.key?.split('#')[0]==='/kungfu/class/wudang/zhike'){
   const incense=section(body,'武当敬香通行'),cost=Math.max(1,state.player.age),silver=state.inventory.filter(i=>i.currency==='silver').reduce((n,i)=>n+i.amount,0);
   incense.append(el('p','p-hint',`原版须携香火过遇真宫。捐献至少年龄数两白银才会获香，当前需要${cost}两；持有${silver}两。零碎小额捐献不会累计换香。`));
   const pay=button('请香 · '+cost+'两白银',()=>{const c=show('确认请香');c.append(el('p','',`向${item.name}交付${cost}两白银，领取一枝香火后上山。`),button('确认支付'+cost+'两',()=>command(`give ${cost} silver to ${item.token}`)));});pay.disabled=silver<cost;incense.append(pay);
  }
  if(item.tuition){const tuition=section(body,'武馆缴费学艺');const paid=item.tuition.paid,over=state.player.exp>=item.tuition.limit;tuition.append(el('p','p-hint',paid?'已取得本次武馆教学许可，可点“请教学艺”。':over?`当前经验已达到 ${item.tuition.limit}，此人不再接受新学费。`:'原版学费为5两白银，支付后可向武馆教头学习；重新登录后可能需要再缴。'));if(!paid&&!over){tuition.append(button('缴纳学费 · 5两白银',()=>{const b=show('缴纳武馆学费');b.append(el('p','','向'+item.name+'支付5两白银，用于本次武馆学艺。'),button('确认支付5两白银',()=>command(`give 5 silver to ${item.token}`)),button('取消',close));}));}}
- if(item.skills?.length)actions.append(button('请教学艺',()=>PocketIdle.lessons(item))); 
+ if(item.skills?.length)actions.append(button('请教学艺',()=>PocketIdle.lessons(item)));  
  }
  if(item.goods?.length){const shop=section(body,'购买物品');for(const g of item.goods)shop.append(button(g.name,()=>command('buy '+g.token)));}
  if(state.inventory.length)actions.append(button('交付物品',()=>{const b=show('交给'+item.name);for(const i of state.inventory)b.append(button(i.name+' · 持有 '+i.amount+unit(i),()=>{const c=show('交付'+i.name),f=el('form','p-command-form'),label=el('label'),n=el('input');n.type='number';n.min='1';n.max=String(i.amount);n.step='1';n.value='1';n.required=true;n.setAttribute('aria-label','交付数量');label.append(el('span','','交付数量 · 持有'+i.amount+unit(i)),n);const go=el('button','p-primary','确认交给'+item.name);go.type='submit';f.append(label,go);f.onsubmit=e=>{e.preventDefault();const amount=Number(n.value);if(!Number.isSafeInteger(amount)||amount<1||amount>i.amount)return;command(`give ${i.amount>1||i.currency?amount+' ':''}${i.token} to ${item.token}`);};c.append(el('p','p-hint','请核对数量，确认后才会交付。'),f);},'p-row'));}));
@@ -70,7 +73,7 @@ const p=state.player,r=state.room;$('#p-location').textContent=r.name;
 for(const b of root.querySelectorAll('[data-view]'))b.classList.toggle('selected',b.dataset.view===view);
 if(view==='map'){globalThis.PocketMap.render(content,state);
 }else if(view==='scene'){
- const intro=el('section','p-room');intro.append(el('div','p-eyebrow',r.time));const desc=el('details','p-room-description');desc.open=false;desc.append(el('summary','',r.dark?'夜色深沉，难以辨认四周':r.description.replace(/\s+/g,' ').trim()),el('p','',r.description));intro.append(desc);content.append(intro);
+ PocketMentors.sceneCard(content,state);const intro=el('section','p-room');intro.append(el('div','p-eyebrow',r.time));const desc=el('details','p-room-description');desc.open=false;desc.append(el('summary','',r.dark?'夜色深沉，难以辨认四周':r.description.replace(/\s+/g,' ').trim()),el('p','',r.description));intro.append(desc);content.append(intro);
  const scene=el('div','p-scene-columns'),left=el('section','p-scene-exits'),right=el('section','p-scene-objects');scene.append(left,right);content.append(scene);const exits=section(left,'去往何处');exits.className='p-compass';const slots={northwest:[1,1],north:[1,2],northeast:[1,3],west:[2,1],east:[2,3],southwest:[3,1],south:[3,2],southeast:[3,3]},cells={},extra=[];
  for(const [d,[row,col]]of Object.entries(slots)){const cell=el('div','p-compass-slot');cell.style.gridRow=row;cell.style.gridColumn=col;cells[d]=cell;exits.append(cell);}
  const here=el('div','p-compass-center');here.append(el('small','','当前位置'),el('strong','',r.name));exits.append(here);
@@ -94,7 +97,7 @@ if(view==='map'){globalThis.PocketMap.render(content,state);
 }else if(view==='skills'){
  renderSkills(content,p);
 }else{
- content.append(el('h2','',p.name),button('查看完整人物状态',showFullProfile,'p-row'));const grid=section(content,'人物档案');for(const [label,value] of [['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['年龄',p.age+'岁'],['性别',p.gender],['经验',p.exp],['潜能',p.potential],['膂力',p.str],['悟性',p.int],['根骨',p.con],['身法',p.dex]]){const card=el('div','p-stat');card.append(el('small','',label),el('strong','',String(value??'—')));grid.append(card);}content.append(meter(p.jing_locked?'精力（精神） · 已锁定':'精力（精神）',p.jing,p.max_jing),meter('体力',p.tili,p.max_tili));const quick=section(content,'调息与恢复');quick.append(button('运功疗伤',()=>command('exert heal')),button('恢复气血',()=>command('exert recover')),button('保存进度',save));
+ content.append(el('h2','',p.name),button('查看完整人物状态',showFullProfile,'p-row'),button('门派任务与师承',()=>PocketMentors.tasks(),'p-row'));const grid=section(content,'人物档案');for(const [label,value] of [['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['年龄',p.age+'岁'],['性别',p.gender],['经验',p.exp],['潜能',p.potential],['膂力',p.str],['悟性',p.int],['根骨',p.con],['身法',p.dex]]){const card=el('div','p-stat');card.append(el('small','',label),el('strong','',String(value??'—')));grid.append(card);}content.append(meter(p.jing_locked?'精力（精神） · 已锁定':'精力（精神）',p.jing,p.max_jing),meter('体力',p.tili,p.max_tili));const quick=section(content,'调息与恢复');quick.append(button('运功疗伤',()=>command('exert heal')),button('恢复气血',()=>command('exert recover')),button('保存进度',save));
 }}
 async function save(){try{const record=await PocketSaves.capture('manual');if(!record){note('交战、昏迷或死亡期间无法创建安全存档');return;}await PocketSaves.flush();note(PocketSaves.status);}catch(e){note(e.message||'云端暂未同步，本机进度已保留');}}
 function viewSignature(s){if(!s.ready)return 'offline';const p={...s.player},r={...s.room,time:''};r.people=r.people.map(({qi,max_qi,jing,max_jing,...person})=>person);if(view!=='profile')for(const key of ['qi','jing','neili','food','water','tili','eff_qi'])delete p[key];return JSON.stringify({view,ready:s.ready,player:p,room:r,skills:s.skills,inventory:s.inventory});}

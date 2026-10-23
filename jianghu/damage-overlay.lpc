@@ -47,6 +47,10 @@ varargs int receive_damage(string type, int damage, mixed reason) {
   if (val >= 0) set(type, val);
   else set(type, -1);
 
+  if(type=="qi" && pocket_friendly_hit(reason) && query("qi")*2<=query("max_qi")) {
+    object partner=query_temp("pocket_sparring");
+    set_temp("pocket_spar_lost_to",partner);
+  }
   set_heart_beat(1);
 
   return damage;

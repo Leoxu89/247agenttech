@@ -17,3 +17,5 @@ html,body{overscroll-behavior:none}.pocket{top:var(--app-top,0px);height:var(--a
 
 .p-neili-note{display:block;color:var(--p-muted);font-size:10px;line-height:1.5;margin-top:7px}.p-meter>div:first-child{gap:5px}.p-meter b{white-space:nowrap}.p-queue-option{display:flex;gap:9px;align-items:center;padding:10px 0}.p-queue-option input{width:20px;height:20px;flex:none}
 .p-lesson-row>.p-hint{grid-column:1/-1}
+.p-mentor-row,.p-task-card{padding:12px;margin:10px 0;border:1px solid var(--line,#3a4b40);border-radius:12px;background:rgba(255,255,255,.025)}
+.p-mentor-row button{width:100%;margin-top:7px;min-height:44px}.p-task-card p{margin:7px 0}.p-action-result{padding:12px;border-left:3px solid #d3ba7d;background:rgba(211,186,125,.09);white-space:pre-wrap}.p-technique-row{padding:10px 0;border-bottom:1px solid #34473b}.p-technique-row button{width:100%}

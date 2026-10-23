@@ -7,6 +7,7 @@ inherit F_CLEAN_UP;
 
 int main(object me, string arg) {
   object obj, old_target;
+  int recommendation;
 
   if (me->is_busy())
     return notify_fail("你上一个动作还没有完成！\n");
@@ -50,6 +51,8 @@ int main(object me, string arg) {
   if (obj->is_ghost()) return notify_fail("无法与魂魄切磋。\n");
   if (me->is_killing(obj->query("id")) || obj->is_killing(me->query("id")))
     return notify_fail("双方仍有生死敌意，请先结束追杀，再切磋。\n");
+  recommendation=me->query_temp("fight_ok") && me->query("family/family_name")=="全真教";
+  me->delete_temp("pocket_spar_lost_to");obj->delete_temp("pocket_spar_lost_to");
   // Retain original quest setup when accepted; refusal no longer blocks practice.
   if (obj->query("can_speak")) obj->accept_fight(me);
   if (!objectp(obj) || environment(obj)!=environment(me))
@@ -58,10 +61,15 @@ int main(object me, string arg) {
       (me->is_fighting() && !me->is_fighting(obj)) ||
       obj->is_killing(me->query("id")) || me->is_killing(obj->query("id")))
     return notify_fail("对方正在处理其他交战，请稍后再试。\n");
+  if(recommendation) {
+    obj->set("qi",obj->query("eff_qi"));obj->set("jing",obj->query("eff_jing"));
+  }
   me->set_temp("pocket_sparring",obj);
   obj->set_temp("pocket_sparring",me);
   me->fight_ob(obj);
   obj->fight_ob(me);
+  if(recommendation) me->set("pocket_faction_task",(["stage":"challenge","teacher":base_name(obj),"teacher_name":obj->name(),"room":base_name(environment(obj)),"message":"推荐挑战进行中：战胜现任师父后等候推荐信"]));
+  "/adm/daemons/pocketui"->watch_sparring(me,obj,recommendation);
   message_vision("$N与$n约定友好切磋，点到为止，气血降至一半即停手。\n",me,obj);
 
   return 1;

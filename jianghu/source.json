@@ -13,9 +13,11 @@
     "cmds/skill/learn.lpc: bounded lesson targets",
     "cmds/std/fight.lpc: friendly NPC sparring",
     "feature/damage.lpc: nonlethal practice and 180s NPC return",
+    "cmds/skill/apprentice.lpc: NPC request reevaluation",
+    "kungfu/class/quanzhen: stable recommendation workflow",
     "adm/etc/preload: append pocketui"
   ],
   "config_overlay": "mudlib directory: /mudlib",
   "ui_version": "4.0",
-  "cache": "8ba17a2dd49d"
+  "cache": "3e5e9c652103"
 }
