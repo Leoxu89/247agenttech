@@ -8,6 +8,18 @@ function teacherInfo(item){return locate(item.source)||{...item,teacher:!!item.a
 function go(info){const room=info.locations?.[0];if(room)PocketMap.route(room,info.name);else A().note('这是剧情或未设固定出生点的人物，暂无可确认的导航地点');}
 function at(source){return current()?.room.people.find(p=>p.source===source);}
 function places(body,info){const api=A();for(const room of info.locations||[]){const r=W().rooms[room];if(!r)continue;body.append(api.button('前往 '+info.name+' · '+r.region+' / '+r.name,()=>PocketMap.route(room,info.name),'p-row'));}}
+function permitRequirements(s){
+ const level=id=>s.skills?.find(k=>k.id===id)?.level||0;
+ const attacks=['chunyang-quan','haotian-zhang','quanzhen-jian','duanyun-bian'];
+ const rows=[{name:'基本内功',level:level('force')},{name:'基本轻功',level:level('dodge')},{name:'全真攻击武学任选一门（纯阳拳、昊天掌、全真剑法、断云鞭）',level:Math.max(...attacks.map(level))}];
+ const missing=rows.filter(k=>k.level<30);
+ return {eligible:s.player.family==='全真教'&&!missing.length,missing,lines:missing.map(k=>`${k.name}：当前${k.level}级，需30级，还差${30-k.level}级`)};
+}
+function permitChecklist(body,s){
+ const api=A(),r=permitRequirements(s);body.append(api.el('h3','','领取全真令的条件'),api.el('p','p-hint','须为全真教弟子：基本内功30级、基本轻功30级，再将纯阳拳、昊天掌、全真剑法、断云鞭中任意一门学到30级。其他基本功、兵器和知识技能不作要求。'));
+ if(r.lines.length){body.append(api.el('p','p-action-result','还缺 '+r.lines.length+' 项：'));for(const line of r.lines)body.append(api.el('p','p-hint',line));body.append(api.el('p','p-hint','向现任师父请教核心武学即可；不必补学基本腿法、基本刀法等杂项。'));}
+ else body.append(api.el('p','p-hint',r.eligible?'✓ 三项核心条件已满足，可向马钰领取全真令。':'还需先加入全真教。'));
+}
 function requirements(info,s){const p=s.player,out=[];
  for(const r of info.rules||[]){const v=r.kind==='skill'?(s.skills.find(k=>k.id===r.id)?.level||0):r.kind==='derived'?p[r.id]:({combat_exp:p.exp,shen:p.shen,max_neili:p.max_neili,score:p.score,int:p.int_base,str:p.str_base,con:p.con_base,dex:p.dex_base,age:p.age,'family/fealty':p.fealty})[r.id];
  const title=r.kind==='skill'?label(r.id):r.label||({int:'当前悟性',str:'当前膂力',con:'当前根骨',dex:'当前身法'})[r.id]||r.id;
@@ -35,6 +47,7 @@ function guide(item,result=''){
  if(info.hints?.length){const details=api.el('details');details.append(api.el('summary','','其他原版收徒说明'));for(const text of info.hints)details.append(api.el('p','p-hint',text.replace(/\b[a-z]+(?:-[a-z]+)+\b/g,label)));body.append(details);}
  if(!req.length&&info.teacher)body.append(api.el('p','p-hint','先查看上方审核对话及“其他原版收徒说明”；涉及任务、性别、正邪、叛师或师承时，按对应分支完成条件后可直接重试。'));
  if(info.family==='全真教'&&[2,3].includes(info.generation)){
+  permitChecklist(body,s);
   const ma=locate('/kungfu/class/quanzhen/ma');if(ma)body.append(api.button('去找马钰领取全真令',()=>go(ma)));
   const mentor=Object.values(W().people||{}).find(t=>t.name===s.player.master&&t.family===s.player.family);
   if(mentor)body.append(api.button('去找现任师父 '+mentor.name,()=>go(mentor)));
@@ -68,6 +81,7 @@ function tasks(){const api=A(),s=current(),p=s.player,b=api.show('门派任务�
  b.append(api.el('p','',`${p.family||'无门派'} · 现任师父：${p.master||'无'}`));
  b.append(api.el('p','p-action-result',task.message||'暂无已记录的门派推荐任务。可查看本门老师，或向马钰打听全真令。'));
  if(task.stage)b.append(api.el('p','p-hint','当前阶段：'+({ready_challenge:'已交令，待切磋',challenge:'正在推荐挑战',letter:'已获推荐信，待交新师父',ready_apprentice:'已交推荐信，待拜师',complete:'已完成师承升级',retry:'挑战中断，待重试'})[task.stage]));
+ if(p.family==='全真教')permitChecklist(b,s);
  const ma=locate('/kungfu/class/quanzhen/ma'),liveMa=at(ma?.source);if(p.family==='全真教')b.append(liveMa?api.button('向马钰领取全真令',()=>api.readCommand('ask '+liveMa.token+' about 全真令','领取全真令')):api.button('去找马钰领全真令',()=>go(ma)));
  const mentor=Object.values(W().people||{}).find(t=>t.name===p.master&&t.family===p.family),live=mentor&&at(mentor.source),permit=s.inventory.find(i=>i.name==='全真令');
  if(live&&permit)b.append(api.button('交全真令给现任师父',()=>give(live,permit)));
@@ -78,5 +92,5 @@ function tasks(){const api=A(),s=current(),p=s.player,b=api.show('门派任务�
  b.append(api.button('查看门派老师与条件',()=>directory(p.family)));
 }
 function sceneCard(parent,s){if(s.player.family!=='全真教'&&!s.player.faction_task?.stage)return;const box=A().el('section','p-task-card');box.append(A().el('strong','','门派任务'),A().el('p','p-hint',s.player.faction_task?.message||s.player.chief_task?.message||'查看师承进度、推荐信取得方法和下一步'),A().button('查看门派任务 / 下一步',tasks));parent.append(box);}
-globalThis.PocketMentors={guide,apply,faction,directory,tasks,sceneCard,teacherInfo,requirements};
+globalThis.PocketMentors={guide,apply,faction,directory,tasks,sceneCard,teacherInfo,requirements,permitRequirements};
 })();
