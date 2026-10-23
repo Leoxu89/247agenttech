@@ -11,9 +11,11 @@
     "feature/alias.lpc: paced commands",
     "adm/daemons/chard.lpc: assisted potential persistence",
     "cmds/skill/learn.lpc: bounded lesson targets",
+    "cmds/std/fight.lpc: friendly NPC sparring",
+    "feature/damage.lpc: nonlethal practice and 180s NPC return",
     "adm/etc/preload: append pocketui"
   ],
   "config_overlay": "mudlib directory: /mudlib",
   "ui_version": "4.0",
-  "cache": "054f604e107b"
+  "cache": "8ba17a2dd49d"
 }

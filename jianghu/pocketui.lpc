@@ -97,6 +97,23 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
     return view;
 }
 
+object active_player();
+
+int friendly_sparring(object me) {
+    object other=me->query_temp("pocket_sparring");
+    return objectp(other) && me->is_fighting(other) && other->is_fighting(me) &&
+      !me->is_killing(other->query("id")) && !other->is_killing(me->query("id"));
+}
+string stop_sparring(string *args,int request_id) {
+    object me=active_player(),other;
+    if(!objectp(me) || !friendly_sparring(me))
+      return json_encode((["ok":0,"message":"当前没有可结束的友好切磋"]));
+    other=me->query_temp("pocket_sparring");
+    me->remove_enemy(other); other->remove_enemy(me);
+    me->delete_temp("pocket_sparring"); other->delete_temp("pocket_sparring");
+    return json_encode((["ok":1,"message":"双方停手，友好切磋已结束"]));
+}
+
 string snapshot(string *args, int request_id) {
     object me, room, destination, ahead;
     mapping data, exits, counts, mine, skills, mapped, branches;
@@ -139,7 +156,7 @@ string snapshot(string *args, int request_id) {
             "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
             "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
             "family_title":plain(me->query("family/title")), "fealty":me->query("family/fealty"),
-            "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
+            "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "sparring": friendly_sparring(me), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
         "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
         "room": ([ "river_to":room->query("to"),"river_about":plain(room->query("yell_about")), "key": file_name(room), "name": plain(room->query("short")),
@@ -406,9 +423,44 @@ string engage(string *args,int request_id) {
     return json_encode((["ok":1,"message":"已迎战，按原版轮次持续攻击；可随时尝试逃跑"]));
 }
 
+// Deaths are transient world state, never written into player save files.
+void return_npc(string home,string file,int declared,int unique) {
+    object room,ob; mixed err;
+    err=catch(room=load_object(home));
+    if(err || !objectp(room)) return;
+    // The original room ledger preserves exact spawn counts and roaming NPCs.
+    if(declared) { catch(room->reset()); return; }
+    foreach(object old in children(file)) {
+      if(!clonep(old) || !objectp(environment(old))) continue;
+      if(unique || environment(old)==room) return;
+    }
+    err=catch(ob=new(file));
+    if(err || !objectp(ob)) return;
+    ob->move(room); ob->set("startroom",home);
+}
+void schedule_npc_return(object npc) {
+    object room; string home,file; mapping declared; int managed;
+    if(previous_object()!=npc || !objectp(npc) || userp(npc)) return;
+    // Quest-owned targets and temporary summons retain their scripted lifecycle.
+    if(npc->query("owner") || npc->query("quest")) return;
+    home=npc->query("startroom");
+    if(!stringp(home) || strsrch(home,"/d/")!=0 || strsrch(home,"#")>=0) {
+      if(!objectp(environment(npc))) return;
+      home=base_name(environment(npc));
+    }
+    if(strsrch(home,"/d/")!=0 || strsrch(home,"#")>=0) return;
+    room=find_object(home); file=base_name(npc);
+    if(!objectp(room)) return;
+    declared=room->query("objects");
+    if(mapp(declared)) foreach(string key in keys(declared))
+      if(key==file || key==file+".c" || key==file+".lpc") managed=1;
+    call_out("return_npc",180,home,file,managed,npc->is_unique());
+}
+
 void create() {
     seteuid(getuid());
     js_export("pocket_recover_potential", (: recover_potential :));
+    js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));
     js_export("pocket_bless", (: bless :));
     js_export("pocket_checkpoint", (: checkpoint :));
