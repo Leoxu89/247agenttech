@@ -14,7 +14,7 @@ int transfer(object me,object npc){string old=me->query("family/family_name"),fr
  if(catch(master=load_object(path))||!objectp(master)){tell_object(me,"旧师父资料暂不可用。\n");return -1;}
  before=score(master);after=score(npc);
  if(after<=before){tell_object(me,sprintf("改投被拒：新师父战力 %d，旧师父战力 %d。新师父必须严格高于旧师父。\n",after,before));return -1;}
- if(camp(old)<0&&camp(fresh)>0&&me->query("shen")<=1000){tell_object(me,sprintf("邪派转投正派需要正气高于1000（至少1001），当前 %d。\n",me->query("shen")));return -1;}
+ if(camp(old)<0&&camp(fresh)>0&&me->query("shen")<1000){tell_object(me,sprintf("邪派转投正派需要正气至少1000，当前 %d。\n",me->query("shen")));return -1;}
  npc->recruit_apprentice(me);if(stringp(npc->query("class")))me->set("class",npc->query("class"));else me->delete("class");me->delete("pocket_faction_task");me->delete_temp("have_letter");me->delete_temp("fight_ok");me->delete_temp("apprentice_ok");me->set("pocket_master_source",base_name(npc));
  if(camp(old)>0&&camp(fresh)<0)me->set("shen",-10);
  me->delete_temp("pending/apprentice");npc->delete_temp("pending/recruit");
