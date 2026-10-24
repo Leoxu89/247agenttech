@@ -52,6 +52,7 @@ int main(object me, string arg) {
   if (me->is_killing(obj->query("id")) || obj->is_killing(me->query("id")))
     return notify_fail("双方仍有生死敌意，请先结束追杀，再切磋。\n");
   recommendation=me->query_temp("fight_ok") && me->query("family/family_name")=="全真教";
+  me->delete_temp("pocket_spar_counted");
   me->delete_temp("pocket_spar_lost_to");obj->delete_temp("pocket_spar_lost_to");
   // Retain original quest setup when accepted; refusal no longer blocks practice.
   if (obj->query("can_speak")) obj->accept_fight(me);

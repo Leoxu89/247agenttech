@@ -12,7 +12,7 @@ int main(object me, string arg) {
   //	string *skname;
   object room;
   object feng;
-  int flag;
+  int flag, transfer;
 
   seteuid(getuid());
   if (me->is_busy()) return notify_fail("你现在正忙着呢。\n");
@@ -33,11 +33,15 @@ int main(object me, string arg) {
   if (ob == me)
     return notify_fail("拜自己为师？好主意....不过没有用。\n");
   if (me->is_apprentice_of(ob)) {
+    me->set("pocket_master_source",base_name(ob));
     message_vision("$N恭恭敬敬地向$n磕头请安，叫道：「师父！」\n", me, ob);
     return 1;
   }
   if (!mapp(ob->query("family")))
     return notify_fail(ob->name() + "既不属於任何门派，也没有开山立派，不能拜师。\n");
+
+  transfer="/adm/daemons/pocketexpansion"->transfer(me,ob);
+  if(transfer) return 1;
 
   // If the target is willing to recruit us already, we do it.
   if ((object)ob->query_temp("pending/recruit") == me) {
@@ -80,6 +84,7 @@ int main(object me, string arg) {
       if (flag == 1) destruct(feng);
     }
     ob->recruit_apprentice(me);
+    me->set("pocket_master_source",base_name(ob));
     ob->delete_temp("pending/recruit");
 
     tell_object(ob, "恭喜你新收了一名弟子！\n");
@@ -109,7 +114,7 @@ int main(object me, string arg) {
     me->set_temp("pending/apprentice", ob);
     if (userp(ob)) {
       tell_object(ob, YEL "如果你愿意收" + me->name() + "为弟子，用 recruit 指令。\n" NOR);
-    } else ob->attempt_apprentice(me);
+    } else {ob->attempt_apprentice(me);if(me->is_apprentice_of(ob))me->set("pocket_master_source",base_name(ob));}
     //fealty=(int)(me->query_temp("fealty_temp"));
     //me->set("family/fealty",fealty);
     //me->delete_temp("fealty_temp");

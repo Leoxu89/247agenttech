@@ -42,7 +42,7 @@ function guide(item,result=''){
  const api=A(),s=current(),info=teacherInfo(item),body=api.show(info.name+' · 拜师条件');
  if(result)body.append(api.el('p','p-action-result',result));
  body.append(api.el('p','p-hint',info.teacher?'原版条件参考，部分门槛按身份及师承分支适用；下方保留本次实际审核结果。':'此人没有开放收徒路线，可选择本门其他师父。'));
- if(s.player.family&&info.family&&s.player.family!==info.family&&s.player.exp>10000)body.append(api.el('p','p-action-result','当前经验已超过10,000，原版不允许从现有门派改投其他门派；可继续本门进阶。'));
+ body.append(api.el('p','p-hint','改投门派：新师父战力须严格高于旧师父；正派转邪派正气变为-10；邪派转正派需正气至少1001。中立门派只检查战力。'));
  const req=requirements(info,s);for(const line of req)body.append(api.el('p','p-hint',line));
  if(info.hints?.length){const details=api.el('details');details.append(api.el('summary','','其他原版收徒说明'));for(const text of info.hints)details.append(api.el('p','p-hint',text.replace(/\b[a-z]+(?:-[a-z]+)+\b/g,label)));body.append(details);}
  if(!req.length&&info.teacher)body.append(api.el('p','p-hint','先查看上方审核对话及“其他原版收徒说明”；涉及任务、性别、正邪、叛师或师承时，按对应分支完成条件后可直接重试。'));

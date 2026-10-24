@@ -1,0 +1,92 @@
+inherit F_DBASE;
+string plain(mixed v){return "/adm/daemons/pocketui"->plain(v);}
+string key(object ob){return replace_string(replace_string(base_name(ob),"_","__"),"/","_s");}
+int coerced(object me,object npc){return !userp(npc)&&me->query("pocket_coerced/"+key(npc));}
+int score(object ob){mapping p="/adm/daemons/pocketpower"->metrics(ob);return to_int(4*sqrt(to_float(p["attack"]))+2*sqrt(to_float(p["dodge"]))+2*sqrt(to_float(p["parry"]))+0.4*p["max_qi"]+0.15*p["max_neili"]+0.1*p["max_jing"]+5*(p["str"]+p["dex"]+p["con"]+p["int"])+2*p["armor"]+(p["weapon_damage"]>p["unarmed_damage"]?p["weapon_damage"]:p["unarmed_damage"]));}
+int camp(string family){if(member_array(family,({"星宿派","神龙教","血刀门","白驼山派","五毒教","日月神教","黑木崖","铁掌帮","大轮寺","雪山寺"}))>=0)return -1;if(member_array(family,({"少林派","武当派","全真教","华山派","峨嵋派","丐帮","昆仑派","恒山派","衡山派","泰山派","天龙寺","青城派","嵩山派","南少林派","红花会","云龙门","大理段家"}))>=0)return 1;return 0;}
+// Returns 1 for a completed transfer, -1 for a rejected transfer, 0 for native recruitment.
+int transfer(object me,object npc){string old=me->query("family/family_name"),fresh=npc->query("family/family_name"),path;object master;mapping lookup;int before,after;
+ if(!stringp(old)||old==fresh)return 0;
+ if(userp(npc)||!function_exists("attempt_apprentice",npc)||!stringp(fresh))return 0;
+ lookup="/adm/daemons/pocketteachers"->teachers();path=me->query("pocket_master_source");
+ if(!stringp(path))path=lookup[old+"|"+plain(me->query("family/master_name"))];
+ if(!stringp(path)){tell_object(me,"无法核对旧师父身份，暂不能安全改投；请先向旧师父请安，建立师承记录。\n");return -1;}
+ if(catch(master=load_object(path))||!objectp(master)){tell_object(me,"旧师父资料暂不可用。\n");return -1;}
+ before=score(master);after=score(npc);
+ if(after<=before){tell_object(me,sprintf("改投被拒：新师父战力 %d，旧师父战力 %d。新师父必须严格高于旧师父。\n",after,before));return -1;}
+ if(camp(old)<0&&camp(fresh)>0&&me->query("shen")<=1000){tell_object(me,sprintf("邪派转投正派需要正气高于1000（至少1001），当前 %d。\n",me->query("shen")));return -1;}
+ npc->recruit_apprentice(me);if(stringp(npc->query("class")))me->set("class",npc->query("class"));else me->delete("class");me->delete("pocket_faction_task");me->delete_temp("have_letter");me->delete_temp("fight_ok");me->delete_temp("apprentice_ok");me->set("pocket_master_source",base_name(npc));
+ if(camp(old)>0&&camp(fresh)<0)me->set("shen",-10);
+ me->delete_temp("pending/apprentice");npc->delete_temp("pending/recruit");
+ tell_object(me,sprintf("你改拜%s门下，加入%s。新师父战力%d（原师父%d），当前正气%d。\n",plain(npc->name()),fresh,after,before,me->query("shen")));return 1;
+}
+void spar_result(object me,object npc){object loser;
+ if(!objectp(me)||!objectp(npc)||!userp(me)||me->query_temp("pocket_spar_counted"))return;
+ if(npc->query_temp("pocket_spar_lost_to")==me)loser=npc;
+ else if(me->query_temp("pocket_spar_lost_to")==npc)loser=me;
+ if(!objectp(loser))return;me->set_temp("pocket_spar_counted",1);me->add(loser==npc?"pocket_stats/spar_wins":"pocket_stats/spar_losses",1);
+}
+void win_coercion(object me,object npc){if(!objectp(me)||!objectp(npc)||npc->query_temp("pocket_coercion")!=me)return;
+ npc->set_temp("pocket_coercion_safe_until",time()+2);npc->delete_temp("pocket_coercion");me->delete_temp("pocket_coercion");me->remove_enemy(npc);npc->remove_enemy(me);me->remove_killer(npc);npc->remove_killer(me);
+ me->set("pocket_coerced/"+key(npc),1);me->add("pocket_stats/coercion_wins",1);tell_object(me,"威逼成功！对方气血已低于一成，仍然存活。现在可点选对方，强取随身物品、强制请教全部武学。\n");}
+void watch(object me,object npc){if(!objectp(me)||!objectp(npc))return;
+ if(me->is_ghost()||me->query("qi")<0||me->query_temp("noliving")){me->delete_temp("pocket_coercion");npc->delete_temp("pocket_coercion");me->die();return;}
+ if(environment(me)!=environment(npc)||!me->is_fighting(npc)){me->delete_temp("pocket_coercion");npc->delete_temp("pocket_coercion");return;}
+ if(npc->query("qi")*10<npc->query("max_qi")){win_coercion(me,npc);return;}call_out("watch",1,me,npc);
+}
+mapping cities(){return (["yangzhou":(["name":"扬州","price":10000,"exit":"/d/city/kedian"]),"suzhou":(["name":"苏州","price":20000,"exit":"/d/suzhou/baodaiqiao"]),"hangzhou":(["name":"杭州","price":30000,"exit":"/d/hangzhou/road1"]),"beijing":(["name":"北京","price":50000,"exit":"/d/beijing/tian_anm"])]);}
+mapping escort_state(object me){mapping task=me->query("pocket_escort");object target,room;
+ if(!mapp(task)||task["stage"]!="active")return task||([]);
+ foreach(object n in children("/d/city/task2/renzhi"))if(clonep(n)&&n->query("leader_name")==me->query("id")&&objectp(environment(n)))target=n;
+ if(!objectp(target)&&!present("mi ling",me)){me->set("pocket_escort/stage","failed");return me->query("pocket_escort");}
+ if(!objectp(target)&&stringp(task["current"])&&strsrch(task["current"],"/d/")==0){
+ if(!catch(room=load_object(task["current"]))&&objectp(room)){target=new("/d/city/task2/renzhi");target->set("leader_name",me->query("id"));target->set("dest_add",task["destination"]);target->move(room);}}
+ if(objectp(target)){task["current"]=base_name(environment(target));me->set("pocket_escort",task);}return task;
+}
+object active(){return "/adm/daemons/pocketui"->active_player();}
+string reply(int ok,string msg){return "/adm/daemons/pocketui"->json_encode((["ok":ok,"message":msg]));}
+string action(string *args,int rid){object me=active(),npc,ob,room;mapping homes,city,record,db;string op,id,cityid; mixed *stash;int i,index;
+ if(!objectp(me)||sizeof(args)<1)return reply(0,"请先登录");op=args[0];id=sizeof(args)>1?args[1]:"";
+ if(op=="info")return "/adm/daemons/pocketui"->json_encode((["ok":1,"cities":cities(),"homes":me->query("pocket_homes")||([]),"active":me->query("pocket_home_city"),"stats":me->query("pocket_stats")||([])]));
+ if(me->is_fighting()||me->is_busy()||me->is_ghost()||me->query_temp("noliving"))return reply(0,"交战、忙碌、昏迷或死亡时不能操作");
+ if(op=="coerce"||op=="loot"){
+ foreach(object n in all_inventory(environment(me)))if(file_name(n)==id&&n->is_character()&&n!=me)npc=n;
+ if(!objectp(npc)||userp(npc)||!living(npc))return reply(0,"对方当前无法互动");
+ if(op=="coerce"){
+ if(environment(me)->query("no_fight")||environment(me)->query("no_ansuan"))return reply(0,"此处禁止战斗，请到可战斗场景");
+ if(npc->is_fighting())return reply(0,"对方正在交战");
+ if(npc->query("max_qi")<11)return reply(0,"对方气血上限过低，无法保证低于一成仍存活");
+ me->delete_temp("pocket_sparring");npc->delete_temp("pocket_sparring");me->set_temp("pocket_coercion",npc);npc->set_temp("pocket_coercion",me);
+ me->kill_ob(npc);npc->kill_ob(me);call_out("watch",1,me,npc);return reply(1,"威逼开始：你可能被杀死；对方气血低于一成即停手");}
+ if(!coerced(me,npc))return reply(0,"请先威逼战胜此人");
+ foreach(object item in all_inventory(npc)){if(sizeof(args)>2&&file_name(item)==args[2]&&!item->is_character())ob=item;}
+ if(!objectp(ob))return reply(0,"物品已不在对方身上");catch(ob->unequip());if(!ob->move(me))return reply(0,"携带过重，请整理行囊");return reply(1,"已强取"+plain(ob->name()));}
+ homes=me->query("pocket_homes")||([]);cityid=id!=""?id:me->query("pocket_home_city");city=cities()[cityid];
+ if(op=="buy"){
+ if(!mapp(city))return reply(0,"请选择已开放城市");if(mapp(homes[cityid]))return reply(0,"此城已有住宅");
+ if(!MONEY_D->player_pay(me,city["price"]))return reply(0,"随身银钱不足：需要"+MONEY_D->money_str(city["price"]));
+ homes[cityid]=(["name":city["name"],"items":({}),"bought_at":time()]);me->set("pocket_homes",homes);me->set("pocket_home_city",cityid);return reply(1,"已购置"+city["name"]+"小院，仓库、睡觉与打坐可用");}
+ if(!mapp(city)||!mapp(homes[cityid]))return reply(0,"尚未拥有这座住宅");
+ if(op=="home"){me->set("pocket_home_city",cityid);room=load_object("/d/pocket/home");room->set("short",city["name"]+"·我的小院");room->set("exits",(["out":city["exit"]]));me->move(room);return reply(1,"已回到"+city["name"]+"的家");}
+ if(cityid!=me->query("pocket_home_city"))return reply(0,"请先回到这座住宅");
+ if(base_name(environment(me))!="/d/pocket/home")return reply(0,"请先回家操作仓库或睡觉");
+ record=homes[cityid];stash=record["items"]||({});
+ if(op=="sleep"){me->set("qi",me->query("eff_qi"));me->set("jing",me->query("eff_jing"));me->set("tili",me->query("max_tili"));me->start_busy(3);return reply(1,"安睡片刻：气血与精力恢复至当前健康上限，体力已恢复");}
+ if(op=="store"){
+ if(sizeof(stash)>=100)return reply(0,"每座住宅最多存100组物品");
+ foreach(object item in all_inventory(me))if(file_name(item)==(sizeof(args)>2?args[2]:""))ob=item;
+ if(!objectp(ob)||ob->is_character())return reply(0,"没有此物品");
+ if(ob->query("no_drop")||ob->query("owner"))return reply(0,"此物品绑定或受任务保护，不能存放");
+ catch(ob->unequip());db="/adm/daemons/pocketui"->clean_value(ob->query_entire_dbase(),0);db["equipped"]=0;
+ stash+=({(["base":base_name(ob),"name":plain(ob->name()),"state":db,"amount":ob->query_amount(),"items":"/adm/daemons/pocketui"->inventory_state(ob,0)])});destruct(ob);
+ }else if(op=="take"){
+ index=to_int(sizeof(args)>2?args[2]:"-1");if(index<0||index>=sizeof(stash))return reply(0,"物品已被取走");db=stash[index];
+ if(catch(ob=new(db["base"]))||!objectp(ob))return reply(0,"物品资料暂不可用，仍保留在仓库");
+ foreach(string k,mixed v in db["state"])if(k!="equipped")ob->set(k,v);
+ if(db["amount"]>0&&function_exists("set_amount",ob))ob->set_amount(db["amount"]);
+ if(!ob->move(me)){destruct(ob);return reply(0,"携带过重，物品仍在仓库");}
+ "/adm/daemons/pocketui"->restore_items(ob,db["items"],0);stash=(index>0?stash[0..index-1]:({}))+(index+1<sizeof(stash)?stash[index+1..]:({}));
+ }else return reply(0,"未知操作");
+ record["items"]=stash;homes[cityid]=record;me->set("pocket_homes",homes);return reply(1,op=="store"?"物品已入库，随角色云存档保存":"已取回物品");
+}
+void create(){seteuid(getuid());js_export("pocket_expansion",(:action:));}

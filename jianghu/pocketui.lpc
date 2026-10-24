@@ -64,6 +64,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
         "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"), "weapon_type":plain(ob->query("skill_type")),
         "worn": !!ob->query("equipped"), "equipped":plain(ob->query("equipped")), "amount": ob->query_amount() || 1,
         "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}), "is_master":me->is_apprentice_of(ob), "public_teaching":!!function_exists("recognize_apprentice",ob) ]);
+    view["coerced"]="/adm/daemons/pocketexpansion"->coerced(me,ob);
     view["container"] = !!ob->is_container();
     view["corpse"] = !!ob->is_corpse();
     view["contents"] = ({});
@@ -80,11 +81,12 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
                 "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
         }
         view["power"]="/adm/daemons/pocketpower"->metrics(ob);
+        if(view["coerced"]) {mapping lootcounts=([]);view["loot"]=({});foreach(object it in all_inventory(ob))if(!it->is_character())view["loot"]+=({item_view(it,me,lootcounts,2)});}
         topics = ob->query("inquiry");
         if (mapp(topics)) view["topics"] = keys(topics);
         skills = ob->query_skills();
         if (mapp(skills)) foreach (string sk in keys(skills)) {
-            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "teach_limit":smaller(skills[sk]-2*me->query("betrayer"),SKILL_D(sk)->type()=="knowledge"?skills[sk]:250) ]) });
+            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "teach_limit":view["coerced"]?skills[sk]:smaller(skills[sk]-2*me->query("betrayer"),SKILL_D(sk)->type()=="knowledge"?skills[sk]:250) ]) });
         }
         goods = ob->query("vendor_goods");
         if (pointerp(goods)) foreach (mixed path in goods) {
@@ -225,6 +227,11 @@ string snapshot(string *args, int request_id) {
         foreach(string other in keys(skills)) if(other!=sk) { mixed ok; if(!catch(ok=SKILL_D(sk)->valid_combine(other)) && ok) combines+=({other}); }
         data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "progress":(me->query_learned()||([]))[sk], "authorized":me->query("can_perform/"+sk)||([]), "prepared":member_array(sk,values(me->query_skill_prepare()||([])))>=0, "practice_supported":member_array("force",available)<0 && sizeof(available)>0, "power":"/adm/daemons/pocketpower"->skill_metrics(me,sk,sizeof(available)?available:member_array(sk,base_ids)>=0?({sk}):({})), "progress_max":(skills[sk]+1)*(skills[sk]+1)+1, "bases": bases, "enable_bases":available, "combines":combines, "basic":member_array(sk,base_ids)>=0 ]) });
     }
+    data["player"]["coercing"]=objectp(me->query_temp("pocket_coercion"));
+    data["player"]["escort"]="/adm/daemons/pocketexpansion"->escort_state(me);
+    data["player"]["stats"]=me->query("pocket_stats")||([]);
+    data["player"]["homes"]=me->query("pocket_homes")||([]);
+    data["player"]["home_city"]=me->query("pocket_home_city");
     data["player"]["power"]="/adm/daemons/pocketpower"->metrics(me);
     data["combat_events"]="/adm/daemons/pocketpower"->recent_events();
     data["player"]["guide_progress"]=me->query("pocket_guides")||([]);
@@ -453,6 +460,7 @@ void watch_sparring(object me,object npc,int recommendation) {
       if(recommendation) {me->set("pocket_faction_task/stage","retry");me->set("pocket_faction_task/message","对手已离开，推荐挑战未完成；请重新领取全真令再挑战");}
       return;
     }
+    "/adm/daemons/pocketexpansion"->spar_result(me,npc);
     if(environment(me)!=environment(npc) || !me->is_fighting(npc) || !npc->is_fighting(me)) {
       if(recommendation && me->query("pocket_faction_task/stage")=="challenge" && npc->query_temp("pocket_spar_lost_to")!=me) {
         me->set("pocket_faction_task/stage","retry");
@@ -463,6 +471,7 @@ void watch_sparring(object me,object npc,int recommendation) {
     // A low-health opponent must not leave a zero-damage practice loop running.
     if(me->query("qi")*2<=me->query("max_qi") || npc->query("qi")*2<=npc->query("max_qi")) {
       if(npc->query("qi")*2<=npc->query("max_qi")) npc->set_temp("pocket_spar_lost_to",me);
+      "/adm/daemons/pocketexpansion"->spar_result(me,npc);
       me->remove_enemy(npc); npc->remove_enemy(me);
       return;
     }
@@ -512,6 +521,7 @@ string guide_progress(string *args,int rid){
 }
 void create() {
     seteuid(getuid());
+    load_object("/adm/daemons/pocketexpansion");
     js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));

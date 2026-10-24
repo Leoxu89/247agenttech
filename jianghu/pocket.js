@@ -65,6 +65,7 @@ if(human){
  if(item.goods?.length){const shop=section(body,'购买物品');for(const g of item.goods)shop.append(button(g.name,()=>command('buy '+g.token)));}
  if(state.inventory.length)actions.append(button('交付物品',()=>{const b=show('交给'+item.name);for(const i of state.inventory)b.append(button(i.name+' · 持有 '+i.amount+unit(i),()=>{const c=show('交付'+i.name),f=el('form','p-command-form'),label=el('label'),n=el('input');n.type='number';n.min='1';n.max=String(i.amount);n.step='1';n.value='1';n.required=true;n.setAttribute('aria-label','交付数量');label.append(el('span','','交付数量 · 持有'+i.amount+unit(i)),n);const go=el('button','p-primary','确认交给'+item.name);go.type='submit';f.append(label,go);f.onsubmit=e=>{e.preventDefault();const amount=Number(n.value);if(!Number.isSafeInteger(amount)||amount<1||amount>i.amount)return;command(`give ${i.amount>1||i.currency?amount+' ':''}${i.token} to ${item.token}`);};c.append(el('p','p-hint','请核对数量，确认后才会交付。'),f);},'p-row'));}));
  actions.append(button('攻击 / 杀死',()=>{const b=show('与'+item.name+'生死交战');b.append(el('p','','这会按原版杀敌规则发起生死战，可能杀死对方，也可能导致自己死亡。常驻人物阵亡后约3分钟刷新，尸体仍可拾取；重新登录也会重建世界。任务专属人物依原任务规则刷新。安全区和受保护人物仍受原版限制。'),button('确认发起生死战',()=>command('kill '+item.token)),button('取消',close));}));
+ PocketExpansion.person(actions,item);
  actions.append(button('切磋',()=>{const b=show('与'+item.name+'切磋');b.append(el('p','','大多数清醒、空闲的人物和动物都接受友好切磋。双方气血降至一半即停手，不造成伤势；禁战场所除外。'),button('开始切磋',()=>command('fight '+item.token)),button('取消',close));}));
 }}
 function render(){if(!state?.ready&&document.getElementById('p-account-form'))return;renderVitals();const content=$('#p-content');content.replaceChildren();root.classList.toggle('p-ready',!!state?.ready);document.body.classList.toggle('p-playing',!!state?.ready);
@@ -92,12 +93,15 @@ if(view==='tasks'){PocketTasks.render(content,state);
  }
  if(r.key==='/d/huashan/zhenyue'&&p.family!=='华山派'&&p.exp>=100)content.append(el('p','p-hint','华山原版门禁：经验达到100的非本派人物会被高根明阻拦。此人不收徒，请勿反复拜师或送礼。可在地图选择全真教等公开入口；未入华山前不要先大量加经验。'));
  if(p.join_quanzhen_pending)content.append(button('跪下受戒',()=>readCommand('kneel','受戒结果'),'p-primary'));
+ if(r.people.some(n=>n.source==='/d/fuzhou/npc/biaotou')){const g=section(content,'押镖操作');g.append(button('接管镖队',()=>readCommand('jiebiao','接镖结果')));for(const ex of r.exits)g.append(button('指挥镖队 → '+ex.name,()=>command('order go '+ex.direction)));}
+ if(r.people.some(n=>n.source==='/d/city/task2/renzhi'))content.append(button('护送人质 · 操作面板',()=>PocketExpansion.escort()));
  window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('挂机打坐',()=>PocketIdle.start({kind:'exercise',label:'持续打坐 · 手动停止',target:0,room:state.room.key})),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
 }else if(view==='bag'){
  content.append(el('h2','','随身行囊'),el('p','p-hint',`${state.inventory.length} 件物品 · 点物品选择吃喝、穿戴或使用`));for(const item of state.inventory){const b=button('',()=>inspect(item,'bag'),'p-row');b.append(el('strong','',item.name),el('span','',(item.worn?'已装备 · ':'')+(item.amount>1||item.currency?item.amount+({silver:'两',gold:'两',coin:'文'}[item.currency]||item.unit||'件'):'查看 / 使用')));content.append(b);}if(!state.inventory.length)content.append(el('p','p-empty','行囊空空，先探索附近的场景吧。'));
 }else if(view==='skills'){
  renderSkills(content,p);
 }else{
+ PocketExpansion.profile(content,p);
  PocketPower.card(content,p,true);content.append(el('h2','',p.name),button('查看完整人物状态',showFullProfile,'p-row'),button('门派任务与师承',()=>PocketMentors.tasks(),'p-row'));const grid=section(content,'人物档案');for(const [label,value] of [['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['年龄',p.age+'岁'],['性别',p.gender],['经验',p.exp],['潜能',p.potential],['膂力',p.str],['悟性',p.int],['根骨',p.con],['身法',p.dex]]){const card=el('div','p-stat');card.append(el('small','',label),el('strong','',String(value??'—')));grid.append(card);}content.append(meter(p.jing_locked?'精力（精神） · 已锁定':'精力（精神）',p.jing,p.max_jing),meter('体力',p.tili,p.max_tili));const quick=section(content,'调息与恢复');quick.append(button('运功疗伤',()=>command('exert heal')),button('恢复气血',()=>command('exert recover')),button('保存进度',save));
 }}
 async function save(){try{const record=await PocketSaves.capture('manual');if(!record){note('交战、昏迷或死亡期间无法创建安全存档');return;}await PocketSaves.flush();note(PocketSaves.status);}catch(e){note(e.message||'云端暂未同步，本机进度已保留');}}

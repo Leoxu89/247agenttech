@@ -38,6 +38,10 @@ varargs int receive_damage(string type, int damage, mixed reason) {
     if(damage>query(type)-floor) damage=query(type)-floor;
     if(damage<0) damage=0;
   }
+  if(!userp(this_object()) && (objectp(query_temp("pocket_coercion"))||query_temp("pocket_coercion_safe_until")>=time())) {
+    int floor=query("max_"+type)/10-1;if(floor<1)floor=1;
+    if(damage>query(type)-floor)damage=query(type)-floor;if(damage<0)damage=0;
+  }
   imp = damage / 5;
   if (query("max_nuqi") && this_object()->is_fighting()) {
     add("nuqi", imp);
@@ -52,8 +56,13 @@ varargs int receive_damage(string type, int damage, mixed reason) {
   if(type=="qi" && pocket_friendly_hit(reason) && query("qi")*2<=query("max_qi")) {
     object partner=query_temp("pocket_sparring");
     set_temp("pocket_spar_lost_to",partner);
+    if(userp(partner))"/adm/daemons/pocketexpansion"->spar_result(partner,this_object());
+    else if(userp(this_object()))"/adm/daemons/pocketexpansion"->spar_result(this_object(),partner);
   }
   if(objectp(reason)) catch("/adm/daemons/pocketpower"->damage_event(reason,this_object(),type,before,query(type),damage,objectp(previous_object())?base_name(previous_object()):""));
+  if(!userp(this_object()) && objectp(query_temp("pocket_coercion")) && query("qi")*10<query("max_qi"))
+    "/adm/daemons/pocketexpansion"->win_coercion(query_temp("pocket_coercion"),this_object());
+  if(userp(this_object()) && objectp(query_temp("pocket_coercion")) && (query("qi")<0||query("jing")<0))call_out("die",0);
   set_heart_beat(1);
 
   return damage;
@@ -69,7 +78,7 @@ varargs int receive_wound(string type, int damage, mixed reason) {
 
   if (objectp(reason)) set_temp("last_damage_from", reason);
   if (stringp(reason)) set_temp("die_reason", reason);
-  if (pocket_friendly_hit(reason)) return 0;
+  if (pocket_friendly_hit(reason) || (!userp(this_object()) && (objectp(query_temp("pocket_coercion"))||query_temp("pocket_coercion_safe_until")>=time()))) return 0;
   imp = damage / 3;
   if (query("max_nuqi") && this_object()->is_fighting()) {
     add("nuqi", imp);
@@ -293,8 +302,9 @@ void die() {
     this_object()->add("dietimes", 1);
   }
   COMBAT_D->announce(this_object(), "dead");
-  if (this_player()->query_condition("huaiyun"))
+  if (objectp(this_player()) && this_player()->query_condition("huaiyun"))
     this_object()->clear_condition("huaiyun");
+  if(objectp(killer)&&userp(killer)&&!query_temp("pocket_kill_counted")) {killer->add("pocket_stats/kills",1);set_temp("pocket_kill_counted",1);}
   if (objectp(corpse = CHAR_D->make_corpse(this_object(), killer))) {
     corpse->move(environment());
     // 超度用的经验值

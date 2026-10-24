@@ -74,6 +74,7 @@ mixed set(string prop, mixed data) {
 
 varargs mixed query(string prop, int raw) {
   mixed data;
+  if(prop=="env/wimpy" && !userp(this_object()) && mapp(tmp_dbase) && objectp(tmp_dbase["pocket_coercion"]))return 0;
   if(prop=="env/wimpy" && !userp(this_object()) && mapp(tmp_dbase) && objectp(tmp_dbase["pocket_sparring"])) {
     object partner=tmp_dbase["pocket_sparring"];
     if(this_object()->is_fighting(partner) && partner->is_fighting(this_object()) &&

@@ -22,7 +22,7 @@ int main(object me, string arg) {
   int master_skill, my_skill, jing_cost, times, pertimes;
   int improve_points, target;
   mixed flag;
-  int i;
+  int i, forced;
 
   if (me->is_busy())
     return notify_fail("你现在正忙着呢。\n");
@@ -40,17 +40,18 @@ int main(object me, string arg) {
   if (!living(ob) || ob->query_temp("noliving"))
     return notify_fail("嗯....你得先把" + ob->name() + "弄醒再说。\n");
 
+  forced="/adm/daemons/pocketexpansion"->coerced(me,ob);
   notify_fail(ob->name() + reject_msg[random(sizeof(reject_msg))]);
-  if (!me->is_apprentice_of(ob) && !(ob->recognize_apprentice(me, skill))) {
+  if (!forced && !me->is_apprentice_of(ob) && !(ob->recognize_apprentice(me, skill))) {
     return 0;
   }
   if (!master_skill = ob->query_skill(skill, 1))
     return notify_fail("这项技能你恐怕必须找别人学了。\n");
 
-  if (stringp(flag = ob->query("no_teach/" + skill))) {
+  if (!forced && stringp(flag = ob->query("no_teach/" + skill))) {
     message_vision(CYN "$N" CYN "摇摇头，说道：" + flag + "\n" NOR, ob);
     return 1;
-  } else if (intp(flag) && flag) {
+  } else if (!forced && intp(flag) && flag) {
     if (flag != 1)
       // show the messaeg if the result was not -1
       write(CYN + ob->name() + CYN "说道：对不起，" +
@@ -59,21 +60,21 @@ int main(object me, string arg) {
   }
 
   notify_fail(ob->name() + "不愿意教你这项技能。\n");
-  if (ob->prevent_learn(me, skill))
+  if (!forced && ob->prevent_learn(me, skill))
     return 0;
   my_skill = me->query_skill(skill, 1);
-  if (target && (target<=my_skill || target>master_skill || target>250))
+  if (target && (target<=my_skill || target>master_skill || (!forced && target>250)))
     return notify_fail("目标等级须高于当前等级且不超过师父上限和250级教学上限。\n");
   if (my_skill >= master_skill)
     return notify_fail("这项技能你的程度已经不输你师父了。\n");
-  if (my_skill >= (int)(master_skill - me->query("betrayer") * 2))
+  if (!forced && my_skill >= (int)(master_skill - me->query("betrayer") * 2))
     return notify_fail(ob->name() + "皱了皱眉头，不禁想起你过去的叛师经历。\n");
   if (userp(ob) && my_skill >= 200)
     return notify_fail("依你目前的能力，已不需向玩家学习了。\n");
-  if ((SKILL_D(skill)->type()) != "knowledge" && my_skill >= 250)
+  if ((SKILL_D(skill)->type()) != "knowledge" && my_skill >= 250 && !forced)
     return notify_fail(ob->name() + "说道：你" + to_chinese(skill) + "的功力已经是非同凡响了，我就不再教你，你自己多研究吧。\n");
   notify_fail("依你目前的能力，没有办法学习这种技能。\n");
-  if (!SKILL_D(skill)->valid_learn(me))
+  if (!forced && !SKILL_D(skill)->valid_learn(me))
     return 0;
 
   jing_cost = 150 / (int)me->query("int");
@@ -89,7 +90,7 @@ int main(object me, string arg) {
     ob->name(),
     to_chinese(skill)
   );
-  if (ob->query("env/no_teach"))
+  if (!forced && ob->query("env/no_teach"))
     return notify_fail("但是" + ob->name() + "现在并不准备回答你的问题。\n");
   tell_object(ob, sprintf("%s向你请教有关「%s」的问题。\n",
     me->name(), to_chinese(skill)));

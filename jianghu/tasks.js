@@ -19,7 +19,10 @@ const defs=[
  {id:'ancestor',group:'巅峰探索',name:'拜访王重阳 · 顶层师承',text:'先完成全真师承进阶，满足祖师收徒的武学、出家、正气和悟性门槛。查看条件面板核对当前差距。',source:'/kungfu/class/quanzhen/wang',steps:['完成全真高阶师承','前往后山山洞核对祖师条件','满足门槛后行拜师礼']},
  {id:'xiake',group:'巅峰探索',name:'侠客岛 · 太玄神功之谜',text:'掌门弟子线可涉及赏善罚恶令；上岛和特殊通路仍遵循原版。龙岛主太玄功问询门槛包括基本内功300、气血上限1300、经验3,000,000；后续仍须原版考验与石室探索。',source:'/kungfu/class/xiakedao/long',topic:'太玄神功',steps:['了解赏善罚恶令与上岛通路','探索侠客岛石室与岛主线索','满足条件后向龙岛主问询太玄神功'],danger:true},
  {id:'worldrank',group:'巅峰探索',name:'跻身天下五百',text:'这是新增成长目标，不发放原版任务奖励。提高永久修为、攻防和装备，以相同公式与江湖人物、其他玩家比较。',steps:['查看自己的战力与境界','进入天下榜前500名'],ranking:true},
- {id:'housing',group:'江湖生活',name:'桃花村 · 成婚与居所',text:'原版有房屋申请：需成婚、配偶同场、租金1,000,000文，再向桃花童申请。当前各账号为独立世界，跨玩家同场成婚及房屋文件云存档尚未接通，暂不能完成，勿先付租金。',source:'/d/taohuacun/npc/taohuatong',steps:['了解原版成婚与房屋制度','等待双人同场和房屋云存档支持'],blocked:true},
+ {id:'housing',group:'江湖生活',name:'单人住宅 · 仓库与安居',text:'无需成婚，在人物页可购买不同城市的小院，瞬间回家、存物、睡觉、打坐；离家返回购房城市。',steps:['选择城市并购房','回家存物、睡觉或打坐'],auto:(s,i)=>i===0&&Object.keys(s.player.homes||{}).length>0},
+ {id:'fuwei',group:'江湖生活',name:'公共任务 · 福威镖局押镖',text:'所有门派可玩。须18岁、经验10000；向福州林震南询问保镖，向账房黄先生交20两黄金押金，再去大院接镖。镖车和镖头需一起抵达指定分局，途中会遇劫匪。本任务原版临时镖队需同次在线完成。',source:'/d/fuzhou/npc/linzhennan',topic:'保镖',steps:['向林震南询问保镖','到账房交20两黄金押金','去大院接镖，再指挥镖队出发'],stepTargets:{1:'/d/fuzhou/npc/huang'},stepRooms:{2:'/d/fuzhou/biaojudy'},actions:{2:'jiebiao'},danger:true},
+ {id:'ironing',group:'初入江湖',name:'公共工作 · 白衣铺熨布',text:'经验1000至4999可接，与门派无关。问扬州沈万福工作，到沈家库房熨布五次，把熨好的布交给沈万福领奖；原版工作需同次在线完成。',source:'/d/city/npc/shenwanfu',topic:'工作',steps:['向沈万福领取工作','到沈家库房点熨烫五次','将熨好的布交回老板'],stepRooms:{1:'/d/city/shenjiakufang'},actions:{1:'yuntang'}},
+ {id:'escort',group:'江湖生活',name:'公共任务 · 保护与护送人质',text:'任何门派可玩。扬州忠烈祠打开神龛领取，需基本轻功80；寻找密令标记的人质并护送到目的地，途中会遇刺客。',steps:['基本轻功达到80','前往忠烈祠领取密令','保护人质并指挥其到达目的地'],auto:(s,i)=>i===0&&level(s,'dodge')>=80||i===2&&(s.player.stats?.escorts||0)>0},
  {id:'travel',group:'江湖生活',name:'渡船、机关与江湖游历',text:'世界地图可规划路线，遇渡船、机关或守卫时暂停，用场景的通行按钮继续；门派目录还可直达重要人物。',steps:['在地图选择目的地','完成一次渡船或机关通行','在新地区发现人物线索']}
 ];
 function level(s,id){return s.skills.find(k=>k.id===id)?.level||0;}
@@ -30,6 +33,8 @@ function mentor(s){return Object.values(PocketWorld.people).find(t=>t.name===s.p
 function currentNpc(source){return A().getState().room.people.find(n=>n.source===source);}
 async function mark(key,value){try{const r=JSON.parse(await driver.fluffos.callLPC('pocket_guide_progress',key,value?'1':'0'));if(!r.ok)throw Error();await A().refresh();PocketSaves.capture('auto').catch(()=>{});}catch{A().note('本次未能保存步骤，请稍后重试');}}
 function details(t){const api=A(),s=api.getState(),b=api.show(t.name);b.append(api.el('p','p-hint',t.text));if(t.blocked)b.append(api.el('p','p-action-result','原版制度指引 · 当前版本暂不可完成'));if(t.family&&s.player.family!==t.family)b.append(api.el('p','p-hint','本线面向'+t.family+'弟子；可以先查看其他门派路线。'));
+ if(t.id==='housing')b.append(api.button('购房 / 回家 / 仓库',()=>PocketExpansion.homes()));
+ if(t.id==='escort')b.append(api.button('护送任务 · 实时操作',()=>PocketExpansion.escort()));
  if(t.native)b.append(api.button('打开实时师承任务追踪',()=>PocketMentors.tasks()));
  if(t.ranking)b.append(api.button('打开天下榜',()=>PocketPower.board()));
  if(t.id==='faction')b.append(api.button('选择门派与老师',()=>PocketMentors.directory()));
@@ -37,7 +42,7 @@ function details(t){const api=A(),s=api.getState(),b=api.show(t.name);b.append(a
  if(t.chief)target=Object.values(PocketWorld.people).find(p=>p.name==='掌门大弟子'&&p.family===s.player.family)?.source;
  if(target){const p=person(target);b.append(api.el('p','p-hint','目标：'+(p?.name||'本门人物')+' · '+(p?.roomName||PocketWorld.rooms[p?.locations?.[0]]?.name||'查看导航')),api.button('导航至 '+(p?.name||'目标人物'),()=>navigate(target)));const n=currentNpc(target);if(n&&t.topic)b.append(api.button('打听 · '+t.topic,()=>ask(n,t)));if(t.id==='ancestor'&&n)b.append(api.button('查看祖师收徒条件',()=>PocketMentors.guide(n)));}
  b.append(api.el('h3','','步骤与进度'),api.el('p','p-hint','有明确角色数据的步骤自动核验，其余可手动确认。勾选只保存攻略进度，不代替原版完成任务，也不发奖励。'));
- t.steps.forEach((text,i)=>{const key=t.id+'-'+i,automatic=!!t.auto?.(s,i),done=automatic||!!s.player.guide_progress?.[key],row=api.el('div','p-task-step');row.append(api.el('strong','',(i+1)+'. '+text),api.button(automatic?'✓ 已由角色数据验证':done?'✓ 已确认 · 点击撤销':'确认已完成',async()=>{await mark(key,!done);details(t);}));if(automatic||t.blocked)row.querySelector('button').disabled=true;let stepTarget=target,stepRoom='';
+ t.steps.forEach((text,i)=>{const key=t.id+'-'+i,automatic=!!t.auto?.(s,i),done=automatic||!!s.player.guide_progress?.[key],row=api.el('div','p-task-step');row.append(api.el('strong','',(i+1)+'. '+text),api.button(automatic?'✓ 已由角色数据验证':done?'✓ 已确认 · 点击撤销':'确认已完成',async()=>{await mark(key,!done);details(t);}));if(automatic||t.blocked)row.querySelector('button').disabled=true;let stepTarget=t.stepTargets?.[i]||target,stepRoom=t.stepRooms?.[i]||'';if(stepRoom)stepTarget='';
  if(t.id==='work'){
   if(i===1||i===3&&!s.player.job_returned)stepTarget='/d/wuguan/npc/wg_laoli';
   if(i===2){stepTarget='';const rooms={'打扫马房':'wg_mafang','锯木头':'wg_mufang','劈柴':'wg_chaifang','浇菜地':'wg_caidi2','锄草':'wg_caidi1','挑水':'wg_shuifang'};if(rooms[s.player.job_name])stepRoom='/d/wuguan/'+rooms[s.player.job_name];else row.append(api.el('small','p-hint','先向张风领取工作，再显示这一步的具体地点。'));}
@@ -45,7 +50,9 @@ function details(t){const api=A(),s=api.getState(),b=api.show(t.name);b.append(a
  if(!t.blocked&&stepTarget){const p=person(stepTarget);if(p?.room||p?.locations?.length)row.append(api.button('导航本步 · '+p.name,()=>navigate(stepTarget)));const npc=currentNpc(stepTarget);if(npc)row.append(api.button('与'+npc.name+'互动',()=>api.inspect(npc,'person')));}
  if(stepRoom)row.append(api.button('导航本步 · '+PocketWorld.rooms[stepRoom].name,()=>PocketMap.route(stepRoom,t.name)));
  if(['equipment','meditation','knowledge','practice','travel','faction'].includes(t.id))row.append(api.button(t.id==='faction'?'选择门派老师':t.id==='equipment'&&i===0||t.id==='knowledge'?'打开行囊':t.id==='equipment'||t.id==='meditation'&&i===0?'查看武学配置':t.id==='travel'?'打开江湖地图':'返回场景操作',()=>{if(t.id==='faction')PocketMentors.directory();else{api.close();api.showView(t.id==='equipment'&&i===0||t.id==='knowledge'?'bag':t.id==='equipment'||t.id==='meditation'&&i===0?'skills':t.id==='travel'?'map':'scene');}}));
- const command=t.actions?.[i];if(command&&target&&currentNpc(target)&&!t.blocked){const btn=api.button('执行这一步',()=>api.readCommand(command,t.name+' · '+text));if(t.id==='work'&&(!s.player.job_done||!s.player.job_returned))btn.disabled=true;row.append(btn);}b.append(row);});
+ const command=t.actions?.[i];if(command&&((stepRoom&&s.room.key===stepRoom)||(stepTarget&&currentNpc(stepTarget)))&&!t.blocked){const btn=api.button('执行这一步',()=>api.readCommand(command,t.name+' · '+text));if(t.id==='work'&&(!s.player.job_done||!s.player.job_returned))btn.disabled=true;row.append(btn);}b.append(row);});
+ if(t.id==='fuwei'&&currentNpc('/d/fuzhou/npc/huang'))b.append(api.button('交押金 · 20两黄金',()=>{const c=api.show('确认押镖押金');c.append(api.el('p','','原版需要20两黄金，丢镖会损失押金。请先确认已向林震南领取任务。'),api.button('确认交付20两黄金',()=>api.readCommand('give 20 gold to huang','押金结果')));}));
+ if(t.id==='ironing'&&currentNpc(t.source)&&s.inventory.some(i=>i.source==='/d/city/obj/bu'))b.append(api.button('交回熨好的布',()=>api.readCommand('give bu to shen','熨布领奖')));
  if(t.danger)b.append(api.el('p','p-action-result','高风险原版挑战：请先手动存档，检查战力和逃跑路线。'));
 }
 function ask(n,t){if(t.danger){const b=A().show('开始挑战前确认');b.append(A().el('p','',t.text),A().button('已准备好 · 向对方问询',()=>A().readCommand('ask '+n.token+' about '+t.topic,t.name)));}else A().readCommand('ask '+n.token+' about '+t.topic,t.name);}
