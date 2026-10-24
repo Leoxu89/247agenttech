@@ -1,0 +1,61 @@
+// Read-only combat measurements and bounded, structured combat events.
+inherit F_DBASE;
+#include <combat.h>
+mapping *events=({});
+int sequence;
+string plain(mixed s) {
+    string out = "";
+    int escape = 0;
+    if (!stringp(s)) return "";
+    for (int i = 0; i < strlen(s); i++) {
+        if (s[i] == 27) { escape = 1; continue; }
+        if (escape) {
+            if (s[i] >= 64 && s[i] <= 126 && s[i] != 91) escape = 0;
+            continue;
+        }
+        out += s[i..i];
+    }
+    return out;
+}
+int power_at(object ob,int level,int usage){
+ int str=ob->query_str(),dex=ob->query_dex(),p,exp=ob->query("combat_exp");
+ if(!level)return exp/2;if(level>800)level=800;if(level<1)level=1;
+ if(str<10)str=10;if(str>200)str=200;if(dex<10)dex=10;if(dex>200)dex=200;
+ p=(level/6)*level*level;
+ return (p+exp)/80*(usage==1?str+ob->query("str"):dex+ob->query("dex"));
+}
+mapping metrics(object ob){
+ object weapon;mapping prep=ob->query_skill_prepare()||([]);string base="unarmed";int attack,defense,parry;
+ weapon=ob->query_temp("weapon");if(objectp(weapon))base=weapon->query("skill_type");else if(sizeof(prep))base=keys(prep)[0];
+ catch(attack=COMBAT_D->skill_power(ob,base,SKILL_USAGE_ATTACK));
+ catch(defense=COMBAT_D->skill_power(ob,"dodge",SKILL_USAGE_DEFENSE));
+ catch(parry=COMBAT_D->skill_power(ob,"parry",SKILL_USAGE_DEFENSE));
+ return (["attack":attack,"dodge":defense,"parry":parry,"attack_base":base,"attack_skill":ob->query_skill_mapped(base)||base,
+ "max_qi":ob->query("max_qi"),"max_jing":ob->query("max_jing"),"max_neili":ob->query("max_neili"),"str":ob->query_str(),"dex":ob->query_dex(),"con":ob->query_con(),"int":ob->query_int(),
+ "armor":ob->query_temp("apply/armor"),"weapon_damage":ob->query_temp("apply/damage"),"unarmed_damage":ob->query_temp("apply/unarmed_damage")]);
+}
+mapping skill_metrics(object me,string sk,string *bases){
+ mapping result=(["level":me->query_skill(sk,1),"attack":0,"defense":0,"effective_level":0,"active":0]);
+ foreach(string base in bases){int level=me->query_skill(base,1)/2+me->query_skill(sk,1)+me->query_temp("apply/"+base),p;int defense=member_array(base,({"dodge","parry"}))>=0;
+  if(base==sk)level=me->query_skill(base); // Basic skill uses the actual mapped configuration.
+  p=power_at(me,level+me->query_temp(defense?"apply/defense":"apply/attack"),defense?2:1);
+  if(base=="force"){result["force_level"]=level;result["meditation_limit"]=level*10;continue;}
+  if(defense){if(p>result["defense"])result["defense"]=p;}else if(p>result["attack"])result["attack"]=p;
+  if(level>result["effective_level"])result["effective_level"]=level;
+  if(me->query_skill_mapped(base)==sk){result["active"]=1;if(defense)catch(result["defense"]=COMBAT_D->skill_power(me,base,2));else catch(result["attack"]=COMBAT_D->skill_power(me,base,1));}
+ }
+ return result;
+}
+void damage_event(object attacker,object victim,string type,int before,int after,int requested,string cause){
+ string action="",skill="伤害结算";
+ if(!objectp(attacker)||attacker==victim||(!userp(attacker)&&!userp(victim)))return;
+ if(attacker->query_temp("pocket_attack_target")==victim){action=plain(attacker->query_temp("pocket_attack_action"));skill=plain(to_chinese(attacker->query_temp("pocket_attack_skill")));}
+ else if(attacker->query_temp("pocket_perform_time")+5>=time())skill=plain(attacker->query_temp("pocket_perform"))||"特殊招式";
+ events+=({(["id":++sequence,"attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":action,"skill":skill,"type":type,"damage":before>after?before-after:0,"requested":requested,"cause":cause,"kind":"hit","time":time()])});
+ if(sizeof(events)>80)events=events[<80..];
+}
+void miss_event(object attacker,object victim,string action,string kind){
+ if(!userp(attacker)&&!userp(victim))return;
+ events+=({(["id":++sequence,"attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":plain(action),"skill":"普通攻击","type":"qi","damage":0,"kind":kind,"time":time()])});if(sizeof(events)>80)events=events[<80..];
+}
+mapping *recent_events(){return events;}

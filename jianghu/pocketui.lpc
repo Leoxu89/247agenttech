@@ -79,6 +79,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
             view["tuition"] = (["paid":!!me->query_temp("marks/yangzhou_paied"),
                 "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
         }
+        view["power"]="/adm/daemons/pocketpower"->metrics(ob);
         topics = ob->query("inquiry");
         if (mapp(topics)) view["topics"] = keys(topics);
         skills = ob->query_skills();
@@ -222,8 +223,12 @@ string snapshot(string *args, int request_id) {
         }
         if (mapp(mapped)) foreach (string base, string special in mapped) if (special == sk) bases += ({ base });
         foreach(string other in keys(skills)) if(other!=sk) { mixed ok; if(!catch(ok=SKILL_D(sk)->valid_combine(other)) && ok) combines+=({other}); }
-        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "progress":(me->query_learned()||([]))[sk], "authorized":me->query("can_perform/"+sk)||([]), "prepared":member_array(sk,values(me->query_skill_prepare()||([])))>=0, "practice_supported":member_array("force",available)<0 && sizeof(available)>0, "progress_max":(skills[sk]+1)*(skills[sk]+1)+1, "bases": bases, "enable_bases":available, "combines":combines, "basic":member_array(sk,base_ids)>=0 ]) });
+        data["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "progress":(me->query_learned()||([]))[sk], "authorized":me->query("can_perform/"+sk)||([]), "prepared":member_array(sk,values(me->query_skill_prepare()||([])))>=0, "practice_supported":member_array("force",available)<0 && sizeof(available)>0, "power":"/adm/daemons/pocketpower"->skill_metrics(me,sk,sizeof(available)?available:member_array(sk,base_ids)>=0?({sk}):({})), "progress_max":(skills[sk]+1)*(skills[sk]+1)+1, "bases": bases, "enable_bases":available, "combines":combines, "basic":member_array(sk,base_ids)>=0 ]) });
     }
+    data["player"]["power"]="/adm/daemons/pocketpower"->metrics(me);
+    data["combat_events"]="/adm/daemons/pocketpower"->recent_events();
+    data["player"]["guide_progress"]=me->query("pocket_guides")||([]);
+    data["player"]["milestones"]=(["qixing":me->query("qixing"),"zhangmen":me->query("zhangmen/title"),"married":me->query("married"),"xkd":me->query("xkd/ling")]);
     value=me->query_temp("last_damage_from");
     if (objectp(value)) data["death"]["last_attacker"]=plain(value->name());
     else if(stringp(value)) data["death"]["last_attacker"]=plain(value);
@@ -498,6 +503,13 @@ void schedule_npc_return(object npc) {
     call_out("return_npc",180,home,file,managed,npc->is_unique());
 }
 
+string guide_progress(string *args,int rid){
+ object me=active_player();string key;
+ if(!objectp(me)||sizeof(args)!=2)return json_encode((["ok":0]));key=args[0];
+ if(sizeof(key)>70||sizeof(regexp(({key}),"^[a-z0-9_-]+$"))!=1)return json_encode((["ok":0]));
+ if(args[1]=="0")me->delete("pocket_guides/"+key);else me->set("pocket_guides/"+key,1);
+ return json_encode((["ok":1]));
+}
 void create() {
     seteuid(getuid());
     js_export("pocket_recover_potential", (: recover_potential :));
@@ -505,6 +517,7 @@ void create() {
     js_export("pocket_state", (: snapshot :));
     js_export("pocket_bless", (: bless :));
     js_export("pocket_checkpoint", (: checkpoint :));
+    js_export("pocket_guide_progress", (: guide_progress :));
     js_export("pocket_restore", (: restore_checkpoint :));
     js_export("pocket_engage", (: engage :));
 }

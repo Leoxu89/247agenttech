@@ -22,12 +22,14 @@ int pocket_friendly_hit(mixed reason) {
 //varargs int receive_damage(string type, int damage, object who)
 varargs int receive_damage(string type, int damage, mixed reason) {
   int val;
+  int before;
   int imp;
 
   if (damage < 0) error("F_DAMAGE: 伤害值为负值。\n");
   if (type != "jing" && type != "qi")
     error("F_DAMAGE: 伤害种类错误( 只能是 jing, qi 其中之一 )。\n");
 
+  before=query(type);
   if (objectp(reason)) set_temp("last_damage_from", reason);
   if (stringp(reason)) set_temp("die_reason", reason);
   if (pocket_friendly_hit(reason)) {
@@ -51,6 +53,7 @@ varargs int receive_damage(string type, int damage, mixed reason) {
     object partner=query_temp("pocket_sparring");
     set_temp("pocket_spar_lost_to",partner);
   }
+  if(objectp(reason)) catch("/adm/daemons/pocketpower"->damage_event(reason,this_object(),type,before,query(type),damage,objectp(previous_object())?base_name(previous_object()):""));
   set_heart_beat(1);
 
   return damage;
