@@ -60,7 +60,7 @@ function guide(item,result=''){
 async function apply(item){
  const api=A();await api.command('bai '+item.token,true);
  // A fresh snapshot follows the native result; this does not call attempt_apprentice speculatively.
- setTimeout(async()=>{await api.refresh();const p=current().player;guide(item,p.master===item.name?'拜师成功，现任师父：'+p.master:api.getText()||'已请求拜师，等候对方答复。');},850);
+ setTimeout(async()=>{await api.refresh();const p=current().player;guide(item,[p.master===item.name?'拜师成功，现任师父：'+p.master:'',api.getText()||'已请求拜师，等候对方答复。'].filter(Boolean).join('\n\n'));},850);
 }
 function give(npc,item){const b=A().show('交付'+item.name);b.append(A().el('p','','交给'+npc.name+'，按原版验证物品与任务资格。'),A().button('确认交付'+item.name,async()=>{await A().command('give '+item.token+' to '+npc.token);setTimeout(()=>{A().refresh();tasks();},850);}));}
 function directory(family){
