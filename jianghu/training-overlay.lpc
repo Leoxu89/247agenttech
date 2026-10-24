@@ -1,0 +1,21 @@
+inherit F_DBASE;
+string reply(int ok,string msg){return "/adm/daemons/pocketui"->json_encode((["ok":ok,"message":msg]));}
+int meets(object me,mapping rule){return (rule["kind"]=="skill"?me->query_skill(rule["id"],1):me->query(rule["id"]))>=rule["min"];}
+string action(string *args,int rid){object me="/adm/daemons/pocketui"->active_player();mapping move;int n,cap,available;
+ if(!objectp(me)||!sizeof(args)||me->is_ghost()||me->query_temp("noliving"))return reply(0,"当前无法修习");
+ if(args[0]=="jiali"){
+ if(!stringp(me->query_skill_mapped("force")))return reply(0,"请先激发一种内功");
+ if(sizeof(args)!=2||sizeof(regexp(({args[1]}),"^[0-9]+$"))!=1)return reply(0,"请选择加力数值");
+ cap=me->query_skill("force")/2;n=to_int(args[1]);if(n<0||n>cap)return reply(0,"加力不能超过当前有效内功的一半");me->set("jiali",n);return reply(1,sprintf("每次命中加力设为%d，上限%d；消耗当前内力，内力不足可能反震",n,cap));}
+ if(me->is_busy()||me->is_fighting())return reply(0,"请在战斗与忙碌结束后领悟招式");
+ if(args[0]!="unlock"||sizeof(args)!=2)return reply(0,"请选择招式");
+ move="/adm/daemons/pockettrainingdata"->moves()[args[1]];if(!mapp(move))return reply(0,"没有这项招式");
+ if(!move["authorization"]||me->query("can_perform/"+move["skill"]+"/"+move["action"])||me->query("perform/"+move["action"]))return reply(0,"这项招式已经可用，无需再次消耗潜能");
+ foreach(mapping rule in move["requirements"])if(rule["kind"]=="skill"&&!meets(me,rule))return reply(0,to_chinese(rule["id"])+sprintf("需要%d级，当前%d级",rule["min"],me->query_skill(rule["id"],1)));
+ foreach(mixed group in move["alternatives"]){int passed,skill_rules;foreach(mapping rule in group)if(rule["kind"]=="skill"){skill_rules++;if(meets(me,rule))passed=1;}if(skill_rules&&!passed)return reply(0,"替代内功或武学条件未满足，请查看招式说明（任选一项）");}
+ n=me->query_skill(move["skill"],1);if(n*n*n/10>me->query("combat_exp"))return reply(0,"实战经验不足以领悟当前等级的招式");
+ available=me->query("potential")-me->query("learned_points");if(available<100)return reply(0,"领悟一招需要100可用潜能");
+ me->add("learned_points",100);me->set("can_perform/"+move["skill"]+"/"+move["action"],1);
+ return reply(1,"已领悟「"+move["name"]+"」，消耗100潜能；激发、备招、兵器和施展所需内力仍须满足");
+}
+void create(){seteuid(getuid());js_export("pocket_training",(:action:));}

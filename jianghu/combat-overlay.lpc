@@ -372,7 +372,7 @@ varargs int do_attack(object me, object victim, object weapon, int attack_type, 
       me->improve_skill(attack_skill, random(my["int"]));
     }
     damage = RESULT_DODGE;
-    catch("/adm/daemons/pocketpower"->miss_event(me,victim,action["action"],"dodge"));
+    catch("/adm/daemons/pocketpower"->miss_event(me,victim,action["action"],"dodge",attack_skill));
     //		if (damage<0) damage=0;
     if (wizardp(me) &&
       (string)me->query("env/combat") == "verbose")
@@ -423,7 +423,7 @@ varargs int do_attack(object me, object victim, object weapon, int attack_type, 
           victim->improve_skill("parry", 1);
       }
       damage = RESULT_PARRY;
-      catch("/adm/daemons/pocketpower"->miss_event(me,victim,action["action"],"parry"));
+      catch("/adm/daemons/pocketpower"->miss_event(me,victim,action["action"],"parry",attack_skill));
       //			if (damage<0) damage=0;
       if (wizardp(me) &&
         (string)me->query("env/combat") == "verbose")
@@ -555,6 +555,7 @@ varargs int do_attack(object me, object victim, object weapon, int attack_type, 
       me->set_temp("pocket_attack_action",action["action"]);
       me->set_temp("pocket_attack_skill",me->query_skill_mapped(attack_skill)||attack_skill);
       damage = victim->receive_damage("qi", damage, me);
+      catch("/adm/daemons/pocketpower"->attack_result(me,victim,1,damage));
       me->delete_temp("pocket_attack_target");
       if (wizardp(me) &&
         (string)me->query("env/combat") == "verbose")

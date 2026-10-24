@@ -120,7 +120,7 @@ int main(object me, string arg) {
       improve_points+=SKILL_D(skill)->learn_bonus()||10;
       improve_points/=me->query("betrayer")+1;
       if(improve_points<15) improve_points=15;
-      me->improve_skill(skill,random(improve_points));
+      me->set_temp("pocket_lesson_target",target);me->improve_skill(skill,random(improve_points));me->delete_temp("pocket_lesson_target");
     }
     if(!pertimes) return notify_fail("你今天太累了，结果什么也没有学到。\n");
     printf("你听了%s的指导，学习了%d次，似乎有些心得。\n",ob->name(),pertimes);
@@ -158,7 +158,7 @@ int main(object me, string arg) {
       improve_points = random(improve_points);
       // 对师傅传授产生误解的比率。== 0时候误解。
       //				if(random(SKILL_D(skill)->success()) )
-      me->improve_skill(skill, improve_points);
+      me->set_temp("pocket_lesson_target",master_skill);me->improve_skill(skill, improve_points);me->delete_temp("pocket_lesson_target");
     }
     if (skill_name = SKILL_D(skill)->query_skill_name(my_skill))
       printf("你听了%s的指导，对「%s」这一招似乎有些心得。\n", ob->name(), skill_name);

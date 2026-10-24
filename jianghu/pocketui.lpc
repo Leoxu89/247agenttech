@@ -59,7 +59,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
         "name": plain(ob->name()), "description": plain(ob->query("long")),
         "qi":ob->query("qi"),"max_qi":ob->query("max_qi"),"jing":ob->query("jing"),"max_jing":ob->query("max_jing"),
         "hostile":ob->is_fighting(me), "currency":ob->query("money_id"),
-        "race": plain(ob->query("race")), "title": plain(ob->query("title")), "living": ob->is_character(), "accepts_apprentice": !!function_exists("attempt_apprentice",ob),
+        "family":plain(ob->query("family/family_name")), "race": plain(ob->query("race")), "title": plain(ob->query("title")), "living": ob->is_character(), "accepts_apprentice": !!function_exists("attempt_apprentice",ob),
         "food": !!ob->query("food_supply"), "drink": !!ob->query("liquid"),
         "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"), "weapon_type":plain(ob->query("skill_type")),
         "worn": !!ob->query("equipped"), "equipped":plain(ob->query("equipped")), "amount": ob->query_amount() || 1,
@@ -160,7 +160,7 @@ string snapshot(string *args, int request_id) {
             "dex": me->query_dex(), "balance": mine["balance"],
             "shen":mine["shen"], "nickname":plain(mine["nickname"]), "degree":plain(mine["degree"]),
             "eff_jing":mine["eff_jing"], "jingli":mine["jingli"], "max_jingli":mine["max_jingli"],
-            "jiali":me->query("jiali"), "score":mine["score"], "weight":me->query_weight(),
+            "jiali":me->query("jiali"),"jiali_max":me->query_skill("force")/2,"training_boost":!!me->query("pocket_training_boost"), "score":mine["score"], "weight":me->query_weight(),
             "potential_total":mine["potential"], "learned_points":mine["learned_points"],
             "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
             "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
@@ -233,6 +233,7 @@ string snapshot(string *args, int request_id) {
     data["player"]["homes"]=me->query("pocket_homes")||([]);
     data["player"]["home_city"]=me->query("pocket_home_city");
     data["player"]["power"]="/adm/daemons/pocketpower"->metrics(me);
+    data["battle_stats"]="/adm/daemons/pocketpower"->battle_stats(me);
     data["combat_events"]="/adm/daemons/pocketpower"->recent_events();
     data["player"]["guide_progress"]=me->query("pocket_guides")||([]);
     data["player"]["milestones"]=(["qixing":me->query("qixing"),"zhangmen":me->query("zhangmen/title"),"married":me->query("married"),"xkd":me->query("xkd/ling")]);
@@ -261,6 +262,9 @@ string bless(string *args, int request_id) {
     times=sizeof(args)>1?to_int(args[1]):1;
     if(times<1||times>100) return json_encode((["ok":0,"message":"次数须为1至100"]));
     switch (kind) {
+    case "training_boost":
+        cap=!me->query("pocket_training_boost");me->set("pocket_training_boost",cap);
+        return json_encode((["ok":1,"locked":cap,"message":cap?"已开启三倍熟练度：学习练习进度及打坐突破增量乘三，费用与瓶颈不变":"已关闭三倍熟练度"]));
     case "food_lock":
         cap=!me->query("pocket_food_locked"); me->set("pocket_food_locked",cap);
         if(cap) me->set("food",me->max_food_capacity());
@@ -522,6 +526,7 @@ string guide_progress(string *args,int rid){
 void create() {
     seteuid(getuid());
     load_object("/adm/daemons/pocketexpansion");
+    load_object("/adm/daemons/pockettraining");
     js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));

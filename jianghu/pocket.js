@@ -117,12 +117,12 @@ function showBless(){
  let batch=1;
  const batchLabel=el('label'),batchSelect=el('select');batchSelect.setAttribute('aria-label','天神补给次数');for(const [n,label]of [[1,'1次'],[10,'10次'],[100,'100次']]){const o=el('option','',label);o.value=String(n);batchSelect.append(o);}batchSelect.onchange=()=>batch=Number(batchSelect.value);batchLabel.append(el('span','','每次补给数量（开关不受影响）'),batchSelect);b.append(batchLabel);
  const status=el('p','p-bless-status','当前正气：'+state.player.shen+' · 选择你需要的帮助');status.setAttribute('role','status');b.append(status);const grid=section(b,'随手补给');
- for(const [id,field,label]of [['jing_lock','jing_locked','精力（精神）'],['qi_lock','qi_locked','气血'],['neili_lock','neili_locked','内力'],['food_lock','food_locked','食物'],['water_lock','water_locked','饮水']]){
+ for(const [id,field,label]of [['jing_lock','jing_locked','精力（精神）'],['qi_lock','qi_locked','气血'],['neili_lock','neili_locked','内力'],['food_lock','food_locked','食物'],['water_lock','water_locked','饮水'],['training_boost','training_boost','三倍熟练度']]){
   const lock=button('',async()=>{lock.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id));if(!result.ok)throw Error(result.message);syncLock(!!result.locked);status.textContent=result.message;await refresh();queueBlessSave();}catch(e){status.textContent=e.message||'未能切换锁定，请重试';}finally{lock.disabled=false;}});
-  function syncLock(locked){lock.textContent=(locked?'解锁':'锁定')+label+' · '+(locked?'已锁定':'未锁定');lock.setAttribute('aria-pressed',String(locked));}
+  function syncLock(locked){lock.textContent=id==='training_boost'?(locked?'关闭':'开启')+label+' · '+(locked?'已开启':'已关闭'):(locked?'解锁':'锁定')+label+' · '+(locked?'已锁定':'未锁定');lock.setAttribute('aria-pressed',String(locked));}
   syncLock(!!state.player[field]);grid.append(lock);
  }
- b.append(el('p','p-hint','五个锁定开关独立生效，再点一次解锁，随角色存档保留。气血锁同时保持伤势上限；内力锁不提高永久内力上限，未修内功时借用300点。锁定保持至少当前修为的满额内力；打坐结束和登录会正常归一，避免超额不断膨胀。食物、饮水锁开启即补满并保持不减；潜能仍按原版消耗。'));
+ b.append(el('p','p-hint','五个资源锁独立生效；三倍熟练度另行切换，开启后学习、练习进度×3，打坐每次突破增量×3，潜能费用与瓶颈不变，随角色存档保留。气血锁同时保持伤势上限；内力锁不提高永久内力上限，未修内功时借用300点。锁定保持至少当前修为的满额内力；打坐结束和登录会正常归一，避免超额不断膨胀。食物、饮水锁开启即补满并保持不减；潜能仍按原版消耗。'));
  for(const [id,label]of [['food','吃饭 · 食物 +30'],['water','喝水 · 饮水 +30'],['qi','恢复气血 / 伤势 +100'],['neili','补充内力 +100'],['money','获得白银 · +10两'],['exp','增加经验 · +10,000'],['potential','增加潜能 · +1,000'],['shen_up','正气 +1,000'],['shen_down','正气 −1,000'],['jing','补满精力（精神）'],['supplies','吃饱喝足 · 补满食水'],['light','备一支火折 · 夜间照明']]){
   const btn=button(label,async()=>{btn.disabled=true;try{const result=JSON.parse(await driver.fluffos.callLPC('pocket_bless',id,String(batch)));await refresh();const p=state.player;status.textContent=(result.delta!==undefined?'本次 '+(result.delta>=0?'+':'')+result.delta+' · ':'')+result.message+'。食物 '+p.food+' / 饮水 '+p.water+' / 气血 '+p.qi+' / 内力 '+p.neili+' / 经验 '+p.exp+' / 潜能 '+p.potential+' / 正气 '+p.shen;if(!result.ok)throw Error(result.message);queueBlessSave();}catch(e){status.textContent='本次未能补充，请重试';}finally{btn.disabled=false;}});grid.append(btn);
  }
@@ -132,14 +132,14 @@ function showBless(){
 const baseNames={force:'内功',dodge:'轻功',parry:'招架',sword:'剑法',blade:'刀法',unarmed:'拳脚',cuff:'拳法',strike:'掌法',finger:'指法',hand:'手法',claw:'爪法',staff:'杖法',whip:'鞭法',leg:'腿法',hook:'钩法',spear:'枪法',hammer:'锤法',axe:'斧法',club:'棍法',stick:'棒法',throwing:'暗器'};
 const handBases=['cuff','strike','finger','leg','hand','claw','unarmed'];
 async function prepareSkills(ids){await command('prepare none',true);if(ids.length)await command('prepare '+ids.join(' '));else close();}
-function skillDetail(skill){const b=show(skillName(skill)),progress=el('div'),status=el('p','p-hint');PocketPower.skillCard(b,skill);b.append(progress,status,button('阅读武学说明',()=>readCommand('help '+skill.id,skillName(skill))));
+function skillDetail(skill){const b=show(skillName(skill));b.append(button('学习 / 解锁这门武学的绝招',()=>PocketTraining.unlock(skill.id)));const progress=el('div'),status=el('p','p-hint');PocketPower.skillCard(b,skill);b.append(progress,status,button('阅读武学说明',()=>readCommand('help '+skill.id,skillName(skill))));
  const paint=()=>{const current=state.skills.find(k=>k.id===skill.id);if(!current)return;progress.replaceChildren(meter('本级熟练度',current.progress||0,current.progress_max||1));status.textContent='当前 '+current.level+' 级 · '+(current.basic?'基本功，无需激发':current.bases?.length?'已激发为 '+current.bases.map(x=>baseNames[x]||x).join('、'):'尚未激发')+(current.prepared?' · 已备招用于空手攻击':'');};paint();liveDetail=paint;
  if(skill.bases?.length&&skill.practice_supported){const g=section(b,'练习');for(const base of skill.bases)g.append(button('练习'+(baseNames[base]||base),()=>command('practice '+base+' 1')),button('挂机练习'+(baseNames[base]||base),()=>PocketIdle.start({kind:'practice',base,skill:skill.id,label:skillName(skill),room:state.room.key})));}
  else if(skill.bases?.length)b.append(el('p','p-hint','此内功通过请教提升等级；在场景点打坐，可以积累永久内力修为。'));
  if(!skill.basic&&skill.enable_bases?.length){const g=section(b,'激发 / 装备');for(const base of skill.enable_bases)g.append(button('激发为'+(baseNames[base]||base),()=>command('enable '+base+' '+skill.id)));}
  if(skill.bases?.some(base=>handBases.includes(base))){const g=section(b,'空手攻击备招');g.append(button('使用'+skillName(skill)+'进行空手攻击',()=>prepareSkills([skill.id])));for(const other of state.skills.filter(k=>skill.combines?.includes(k.id)&&k.bases?.some(base=>handBases.includes(base))))g.append(button('组合备招 · '+skillName(skill)+' + '+skillName(other),()=>prepareSkills([skill.id,other.id])));}
 }
-function renderSkills(content,p){content.append(el('h2','','我的武学'),el('p','p-hint','可用潜能 '+p.potential+' · 点武学查看说明、练习和激发'));
+function renderSkills(content,p){PocketTraining.render(content,p);content.append(el('h2','','我的武学'),el('p','p-hint','可用潜能 '+p.potential+' · 点武学查看说明、练习和激发'));
  const tabs=el('div','p-map-tabs');for(const [id,label]of [['learned','武学分类'],['equipped','激发配置']]){const b=button(label,()=>{skillTab=id;render();});b.classList.toggle('active',skillTab===id);tabs.append(b);}content.append(tabs);
  if(skillTab==='equipped'){
  const prepared=state.skills.filter(k=>k.prepared);content.append(el('p','p-hint','当前空手备招：'+(prepared.map(skillName).join(' + ')||'普通拳脚（尚未备招）')));if(prepared.length)content.append(button('取消空手备招',()=>prepareSkills([])));

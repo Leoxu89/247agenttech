@@ -46,16 +46,38 @@ mapping skill_metrics(object me,string sk,string *bases){
  }
  return result;
 }
-void damage_event(object attacker,object victim,string type,int before,int after,int requested,string cause){
- string action="",skill="伤害结算";
- if(!objectp(attacker)||attacker==victim||(!userp(attacker)&&!userp(victim)))return;
- if(attacker->query_temp("pocket_attack_target")==victim){action=plain(attacker->query_temp("pocket_attack_action"));skill=plain(to_chinese(attacker->query_temp("pocket_attack_skill")));}
- else if(attacker->query_temp("pocket_perform_time")+5>=time())skill=plain(attacker->query_temp("pocket_perform"))||"特殊招式";
- events+=({(["id":++sequence,"attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":action,"skill":skill,"type":type,"damage":before>after?before-after:0,"requested":requested,"cause":cause,"kind":"hit","time":time()])});
- if(sizeof(events)>80)events=events[<80..];
+
+mapping bout=([]);object owner,foe;int bout_sequence;
+void begin(object attacker,object victim){object player=userp(attacker)?attacker:userp(victim)?victim:0,enemy;
+ if(!objectp(player)||attacker==victim)return;enemy=player==attacker?victim:attacker;
+ if(!sizeof(bout)||!bout["active"]||owner!=player||(foe!=enemy&&(!objectp(foe)||!foe->is_fighting(player)))){
+ owner=player;foe=enemy;bout=(["id":++bout_sequence,"started":time(),"active":1,"attacks":0,"hits":0,"normal_damage":0,"total_damage":0,"enemy_heal":0,"own_heal":0,"enemy_attacks":0,"enemy_hits":0]);
+ }
 }
-void miss_event(object attacker,object victim,string action,string kind){
- if(!userp(attacker)&&!userp(victim))return;
- events+=({(["id":++sequence,"attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":plain(action),"skill":"普通攻击","type":"qi","damage":0,"kind":kind,"time":time()])});if(sizeof(events)>80)events=events[<80..];
+mapping battle_stats(object me){if(owner!=me)return ([]);if(bout["active"]&&!me->is_fighting()){bout["active"]=0;bout["ended"]=time();}bout["elapsed"]=(bout["active"]?time():bout["ended"])-bout["started"];return copy(bout);}
+void append_event(mapping e){e["id"]=++sequence;e["time"]=time();e["battle_id"]=bout["id"];events+=({e});if(sizeof(events)>100)events=events[<100..];}
+string attack_skill(object ob){object w=ob->query_temp("weapon");mapping prep=ob->query_skill_prepare()||([]);string base=objectp(w)?w->query("skill_type"):sizeof(prep)?keys(prep)[0]:"unarmed";return plain(to_chinese(ob->query_skill_mapped(base)||base));}
+void attack_result(object attacker,object victim,int hit,int damage){begin(attacker,victim);if(!objectp(owner))return;
+ if(attacker==owner){bout["attacks"]++;if(hit){bout["hits"]++;bout["normal_damage"]+=damage;}}
+ else if(victim==owner){bout["enemy_attacks"]++;if(hit)bout["enemy_hits"]++;}
+}
+void damage_event(object attacker,object victim,string type,int before,int after,int requested,string cause){
+ string action="",skill="",defense=plain(to_chinese(victim->query_skill_mapped(objectp(victim->query_temp("weapon"))?"parry":"unarmed")||(objectp(victim->query_temp("weapon"))?"parry":"unarmed")));int loss=before>after?before-after:0;
+ if(!objectp(attacker)||attacker==victim||(!userp(attacker)&&!userp(victim)))return;begin(attacker,victim);
+ if(attacker->query_temp("pocket_attack_target")==victim){action=plain(attacker->query_temp("pocket_attack_action"));skill=plain(to_chinese(attacker->query_temp("pocket_attack_skill")));}
+ if(skill==""&&strsrch(cause,"/kungfu/skill/")==0){string sk,move;if(sscanf(cause,"/kungfu/skill/%s/%s",sk,move)==2)skill=plain(to_chinese(sk));}
+ if(skill=="")skill=attack_skill(attacker);
+ if(attacker==owner && type=="qi")bout["total_damage"]+=loss;
+ append_event((["attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":action,"skill":skill,"defense_skill":defense,"type":type,"damage":loss,"requested":requested,"cause":cause,"kind":"hit"]));
+}
+varargs void miss_event(object attacker,object victim,string action,string kind,string base){
+ if(!userp(attacker)&&!userp(victim))return;begin(attacker,victim);attack_result(attacker,victim,0,0);
+ append_event((["attacker":plain(attacker->name()),"target":plain(victim->name()),"attacker_id":attacker->query("id"),"target_id":victim->query("id"),"action":plain(action),"skill":stringp(base)?plain(to_chinese(attacker->query_skill_mapped(base)||base)):attack_skill(attacker),"defense_skill":plain(to_chinese(victim->query_skill_mapped(kind=="dodge"?"dodge":objectp(victim->query_temp("weapon"))?"parry":"unarmed")||(kind=="dodge"?"dodge":objectp(victim->query_temp("weapon"))?"parry":"unarmed"))),"type":"qi","damage":0,"kind":kind]));
+}
+void heal_event(object target,int before,int after,string method){int gain=after-before;
+ if(gain<1||!objectp(owner)||!bout["active"]||(!owner->is_fighting()&&target!=owner))return;
+ if(target!=owner&&target!=foe)return;
+ if(target==owner)bout["own_heal"]+=gain;else bout["enemy_heal"]+=gain;
+ append_event((["attacker":plain(target->name()),"target":plain(target->name()),"attacker_id":target->query("id"),"target_id":target->query("id"),"kind":"heal","type":"qi","damage":gain,"skill":plain(to_chinese(target->query_skill_mapped("force")||"force")),"action":method]));
 }
 mapping *recent_events(){return events;}

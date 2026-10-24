@@ -2,7 +2,8 @@ inherit F_DBASE;
 string plain(mixed v){return "/adm/daemons/pocketui"->plain(v);}
 string key(object ob){return replace_string(replace_string(base_name(ob),"_","__"),"/","_s");}
 int coerced(object me,object npc){return !userp(npc)&&me->query("pocket_coerced/"+key(npc));}
-int score(object ob){mapping p="/adm/daemons/pocketpower"->metrics(ob);return to_int(4*sqrt(to_float(p["attack"]))+2*sqrt(to_float(p["dodge"]))+2*sqrt(to_float(p["parry"]))+0.4*p["max_qi"]+0.15*p["max_neili"]+0.1*p["max_jing"]+5*(p["str"]+p["dex"]+p["con"]+p["int"])+2*p["armor"]+(p["weapon_damage"]>p["unarmed_damage"]?p["weapon_damage"]:p["unarmed_damage"]));}
+int score(object ob){mapping p="/adm/daemons/pocketpower"->metrics(ob);float offense=sqrt(to_float(p["attack"]))+0.5*sqrt(to_float(p["dodge"]))+0.5*sqrt(to_float(p["parry"]))+6*(p["weapon_damage"]>p["unarmed_damage"]?p["weapon_damage"]:p["unarmed_damage"])+4*p["armor"]+5*(p["str"]+p["dex"]+p["con"]+p["int"]);float endurance=to_float(p["max_qi"])+0.5*p["max_neili"]+0.25*p["max_jing"];return to_int(2*sqrt(offense*endurance)+endurance);}
+
 int camp(string family){if(member_array(family,({"星宿派","神龙教","血刀门","白驼山派","五毒教","日月神教","黑木崖","铁掌帮","大轮寺","雪山寺"}))>=0)return -1;if(member_array(family,({"少林派","武当派","全真教","华山派","峨嵋派","丐帮","昆仑派","恒山派","衡山派","泰山派","天龙寺","青城派","嵩山派","南少林派","红花会","云龙门","大理段家"}))>=0)return 1;return 0;}
 // Returns 1 for a completed transfer, -1 for a rejected transfer, 0 for native recruitment.
 int transfer(object me,object npc){string old=me->query("family/family_name"),fresh=npc->query("family/family_name"),path;object master;mapping lookup;int before,after;

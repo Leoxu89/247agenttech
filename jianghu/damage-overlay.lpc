@@ -101,7 +101,7 @@ varargs int receive_wound(string type, int damage, mixed reason) {
 }
 
 int receive_heal(string type, int heal) {
-  int val;
+  int val,before=query(type);
 
   if (heal < 0) error("F_DAMAGE: 恢复值为负值。\n");
   if (type != "jing" && type != "qi")
@@ -112,6 +112,7 @@ int receive_heal(string type, int heal) {
   if (val > (int)query("eff_" + type)) set(type, (int)query("eff_" + type));
   else set(type, val);
 
+  if(type=="qi" && query(type)>before)catch("/adm/daemons/pocketpower"->heal_event(this_object(),before,query(type),"运功恢复"));
   return heal;
 }
 
@@ -354,8 +355,17 @@ void reincarnate() {
   set("water", max_water_capacity());
 }
 
+// Carry fractional points so small gains still total exactly one fifth.
+int pocket_natural_gain(string resource,int amount) {
+  int total;
+  if(!this_object()->is_fighting())return amount;
+  total=amount+this_object()->query_temp("pocket_natural_remainder/"+resource);
+  this_object()->set_temp("pocket_natural_remainder/"+resource,total%5);
+  return total/5;
+}
+
 int heal_up() {
-  int update_flag;
+  int update_flag, qi_before;
   mapping my;
 
   //	if( this_object()->is_fighting() ) return -1;
@@ -392,46 +402,49 @@ int heal_up() {
   (userp(this_object()) || this_object()->query("ownername")))
     return update_flag;
 
-  my["jing"] += my["con"] / 3 + my["max_jingli"] / 10;
+  qi_before=my["qi"];
+
+  my["jing"] += pocket_natural_gain("jing",my["con"] / 3 + my["max_jingli"] / 10);
   if (my["jing"] >= my["eff_jing"]) {
     my["jing"] = my["eff_jing"];
     if (my["eff_jing"] < my["max_jing"]) {
-      my["eff_jing"]++; update_flag++;
+      my["eff_jing"]+=pocket_natural_gain("eff_jing",1); update_flag++;
     }
   } else update_flag++;
 
-  my["qi"] += my["con"] / 3 + my["max_neili"] / 10;
+  my["qi"] += pocket_natural_gain("qi",my["con"] / 3 + my["max_neili"] / 10);
   if (my["qi"] >= my["eff_qi"]) {
     my["qi"] = my["eff_qi"];
     if (my["eff_qi"] < my["max_qi"]) {
-      my["eff_qi"]++; update_flag++;
+      my["eff_qi"]+=pocket_natural_gain("eff_qi",1); update_flag++;
     }
   } else update_flag++;
 
   if (my["max_jingli"] && my["jingli"] < my["max_jingli"]) {
-    my["jingli"] += (int)this_object()->query_skill("taoism", 1) / 20;
+    my["jingli"] += pocket_natural_gain("jingli",(int)this_object()->query_skill("taoism", 1) / 20);
     if (my["jingli"] > my["max_jingli"]) my["jingli"] = my["max_jingli"];
     update_flag++;
   }
 
   if (my["max_neili"] && my["neili"] < my["max_neili"]) {
-    my["neili"] += (int)this_object()->query_skill(
+    my["neili"] += pocket_natural_gain("neili",(int)this_object()->query_skill(
       "force",
       1
-    ) / 2 + (int)this_object()->query("sta") / 3;
+    ) / 2 + (int)this_object()->query("sta") / 3);
     if (my["neili"] > my["max_neili"]) my["neili"] = my["max_neili"];
     update_flag++;
   }
 
   if (my["max_tili"] && my["tili"] < my["max_tili"]) {
-    my["tili"] += (int)this_object()->query_skill(
+    my["tili"] += pocket_natural_gain("tili",(int)this_object()->query_skill(
       "parry",
       1
-    ) / 2 + (int)this_object()->query("sta") / 3;
+    ) / 2 + (int)this_object()->query("sta") / 3);
     if (my["tili"] > my["max_tili"]) my["tili"] = my["max_tili"];
     update_flag++;
   }
 
+  if(my["qi"]>qi_before)catch("/adm/daemons/pocketpower"->heal_event(this_object(),qi_before,my["qi"],"自然恢复（战斗中20%）"));
   this_object()->pocket_enforce_locks();
   return update_flag;
 }
