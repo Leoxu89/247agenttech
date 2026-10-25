@@ -55,7 +55,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
     if (!stringp(id) || id == "") id = "object";
     counts[id] = (counts[id] || 0) + 1;
     key = id + (counts[id] > 1 ? " " + counts[id] : "");
-    view = ([ "key": file_name(ob), "source":base_name(ob), "token": key,
+    view = ([ "key": file_name(ob), "source":ob->query("pocket_avatar")?"player:"+ob->query("pocket_avatar"):base_name(ob), "offline_player":!!ob->query("pocket_avatar"), "avatar_generation":ob->query("pocket_avatar_generation"), "token": key,
         "name": plain(ob->name()), "description": plain(ob->query("long")),
         "qi":ob->query("qi"),"max_qi":ob->query("max_qi"),"jing":ob->query("jing"),"max_jing":ob->query("max_jing"),
         "hostile":ob->is_fighting(me), "currency":ob->query("money_id"),
@@ -80,13 +80,13 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
             view["tuition"] = (["paid":!!me->query_temp("marks/yangzhou_paied"),
                 "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
         }
-        view["power"]="/adm/daemons/pocketpower"->metrics(ob);
+        view["power"]="/adm/daemons/pocketpower"->normal_metrics(ob);
         if(view["coerced"]) {mapping lootcounts=([]);view["loot"]=({});foreach(object it in all_inventory(ob))if(!it->is_character())view["loot"]+=({item_view(it,me,lootcounts,2)});}
         topics = ob->query("inquiry");
         if (mapp(topics)) view["topics"] = keys(topics);
         skills = ob->query_skills();
         if (mapp(skills)) foreach (string sk in keys(skills)) {
-            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "teach_limit":view["coerced"]?skills[sk]:smaller(skills[sk]-2*me->query("betrayer"),SKILL_D(sk)->type()=="knowledge"?skills[sk]:250) ]) });
+            view["skills"] += ({ ([ "id": sk, "name": plain(to_chinese(sk)), "level": skills[sk], "teach_limit":skills[sk] ]) });
         }
         goods = ob->query("vendor_goods");
         if (pointerp(goods)) foreach (mixed path in goods) {
@@ -104,6 +104,7 @@ object active_player();
 
 int friendly_sparring(object me) {
     object other=me->query_temp("pocket_sparring");
+    if(objectp(other)&&(me->query("pocket_arena")||other->query("pocket_arena"))&&me->is_fighting(other))return 1;
     return objectp(other) && me->is_fighting(other) && other->is_fighting(me) &&
       !me->is_killing(other->query("id")) && !other->is_killing(me->query("id"));
 }
@@ -166,7 +167,7 @@ string snapshot(string *args, int request_id) {
             "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
             "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
             "family_title":plain(me->query("family/title")), "fealty":me->query("family/fealty"),
-            "perform_permissions":me->query("perform")||([]), "chief_task":me->query("pocket_chief_task")||([]), "faction_task":me->query("pocket_faction_task")||([]), "have_letter":!!me->query_temp("have_letter"), "apprentice_ok":!!me->query_temp("apprentice_ok"), "fight_ready":!!me->query_temp("fight_ok"), "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "sparring": friendly_sparring(me), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
+            "perform_permissions":me->query("perform")||([]), "last_victory":me->query("pocket_last_victory")||([]), "chief_task":me->query("pocket_chief_task")||([]), "faction_task":me->query("pocket_faction_task")||([]), "have_letter":!!me->query_temp("have_letter"), "apprentice_ok":!!me->query_temp("apprentice_ok"), "fight_ready":!!me->query_temp("fight_ok"), "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "sparring": friendly_sparring(me), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
         "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
         "room": ([ "river_to":room->query("to"),"river_about":plain(room->query("yell_about")), "key": file_name(room), "name": plain(room->query("short")),
@@ -233,7 +234,7 @@ string snapshot(string *args, int request_id) {
     data["player"]["stats"]=me->query("pocket_stats")||([]);
     data["player"]["homes"]=me->query("pocket_homes")||([]);
     data["player"]["home_city"]=me->query("pocket_home_city");
-    data["player"]["power"]="/adm/daemons/pocketpower"->metrics(me);
+    data["player"]["power"]="/adm/daemons/pocketpower"->normal_metrics(me);
     data["battle_stats"]="/adm/daemons/pocketpower"->battle_stats(me);
     data["combat_events"]="/adm/daemons/pocketpower"->recent_events();
     data["player"]["guide_progress"]=me->query("pocket_guides")||([]);
@@ -501,7 +502,7 @@ void return_npc(string home,string file,int declared,int unique) {
 }
 void schedule_npc_return(object npc) {
     object room; string home,file; mapping declared; int managed;
-    if(previous_object()!=npc || !objectp(npc) || userp(npc)) return;
+    if(previous_object()!=npc || !objectp(npc) || userp(npc) || npc->query("pocket_avatar") || npc->query("pocket_arena")) return;
     // Quest-owned targets and temporary summons retain their scripted lifecycle.
     if(npc->query("owner") || npc->query("quest")) return;
     home=npc->query("startroom");
@@ -530,6 +531,7 @@ void create() {
     load_object("/adm/daemons/pocketexpansion");
     load_object("/adm/daemons/pockettraining");
     load_object("/adm/daemons/pocketgrowth");
+    load_object("/adm/daemons/pocketworld");
     js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));

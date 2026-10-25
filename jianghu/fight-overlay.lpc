@@ -65,6 +65,7 @@ int main(object me, string arg) {
   if(recommendation) {
     obj->set("qi",obj->query("eff_qi"));obj->set("jing",obj->query("eff_jing"));
   }
+  "/adm/daemons/pocketexpansion"->start_bout(me,obj);
   me->set_temp("pocket_sparring",obj);
   obj->set_temp("pocket_sparring",me);
   me->fight_ob(obj);

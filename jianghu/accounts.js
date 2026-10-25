@@ -61,6 +61,6 @@ async function update(state){
  }
  if(!nativeStarted&&driver&&connectSession&&!activeGame.disconnected){nativeStarted=true;const head=await S.read('a:'+selected.id+':head');flow={...selected.profile,buffer:'',expectExisting:!!head?.files?.length};sendGameCommand(selected.profile.native.id);setTimeout(()=>{if(flow){flow=null;error='创建或登录未完成，请返回账号登录后重试';A().showView('scene');}},30000);}
 }
-async function logout(){await PocketSaves.capture('manual');try{await PocketSaves.flush();}catch(e){A().note('本机进度已保留，云端未同步，暂不退出');return;}const account=S.active();if(!account.legacy)await request('/logout',{});sessionStorage.removeItem('xkx-account');location.reload();}
+async function logout(){await PocketSaves.capture('manual');try{await PocketSaves.flush();}catch(e){A().note('本机进度已保留，云端未同步，暂不退出');return;}const account=S.active();await window.PocketOnline?.depart();if(!account.legacy)await request('/logout',{});sessionStorage.removeItem('xkx-account');location.reload();}
 window.PocketAccounts={render,text,update,request,base,logout};
 })();

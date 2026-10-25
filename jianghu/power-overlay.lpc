@@ -34,6 +34,10 @@ mapping metrics(object ob){
  "max_qi":ob->query("max_qi"),"max_jing":ob->query("max_jing"),"max_neili":ob->query("max_neili"),"str":ob->query_str(),"dex":ob->query_dex(),"con":ob->query_con(),"int":ob->query_int(),
  "armor":ob->query_temp("apply/armor"),"weapon_damage":ob->query_temp("apply/damage"),"unarmed_damage":ob->query_temp("apply/unarmed_damage")]);
 }
+mapping normal_metrics(object ob){mapping saved=ob->query_temp("apply"),gear=([]),p; mixed err;
+ foreach(object item in all_inventory(ob))if(item->query("equipped")){mapping props=item->query(item->query("equipped")=="worn"?"armor_prop":"weapon_prop");if(mapp(props))foreach(string k,mixed v in props)if(intp(v))gear[k]=(gear[k]||0)+v;}
+ ob->set_temp("apply",gear);err=catch(p=metrics(ob));if(mapp(saved))ob->set_temp("apply",saved);else ob->delete_temp("apply");if(err)return metrics(ob);return p;
+}
 mapping skill_metrics(object me,string sk,string *bases){
  mapping result=(["level":me->query_skill(sk,1),"attack":0,"defense":0,"effective_level":0,"active":0]);
  foreach(string base in bases){int level=me->query_skill(base,1)/2+me->query_skill(sk,1)+me->query_temp("apply/"+base),p;int defense=member_array(base,({"dodge","parry"}))>=0;
@@ -51,6 +55,8 @@ mapping bout=([]);object owner,foe;int bout_sequence;
 void begin(object attacker,object victim){object player=userp(attacker)?attacker:userp(victim)?victim:0,enemy;
  if(!objectp(player)||attacker==victim)return;enemy=player==attacker?victim:attacker;
  if(!sizeof(bout)||!bout["active"]||owner!=player||(foe!=enemy&&(!objectp(foe)||!foe->is_fighting(player)))){
+ 
+ "/adm/daemons/pocketexpansion"->start_bout(player,enemy);
  owner=player;foe=enemy;bout=(["id":++bout_sequence,"started":time(),"active":1,"attacks":0,"hits":0,"normal_damage":0,"total_damage":0,"enemy_heal":0,"own_heal":0,"enemy_attacks":0,"enemy_hits":0]);
  }
 }

@@ -14,6 +14,7 @@ void set_ghost(int i) { ghost = i; }
 int pocket_friendly_hit(mixed reason) {
   object partner=query_temp("pocket_sparring");
   if(!objectp(partner) || (objectp(reason) && reason!=partner)) return 0;
+  if((query("pocket_arena")||partner->query("pocket_arena"))&&environment(this_object())==environment(partner))return 1;
   return this_object()->is_fighting(partner) && partner->is_fighting(this_object()) &&
     !this_object()->is_killing(partner->query("id")) &&
     !partner->is_killing(this_object()->query("id"));
@@ -29,6 +30,7 @@ varargs int receive_damage(string type, int damage, mixed reason) {
   if (type != "jing" && type != "qi")
     error("F_DAMAGE: 伤害种类错误( 只能是 jing, qi 其中之一 )。\n");
 
+  if(objectp(reason))catch("/adm/daemons/pocketpower"->begin(reason,this_object()));
   before=query(type);
   if (objectp(reason)) set_temp("last_damage_from", reason);
   if (stringp(reason)) set_temp("die_reason", reason);
@@ -305,7 +307,7 @@ void die() {
   COMBAT_D->announce(this_object(), "dead");
   if (objectp(this_player()) && this_player()->query_condition("huaiyun"))
     this_object()->clear_condition("huaiyun");
-  if(objectp(killer)&&userp(killer)&&!query_temp("pocket_kill_counted")) {killer->add("pocket_stats/kills",1);set_temp("pocket_kill_counted",1);}
+  if(objectp(killer)&&userp(killer)&&!query_temp("pocket_kill_counted")) {killer->add("pocket_stats/kills",1);"/adm/daemons/pocketexpansion"->reward(killer,this_object(),"杀敌");set_temp("pocket_kill_counted",1);}
   if (objectp(corpse = CHAR_D->make_corpse(this_object(), killer))) {
     corpse->move(environment());
     // 超度用的经验值

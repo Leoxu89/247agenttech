@@ -1,0 +1,24 @@
+(()=>{
+const A=()=>PocketAPI;let entered=false,busy=false,last=0,lastRoom='',pollRoom=0,pollKey='',known=new Map(),error='',leaving=false;const session=crypto.randomUUID();
+const rpc=(op,...args)=>driver.fluffos.callLPC('pocket_world',op,...args).then(JSON.parse);
+function args(a,id,challenge=''){const rows=[id,a.name,a.family||'',challenge,'generation:'+(a.generation||0)];for(const [k,v]of Object.entries(a.stats||{}))rows.push('stat:'+k+'='+v);for(const [k,v]of Object.entries(a.skills||{}))rows.push('skill:'+k+'='+v);for(const [k,v]of Object.entries(a.maps||{}))rows.push('map:'+k+'='+v);for(const [k,v]of Object.entries(a.prepare||{}))rows.push('prep:'+k+'='+v);for(const i of a.items||[])rows.push('item:'+i.base+'='+i.amount+','+i.equipped);return rows;}
+async function publish(offline=false){const s=A().getState(),a=PocketStore.active();if(!s?.ready||!a?.token||a.pending||a.legacy)return;const r=await rpc('export');if(!r.ok)return;await PocketAccounts.request('/world/publish',{avatar:r.avatar,offline});last=Date.now();lastRoom=r.avatar.room;}
+async function events(rows){for(const e of rows){try{if(e.challenge){const r=await PocketAccounts.request('/arena/finish',{id:e.challenge,won:!!e.won});A().note(e.won?'挑战获胜！'+(r.rank?'天下第 '+r.rank+' 名':'未进入前五百'):'天下榜挑战结束，名次不变');await PocketPower.loadArena();}else{await PocketAccounts.request('/world/event',{...e,id:session+':'+e.id,generation:known.get(e.target)?.generation});}await rpc('ack',String(e.id));}catch(err){if([400,404,409].includes(err.status)){A().note('战报同步：'+err.message);await rpc('ack',String(e.id));}else throw err;}}}
+async function update(s){const a=PocketStore.active();if(busy||leaving||!s?.ready||!a?.token||a.pending||a.legacy)return;busy=true;try{
+ if(!entered){const r=await PocketAccounts.request('/world/enter',{});if(r.restore||sessionStorage.getItem('xkx-offline-restore')){sessionStorage.setItem('xkx-offline-restore','1');const restored=await rpc('restore');if(!restored.ok)throw Error('离线复活待完成，请稍候');sessionStorage.removeItem('xkx-offline-restore');A().note('离线期间角色曾被击败，现已在原地点满血恢复。');}entered=true;const log=await PocketAccounts.request('/world/events');if(log.events?.length)A().note('离线战报：最近有 '+log.events.length+' 次互动，可在天下榜查看。');}
+ const data=await rpc('export');await events(data.events||[]);
+ if(Date.now()-last>30000||data.avatar.room!==lastRoom)await publish();
+ if(!s.player.fighting&&!s.player.busy&&!s.player.ghost&&!s.room.key.startsWith('/d/pocket/arena')&&(Date.now()-pollRoom>20000||s.room.key!==pollKey)){
+  const r=await PocketAccounts.request('/world/room/'+encodeURIComponent(s.room.key));pollRoom=Date.now();pollKey=s.room.key;await rpc('prune',...r.avatars.map(a=>a.id+'@'+a.generation));
+  // Keep defeated/coerced local avatars in this visit. Reconcile absence and new generations without replenishing loot.
+  const existing=s.room.people.filter(p=>p.offline_player);for(const av of r.avatars){const key='player:'+av.id;known.set(key,av);if(!existing.some(p=>p.source===key&&p.avatar_generation===av.generation)){const inserted=await rpc('avatar',...args(av,av.id));if(!inserted.ok)throw Error(inserted.message);}}
+ }
+ error='';
+ }catch(e){error=e.message;}finally{busy=false;}}
+async function challenge(entry){const api=A(),s=api.getState();if(s.player.fighting||s.player.busy){api.note('请先结束战斗或忙碌');return;}PocketIdle.stop('开始天下榜挑战');PocketMap.pause();let record;try{await PocketSaves.capture('manual');record=await PocketAccounts.request('/arena/start',{target:entry.key});let r;if(record.snapshot)r=await rpc('challenge_player',...args(record.snapshot,entry.key.slice(7),record.id));else r=await rpc('challenge_npc',entry.key,record.id);if(!r.ok)throw Error(r.message);api.close();api.note(r.message);await api.refresh();}catch(e){if(record)await PocketAccounts.request('/arena/finish',{id:record.id,won:false}).catch(()=>{});api.note(e.message);}}
+async function logs(){const api=A(),b=api.show('离线互动记录');try{const r=await PocketAccounts.request('/world/events');b.append(api.el('p','p-hint','离线侠客使用最近同步的武学与装备。互动不扣除本人真实物品、金钱或武学；离线被杀后，下次登录原地满血恢复。'));for(const e of r.events)b.append(api.el('p','',new Date(e.created_at).toLocaleString('zh-CN')+' · 对方'+e.mode+' · '+(e.won?'对方获胜':'对方落败')));if(!r.events.length)b.append(api.el('p','','尚无离线互动'));}catch(e){b.append(api.el('p','',e.message));}}
+async function depart(){leaving=true;try{await publish(true);}finally{leaving=false;}}
+// Hidden tabs become offline after the heartbeat lease expires; clean logout publishes immediately.
+window.addEventListener('pagehide',()=>{const a=PocketStore.active();if(!a?.token||!entered)return;rpc('export').then(r=>fetch(PocketAccounts.base()+'/world/publish',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.token},body:JSON.stringify({avatar:r.avatar,offline:true})})).catch(()=>{});});
+window.PocketOnline={update,challenge,logs,depart,get error(){return error;}};
+})();

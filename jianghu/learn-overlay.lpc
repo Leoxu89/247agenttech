@@ -63,16 +63,10 @@ int main(object me, string arg) {
   if (!forced && ob->prevent_learn(me, skill))
     return 0;
   my_skill = me->query_skill(skill, 1);
-  if (target && (target<=my_skill || target>master_skill || (!forced && target>250)))
-    return notify_fail("目标等级须高于当前等级且不超过师父上限和250级教学上限。\n");
+  if (target && (target<=my_skill || target>master_skill))
+    return notify_fail("目标等级须高于当前等级且不超过师父实际教学上限。\n");
   if (my_skill >= master_skill)
     return notify_fail("这项技能你的程度已经不输你师父了。\n");
-  if (!forced && my_skill >= (int)(master_skill - me->query("betrayer") * 2))
-    return notify_fail(ob->name() + "皱了皱眉头，不禁想起你过去的叛师经历。\n");
-  if (userp(ob) && my_skill >= 200)
-    return notify_fail("依你目前的能力，已不需向玩家学习了。\n");
-  if ((SKILL_D(skill)->type()) != "knowledge" && my_skill >= 250 && !forced)
-    return notify_fail(ob->name() + "说道：你" + to_chinese(skill) + "的功力已经是非同凡响了，我就不再教你，你自己多研究吧。\n");
   notify_fail("依你目前的能力，没有办法学习这种技能。\n");
   if (!forced && !SKILL_D(skill)->valid_learn(me))
     return 0;
