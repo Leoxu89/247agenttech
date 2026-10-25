@@ -69,9 +69,11 @@ function directory(family){
 }
 function faction(f){
  const api=A(),b=api.show(f.name+' · 老师与人物');b.append(api.el('p','p-hint',f.note),api.button('前往门派入口',()=>PocketMap.route(f.room,f.name)));
+ const map=api.el('div','p-faction-detail-map');b.append(map);PocketPlaces.factionMap(map,f,current());
  const input=api.el('input','p-map-search');input.type='search';input.placeholder='查找本门人物或场景';input.setAttribute('aria-label','查找本门人物或场景');b.append(input);const list=api.el('div');b.append(list);
  const people=(f.people||[]).map(locate).filter(t=>t&&!t.directory_alias).sort((a,b)=>Number(b.teacher)-Number(a.teacher)||(a.generation||99)-(b.generation||99)||a.name.localeCompare(b.name,'zh'));
  function draw(){list.replaceChildren();for(const t of people.filter(t=>(t.name+' '+t.locations.map(k=>W().rooms[k]?.name).join(' ')).includes(input.value.trim()))){const row=api.el('article','p-mentor-row');row.append(api.el('strong','',t.name+(t.teacher?' · 可拜师':' · 重要人物（不收徒）')),api.el('p','p-hint',t.locations.length?t.locations.map(k=>W().rooms[k]?.region+' / '+W().rooms[k]?.name).join('、'):'未设固定出生点 / 剧情出现'));
+ if(t.locations.length)row.append(api.button('地图上标记 '+t.name,()=>PocketPlaces.focus(t.locations[0])));
  if(t.teacher)row.append(api.button('拜师条件 · '+t.name,()=>guide(t)));
  for(const room of t.locations)row.append(api.button('去找'+t.name+' · '+W().rooms[room]?.name,()=>PocketMap.route(room,t.name),'p-row'));list.append(row);}if(!list.childElementCount)list.append(api.el('p','p-hint','没有匹配的人物。'));}
  input.oninput=draw;draw();

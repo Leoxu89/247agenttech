@@ -1,4 +1,5 @@
 int smaller(int a,int b);
+mixed clean_value(mixed v,int depth);
 // JSON is kept local because the minimal WASM driver omits the JSON package.
 string json_encode(mixed value) {
     string *parts = ({});
@@ -61,7 +62,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
         "hostile":ob->is_fighting(me), "currency":ob->query("money_id"),
         "family":plain(ob->query("family/family_name")), "race": plain(ob->query("race")), "title": plain(ob->query("title")), "living": ob->is_character(), "accepts_apprentice": !!function_exists("attempt_apprentice",ob),
         "food": !!ob->query("food_supply"), "drink": !!ob->query("liquid"),
-        "armor": !!ob->query("armor_type"), "weapon": !!ob->query("skill_type"), "weapon_type":plain(ob->query("skill_type")),
+        "armor": !!ob->query("armor_type"), "armor_type":plain(ob->query("armor_type")), "medicine":!!ob->query("medicine"), "weapon": !!ob->query("skill_type"), "weapon_type":plain(ob->query("skill_type")),
         "worn": !!ob->query("equipped"), "equipped":plain(ob->query("equipped")), "amount": ob->query_amount() || 1,
         "unit": plain(ob->query("unit")), "topics": ({}), "skills": ({}), "goods": ({}), "is_master":me->is_apprentice_of(ob), "public_teaching":!!function_exists("recognize_apprentice",ob) ]);
     view["coerced"]="/adm/daemons/pocketexpansion"->coerced(me,ob);
@@ -80,7 +81,7 @@ varargs mapping item_view(object ob, object me, mapping counts, int depth) {
             view["tuition"] = (["paid":!!me->query_temp("marks/yangzhou_paied"),
                 "limit":base_name(ob)=="/d/wuguan/npc/wg_chen"?100000:base_name(ob)=="/d/wuguan/npc/chen"?3500:50000]);
         }
-        view["power"]="/adm/daemons/pocketpower"->normal_metrics(ob);
+        view["power"]="/adm/daemons/pocketpower"->normal_metrics(ob);view["skill_maps"]=ob->query_skill_map()||([]);view["skill_prepare"]=ob->query_skill_prepare()||([]);view["manager"]=!!ob->is_manager();
         if(view["coerced"]) {mapping lootcounts=([]);view["loot"]=({});foreach(object it in all_inventory(ob))if(!it->is_character())view["loot"]+=({item_view(it,me,lootcounts,2)});}
         topics = ob->query("inquiry");
         if (mapp(topics)) view["topics"] = keys(topics);
@@ -167,7 +168,7 @@ string snapshot(string *args, int request_id) {
             "str_base":mine["str"], "con_base":mine["con"], "dex_base":mine["dex"],
             "online_seconds":mine["mud_age"], "family_generation":me->query("family/generation"),
             "family_title":plain(me->query("family/title")), "fealty":me->query("family/fealty"),
-            "perform_permissions":me->query("perform")||([]), "last_victory":me->query("pocket_last_victory")||([]), "chief_task":me->query("pocket_chief_task")||([]), "faction_task":me->query("pocket_faction_task")||([]), "have_letter":!!me->query_temp("have_letter"), "apprentice_ok":!!me->query_temp("apprentice_ok"), "fight_ready":!!me->query_temp("fight_ok"), "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "sparring": friendly_sparring(me), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
+            "perform_permissions":me->query("perform")||([]), "last_victory":me->query("pocket_last_victory")||([]), "public_quests":clean_value(me->query("quest")||([]),0), "chief_task":me->query("pocket_chief_task")||([]), "faction_task":me->query("pocket_faction_task")||([]), "have_letter":!!me->query_temp("have_letter"), "apprentice_ok":!!me->query_temp("apprentice_ok"), "fight_ready":!!me->query_temp("fight_ok"), "class":plain(me->query("class")), "join_quanzhen_pending":!!me->query_temp("pending/join_quanzhen"), "sparring": friendly_sparring(me), "fighting": me->is_fighting(), "busy": me->is_busy(), "ghost": me->is_ghost() ]),
         "enemies":({}), "unconscious":!!me->query_temp("noliving/unconcious"),
         "death":(["message":plain(me->query("last_die_msg")),"by":plain(me->query("last_die_by_name")),"time":me->query("dietime")]),
         "room": ([ "river_to":room->query("to"),"river_about":plain(room->query("yell_about")), "key": file_name(room), "name": plain(room->query("short")),
@@ -532,6 +533,7 @@ void create() {
     load_object("/adm/daemons/pockettraining");
     load_object("/adm/daemons/pocketgrowth");
     load_object("/adm/daemons/pocketworld");
+    load_object("/adm/daemons/pocketinventory");
     js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));

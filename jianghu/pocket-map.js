@@ -74,8 +74,8 @@ function atlas(parent,s){
 function render(parent,s){
  const A=api();learn(s);parent.append(A.el('h2','','江湖地图'));
  const current=A.el('div','p-map-location');current.append(A.el('small','','当前位置'),A.el('strong','',`${region(s.room.key)} · ${s.room.name}`));parent.append(current);
- const tabs=A.el('div','p-map-tabs');for(const [id,label] of [['near','附近'],['world','世界'],['factions','门派']])tabs.append(A.button(label,()=>{mode=id;A.showView('map');},mode===id?'active':''));parent.append(tabs);
- const slot=A.el('div','p-map-slot');parent.append(slot);(mode==='near'?near:mode==='world'?PocketWorldMap.render:atlas)(slot,s);
+ const tabs=A.el('div','p-map-tabs');for(const [id,label] of [['near','附近'],['world','世界'],['cities','城市'],['factions','门派']])tabs.append(A.button(label,()=>{mode=id;A.showView('map');},mode===id?'active':''));parent.append(tabs);
+ const slot=A.el('div','p-map-slot');parent.append(slot);(mode==='near'?near:mode==='world'?PocketWorldMap.render:mode==='cities'?PocketPlaces.cities:atlas)(slot,s);
 }
 function update(s){
  if(!s?.ready){walker.cancel();document.getElementById('p-route-status')?.setAttribute('hidden','');return;}learn(s);walker.tick(s,Date.now());globalThis.PocketTransit?.update(s);

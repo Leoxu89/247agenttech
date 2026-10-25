@@ -30,7 +30,7 @@ function detailName(item){return ({bian:'匾额',duilian:'对联',jing:state.roo
 function skillName(sk){return /[\u3400-\u9fff]/.test(sk.name||'')?sk.name:(globalThis.PocketWorld.skillNames[sk.id]||'未录名武学');}
 function inspect(item,where){
 if(item.token==='mailbox'){const b=show('随身信箱');b.append(el('p','p-description','这是你的江湖信箱。当前是本机单人体验，暂不提供跨玩家寄信。'),button('查看已有信件',()=>readCommand('from','我的信件')));return;}
-const body=show(where==='detail'?detailName(item):(item.name||'查看'));if(item.power)PocketPower.card(body,item);if(item.title)body.append(el('p','p-hint',item.title));body.append(el('p','p-description',item.description||'点“仔细查看”阅读原版描述。'));const actions=section(body,'可以做什么');actions.append(button('仔细查看',()=>readCommand('look '+item.token,item.name)));if(where==='ground'&&!item.corpse)actions.append(button('拾取',()=>command('get '+item.token)));
+const body=show(where==='detail'?detailName(item):(item.name||'查看'));if(item.power)PocketPower.card(body,item);if(item.title)body.append(el('p','p-hint',item.title));body.append(el('p','p-description',item.description||'点“仔细查看”阅读原版描述。'));const actions=section(body,'可以做什么');actions.append(button('仔细查看',()=>where==='person'?PocketCharacter.open(item):readCommand('look '+item.token,item.name)));if(where==='ground'&&!item.corpse)actions.append(button('拾取',()=>command('get '+item.token)));
 if(item.container){
  const loot=section(body,item.corpse?'尸体上的物品':'容器内的物品');
  const take=async token=>{await command('get '+token+' from '+item.token,true);setTimeout(async()=>{await refresh();const fresh=[...state.room.items,...state.inventory].find(x=>x.key===item.key);if(fresh)inspect(fresh,where);else close();},600);};
@@ -40,13 +40,14 @@ if(item.container){
 if(where==='bag'){
  if(item.food)actions.append(button('吃',()=>command('eat '+item.token)));
  if(item.drink)actions.append(button('喝',()=>command('drink '+item.token)));
- if(item.armor)actions.append(button(item.worn?'卸下':'穿戴',()=>command((item.worn?'remove ':'wear ')+item.token)));
- if(item.weapon)actions.append(button(item.worn?'收起':'装备',()=>command((item.worn?'unwield ':'wield ')+item.token)));
+ if(item.armor)actions.append(button(item.worn?'卸下':'穿戴',()=>PocketBag.equip(item,item.worn?'remove':'wear')));
+ if(item.weapon)actions.append(button(item.worn?'收起':'装备',()=>PocketBag.equip(item,item.worn?'unwield':'wield')));
  actions.append(button('阅读',()=>readCommand('read '+item.token,item.name)));
  actions.append(button('放下',()=>{const confirm=show('放下'+item.name);confirm.append(el('p','','物品会留在当前场景。'),button('确认放下',()=>command('drop '+item.token)));}));
 }
 if(where==='person'){
 if(item.offline_player)body.append(el('p','p-action-result','离线玩家 · 最近同步的武学与装备；可切磋、威逼、战斗。本人登录后原地满血恢复。'));
+PocketCharacter.summary(body,item);
 const human=!item.race||item.race==='人类';
 if(human){
  if(item.key?.split('#')[0]==='/d/wuguan/npc/wg_zhangfeng'&&state.player.job_name){const job=section(body,'武馆工作');job.append(el('p','p-hint',state.player.job_returned?'工具已还，可向张风覆命领取奖励。':state.player.job_done?'工作已完成，请先找老李归还工具。':'当前工作：'+state.player.job_name+'，请先做完并归还工具。'));const submit=button('完成工作 · 覆命领奖',()=>readCommand('job ok','武馆工作 · 覆命'));submit.disabled=!state.player.job_done||!state.player.job_returned;job.append(submit);}
@@ -63,6 +64,7 @@ if(human){
  if(item.tuition){const tuition=section(body,'武馆缴费学艺');const paid=item.tuition.paid,over=state.player.exp>=item.tuition.limit;tuition.append(el('p','p-hint',paid?'已取得本次武馆教学许可，可点“请教学艺”。':over?`当前经验已达到 ${item.tuition.limit}，此人不再接受新学费。`:'原版学费为5两白银，支付后可向武馆教头学习；重新登录后可能需要再缴。'));if(!paid&&!over){tuition.append(button('缴纳学费 · 5两白银',()=>{const b=show('缴纳武馆学费');b.append(el('p','','向'+item.name+'支付5两白银，用于本次武馆学艺。'),button('确认支付5两白银',()=>command(`give 5 silver to ${item.token}`)),button('取消',close));}));}}
  if(item.skills?.length)actions.append(button('请教学艺',()=>PocketIdle.lessons(item)));  
  }
+ if(item.manager)PocketPublicTasks.person(body,item);
  if(item.goods?.length){const shop=section(body,'购买物品');for(const g of item.goods)shop.append(button(g.name,()=>command('buy '+g.token)));}
  if(state.inventory.length)actions.append(button('交付物品',()=>{const b=show('交给'+item.name);for(const i of state.inventory)b.append(button(i.name+' · 持有 '+i.amount+unit(i),()=>{const c=show('交付'+i.name),f=el('form','p-command-form'),label=el('label'),n=el('input');n.type='number';n.min='1';n.max=String(i.amount);n.step='1';n.value='1';n.required=true;n.setAttribute('aria-label','交付数量');label.append(el('span','','交付数量 · 持有'+i.amount+unit(i)),n);const go=el('button','p-primary','确认交给'+item.name);go.type='submit';f.append(label,go);f.onsubmit=e=>{e.preventDefault();const amount=Number(n.value);if(!Number.isSafeInteger(amount)||amount<1||amount>i.amount)return;command(`give ${i.amount>1||i.currency?amount+' ':''}${i.token} to ${item.token}`);};c.append(el('p','p-hint','请核对数量，确认后才会交付。'),f);},'p-row'));}));
  actions.append(button('攻击 / 杀死',()=>{const b=show('与'+item.name+'生死交战');b.append(el('p','','这会按原版杀敌规则发起生死战，可能杀死对方，也可能导致自己死亡。常驻人物阵亡后约3分钟刷新，尸体仍可拾取；重新登录也会重建世界。任务专属人物依原任务规则刷新。安全区和受保护人物仍受原版限制。'),button('确认发起生死战',()=>command('kill '+item.token)),button('取消',close));}));
@@ -98,7 +100,7 @@ if(view==='tasks'){PocketTasks.render(content,state);
  if(r.people.some(n=>n.source==='/d/city/task2/renzhi'))content.append(button('护送人质 · 操作面板',()=>PocketExpansion.escort()));
  window.PocketTransit?.render(content,state);const quick=section(content,'随手操作');quick.append(button('环顾',()=>readCommand('look','环顾四周')),button('打坐',()=>command('dazuo 10')),button('挂机打坐',()=>PocketIdle.start({kind:'exercise',label:'持续打坐 · 手动停止',target:0,room:state.room.key})),button('吐纳',()=>command('tuna 10')),button('停止忙碌',()=>command('halt')));
 }else if(view==='bag'){
- content.append(el('h2','','随身行囊'),el('p','p-hint',`${state.inventory.length} 件物品 · 点物品选择吃喝、穿戴或使用`));for(const item of state.inventory){const b=button('',()=>inspect(item,'bag'),'p-row');b.append(el('strong','',item.name),el('span','',(item.worn?'已装备 · ':'')+(item.amount>1||item.currency?item.amount+({silver:'两',gold:'两',coin:'文'}[item.currency]||item.unit||'件'):'查看 / 使用')));content.append(b);}if(!state.inventory.length)content.append(el('p','p-empty','行囊空空，先探索附近的场景吧。'));
+ PocketBag.render(content,state);
 }else if(view==='skills'){
  renderSkills(content,p);
 }else{
@@ -165,6 +167,6 @@ function showFullProfile(){const p=state.player,b=show('完整人物状态');Poc
  b.append(button('查看原版完整档案',()=>readCommand('score','原版完整档案')),button('查看原版身体报告',()=>readCommand('hp','原版身体报告')));
 }
 
-globalThis.PocketAPI={watchDetail:fn=>{liveDetail=fn;},getState:()=>state,getText:()=>textBuffer,inspect,meter,skillName,showBless,el,button,section,show,close,note,command,readCommand,refresh,showView};
+globalThis.PocketAPI={showLogs,watchDetail:fn=>{liveDetail=fn;},getState:()=>state,getText:()=>textBuffer,inspect,meter,skillName,showBless,el,button,section,show,close,note,command,readCommand,refresh,showView};
 setInterval(refresh,750);render();refresh();
 })();

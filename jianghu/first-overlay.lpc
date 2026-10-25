@@ -302,7 +302,7 @@ string zm_apply() {
   object ob = this_player();
 
   if (me->query("family/family_name") != ob->query("family/family_name")) {
-    return "我便是" + me->query("family/family_name") + "掌门弟子！\n";
+    command("fight "+ob->query("id"));return "欢迎江湖同道切磋，外派挑战不更改师承与掌门弟子身份。\n";
   }
   if (ob->query("betrayer") || ob->query("detach/" + me->query("family/family_name"))) {
     return "你曾叛师欺祖，言无信行不轨，岂能出任掌门弟子一职！\n";
