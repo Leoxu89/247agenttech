@@ -4,7 +4,7 @@ string key(object ob){if(ob->query("pocket_avatar"))return "avatar_"+ob->query("
 int coerced(object me,object npc){return !userp(npc)&&me->query("pocket_coerced/"+key(npc));}
 int score(object ob){mapping p="/adm/daemons/pocketpower"->normal_metrics(ob);float offense=sqrt(to_float(p["attack"]))+0.5*sqrt(to_float(p["dodge"]))+0.5*sqrt(to_float(p["parry"]))+6*(p["weapon_damage"]>p["unarmed_damage"]?p["weapon_damage"]:p["unarmed_damage"])+4*p["armor"]+5*(p["str"]+p["dex"]+p["con"]+p["int"]);float endurance=to_float(p["max_qi"])+0.5*p["max_neili"]+0.25*p["max_jing"];return to_int(2*sqrt(offense*endurance)+endurance);}
 
-void start_bout(object me,object npc){mapping b=me->query_temp("pocket_rewards")||([]);string id=file_name(npc);if(!mapp(b[id])||b[id]["done"]){b[id]=(["score":score(npc),"done":0]);me->set_temp("pocket_rewards",b);}}
+varargs void start_bout(object me,object npc,int fresh){mapping b=me->query_temp("pocket_rewards")||([]);string id=file_name(npc);if(fresh||!mapp(b[id])||b[id]["done"]){b[id]=(["score":score(npc),"done":0]);me->set_temp("pocket_rewards",b);}}
 void reward(object me,object npc,string mode){mapping b;int amount;string id;if(!objectp(me)||!objectp(npc)||!userp(me))return;
  b=me->query_temp("pocket_rewards")||([]);id=file_name(npc);if(!mapp(b[id]))b[id]=(["score":score(npc),"done":0]);if(b[id]["done"])return;amount=b[id]["score"];b[id]["done"]=1;me->set_temp("pocket_rewards",b);
  me->add("combat_exp",amount);me->add("potential",amount);me->set("pocket_last_victory",(["opponent":plain(npc->name()),"mode":mode,"amount":amount,"time":time()]));
@@ -66,7 +66,7 @@ string action(string *args,int rid){object me=active(),npc,ob,room;mapping homes
  if(npc->is_fighting())return reply(0,"对方正在交战");
  if(npc->query("max_qi")<11)return reply(0,"对方气血上限过低，无法保证低于一成仍存活");
  me->delete_temp("pocket_sparring");npc->delete_temp("pocket_sparring");me->set_temp("pocket_coercion",npc);npc->set_temp("pocket_coercion",me);
- start_bout(me,npc);me->kill_ob(npc);npc->kill_ob(me);call_out("watch",1,me,npc);return reply(1,"威逼开始：你可能被杀死；对方气血低于一成即停手");}
+ start_bout(me,npc,1);me->kill_ob(npc);npc->kill_ob(me);call_out("watch",1,me,npc);return reply(1,"威逼开始：你可能被杀死；对方气血低于一成即停手");}
  if(!coerced(me,npc))return reply(0,"请先威逼战胜此人");
  foreach(object item in all_inventory(npc)){if(sizeof(args)>2&&file_name(item)==args[2]&&!item->is_character())ob=item;}
  if(!objectp(ob))return reply(0,"物品已不在对方身上");catch(ob->unequip());if(!ob->move(me))return reply(0,"携带过重，请整理行囊");return reply(1,"已强取"+plain(ob->name()));}

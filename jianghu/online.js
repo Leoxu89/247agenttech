@@ -20,5 +20,6 @@ async function logs(){const api=A(),b=api.show('离线互动记录');try{const r
 async function depart(){leaving=true;try{await publish(true);}finally{leaving=false;}}
 // Hidden tabs become offline after the heartbeat lease expires; clean logout publishes immediately.
 window.addEventListener('pagehide',()=>{const a=PocketStore.active();if(!a?.token||!entered)return;rpc('export').then(r=>fetch(PocketAccounts.base()+'/world/publish',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',Authorization:'Bearer '+a.token},body:JSON.stringify({avatar:r.avatar,offline:true})})).catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-last>75000)entered=false;});
 window.PocketOnline={update,challenge,logs,depart,get error(){return error;}};
 })();
