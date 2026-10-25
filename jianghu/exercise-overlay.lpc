@@ -99,6 +99,7 @@ int exercising(object me) {
       max_neili_gain=(1+max_neili_gain)*(me->query("pocket_training_boost")?3:1);
       if(me->query("max_neili")+max_neili_gain>me->query_skill("force")*10)max_neili_gain=me->query_skill("force")*10-me->query("max_neili");
       if(max_neili_gain>0)me->add("max_neili",max_neili_gain);
+      "/adm/daemons/pocketgrowth"->sync(me);
       me->set("neili", (int)me->query("max_neili"));
       write("你的内力增加了！！\n");
       return 0;

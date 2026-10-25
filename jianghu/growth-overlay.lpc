@@ -1,0 +1,42 @@
+// Reuse the native human formulas, without setup_char's unrelated caps/resets.
+inherit F_DBASE;
+string inputs(object me) {
+ string key=sprintf("%d/%d/%d/%d/%d/%d/",me->query("age"),me->query("con"),me->query("int"),me->query("max_neili"),me->query("max_jingli"),me->query_skill("force",1));
+ foreach(string sk in ({"taoism","buddhism","ziyunyin","zhengqijue","poison","hunyuan-yiqi","taiji-shengong","xiantian-qigong","zixia-shengong","huagong-dafa"}))key+=sprintf("%d/",me->query_skill(sk,1));
+ return key;
+}
+mapping before(object me) {return (["max_qi":me->query("max_qi"),"eff_qi":me->query("eff_qi"),"qi":me->query("qi"),"max_jing":me->query("max_jing"),"eff_jing":me->query("eff_jing"),"jing":me->query("jing")]);}
+void preserve(object me,mapping old) {
+ mapping db=me->query_entire_dbase();
+ foreach(string resource in ({"qi","jing"})) {
+  int previous=old["max_"+resource],current=db["max_"+resource],eff=old["eff_"+resource],wounds,next;
+  if(previous<1||previous==current)continue;
+  wounds=previous-eff;if(wounds<0)wounds=0;
+  next=current-wounds;if(next<1)next=1;if(next>current)next=current;
+  // Never revive an unconscious/dying character by recalculating a maximum.
+  if(eff<=0)next=eff;
+  db["eff_"+resource]=next;
+  db[resource]=old[resource];
+  if(current<previous&&db[resource]>next)db[resource]=next;
+ }
+ me->pocket_enforce_locks();
+}
+void sync(object me) {
+ string key;mapping old,db;
+ if(!objectp(me)||!userp(me)||me->is_ghost()||me->query("race")!="人类"||me->query("age")<14)return;
+ key=inputs(me);if(me->query_temp("pocket_growth_inputs")==key)return;
+ old=before(me);
+ "/adm/daemons/race/human"->setup_human(me);
+ // This repair owns health growth only; retain independently configured spirit.
+ db=me->query_entire_dbase();db["max_jing"]=old["max_jing"];
+ preserve(me,old);
+ me->set_temp("pocket_growth_inputs",inputs(me));
+}
+mapping report(object me) {
+ int age=me->query("age"),base,training,neili,age_part,tao=me->query_skill("taoism",1);
+ base=age<=14?100:age<=30?100+(age-14)*me->query("con"):100+16*me->query("con");
+ age_part=tao/2-(age<=30?age:30);
+ if(tao>39&&age_part>0)training=age_part*(me->query_skill("xiantian-qigong",1)/10);
+ neili=me->query("max_neili")/4;
+ return (["base":base,"quanzhen":training,"neili":neili,"other":me->query("max_qi")-base-training-neili,"total":me->query("max_qi")]);
+}

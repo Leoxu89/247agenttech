@@ -135,6 +135,7 @@ string snapshot(string *args, int request_id) {
         task["stage"]="complete"; task["message"]="师承升级已完成，可向新师父请教学艺";
       }
     }
+    "/adm/daemons/pocketgrowth"->sync(me);
     me->pocket_enforce_locks();
     mine = me->query_entire_dbase();
     time = NATURE_D->game_time();
@@ -146,7 +147,7 @@ string snapshot(string *args, int request_id) {
             "title": plain(me->query("title")), "age": me->query("age"),
             "gender": plain(me->query("gender")), "family": plain(me->query("family/family_name")),
             "master": plain(me->query("family/master_name")), "hometown": plain(me->query("hometown")),
-            "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
+            "qi_growth":"/adm/daemons/pocketgrowth"->report(me), "qi": mine["qi"], "max_qi": mine["max_qi"], "eff_qi": mine["eff_qi"],
             "jing": mine["jing"], "max_jing": mine["max_jing"], "jing_locked":!!mine["pocket_jing_locked"], "qi_locked":!!mine["pocket_qi_locked"], "neili_locked":!!mine["pocket_neili_locked"], "neili": mine["neili"],
             "max_neili": mine["max_neili"], "tili": mine["tili"], "max_tili": mine["max_tili"],
             "food_locked":!!mine["pocket_food_locked"], "water_locked":!!mine["pocket_water_locked"], "force_effective":me->query_skill("force"), "food": mine["food"], "max_food": me->max_food_capacity(),
@@ -383,6 +384,7 @@ string checkpoint(string *args,int request_id) {
     foreach(object ob in all_inventory(environment(me))) if(ob!=me&&ob->is_character()&&ob->is_fighting(me)) return json_encode((["ok":0,"message":"有人正在攻击你，保留此前的检查点"]));
     room=file_name(environment(me));
     if(strsrch(room,"/d/")!=0||strsrch(room,"#")>=0) return json_encode((["ok":0,"message":"渡船等临时场景中保留上一个检查点"]));
+    "/adm/daemons/pocketgrowth"->sync(me);
     me->set("startroom",room);
     if(me->query("potential")-me->query("learned_points")>100000) me->set("pocket_potential_unlimited",1);
     link=me->query_temp("link_ob");
@@ -527,6 +529,7 @@ void create() {
     seteuid(getuid());
     load_object("/adm/daemons/pocketexpansion");
     load_object("/adm/daemons/pockettraining");
+    load_object("/adm/daemons/pocketgrowth");
     js_export("pocket_recover_potential", (: recover_potential :));
     js_export("pocket_stop_sparring", (: stop_sparring :));
     js_export("pocket_state", (: snapshot :));

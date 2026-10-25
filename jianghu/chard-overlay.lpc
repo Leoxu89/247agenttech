@@ -19,8 +19,9 @@ void create() { seteuid(getuid()); }
 
 void setup_char(object ob) {
   string race;
-  mapping my;
+  mapping my, growth_before;
 
+  if(userp(ob))growth_before="/adm/daemons/pocketgrowth"->before(ob);
   if (!stringp(race = ob->query("race"))) {
     race = "人类";
     ob->set("race", "人类");
@@ -28,6 +29,7 @@ void setup_char(object ob) {
   switch (race) {
     case "人类":
       HUMAN_RACE->setup_human(ob);
+      if(mapp(growth_before))"/adm/daemons/pocketgrowth"->preserve(ob,growth_before);
       break;
     case "妖魔":
       MONSTER_RACE->setup_monster(ob);

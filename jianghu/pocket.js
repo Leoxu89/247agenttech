@@ -153,7 +153,7 @@ function renderSkills(content,p){PocketTraining.render(content,p);content.append
  for(const sk of list)group.append(button(skillName(sk)+' · '+sk.level+'级'+(sk.bases?.length?' · 已激发':'')+(sk.power?.attack?' · 威力 '+sk.power.attack.toLocaleString():sk.power?.defense?' · 防御 '+sk.power.defense.toLocaleString():''),()=>skillDetail(sk),'p-row'));content.append(group);}
  if(!state.skills.length)content.append(el('p','p-empty','尚未习得武学，请先向场景内的师父请教。'));
 }
-function showFullProfile(){const p=state.player,b=show('完整人物状态');PocketPower.card(b,p,true);
+function showFullProfile(){const p=state.player,b=show('完整人物状态');PocketPower.card(b,p,true);if(p.qi_growth){const g=p.qi_growth;b.append(el('p','p-hint','气血上限 '+g.total+' = 年龄与先天根骨基础 '+g.base+' + 全真道学/先天气功 '+g.quanzhen+' + 永久内力 '+g.neili+' + 其他原版加成 '+g.other+'。14岁基础为100；后天根骨主要影响恢复，不在此年龄直接增加基础上限。上限增加不会自动补满已损气血。'));}
  for(const [title,rows]of [
  ['身份与师承',[['姓名',p.name],['称号',p.title],['绰号',p.nickname],['性别',p.gender],['年龄',p.age+'岁'],['籍贯',p.hometown],['门派',p.family||'无门无派'],['师父',p.master||'尚未拜师'],['辈分',p.family_generation],['门派职衔',p.family_title],['忠诚',p.fealty]]],
  ['身体与战斗',[['气血',p.qi+' / '+p.max_qi],['气血有效上限',p.eff_qi],['气血锁定',p.qi_locked?'已锁定':'未锁定'],['精力（精神）',p.jing+' / '+p.max_jing],['精神有效上限',p.eff_jing],['精力锁定',p.jing_locked?'已锁定':'未锁定'],['精力储备',p.jingli+' / '+p.max_jingli],['当前内力',p.neili],['永久内力修为',p.max_neili],['临时内力容量',p.max_neili?2*p.max_neili:300],['内力锁定',p.neili_locked?'已锁定':'未锁定'],['加力',p.jiali],['体力',p.tili+' / '+p.max_tili],['食物',p.food+' / '+p.max_food],['食物锁定',p.food_locked?'已锁定':'未锁定'],['饮水',p.water+' / '+p.max_water],['饮水锁定',p.water_locked?'已锁定':'未锁定'],['状态',p.ghost?'死亡':p.fighting?'战斗中':p.busy?'忙碌':'正常']]],

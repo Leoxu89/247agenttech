@@ -18,6 +18,6 @@
     "adm/etc/preload: append pocketui"
   ],
   "config_overlay": "mudlib directory: /mudlib",
-  "ui_version": "7.1",
-  "cache": "8052642a6cfd"
+  "ui_version": "7.2",
+  "cache": "b5caeeff1788"
 }
