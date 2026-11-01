@@ -24,7 +24,7 @@ function renderControls(){
   const names={idle:'Ready when you are',starting:'Connecting microphone…',listening:'Listening',sample:'Sample conversation',paused:'Paused',complete:'Sample complete',ended:'Session ended'};
   $('status').textContent=names[state.status];$('state-dot').className='state-dot'+(active?(state.mode==='sample'?' sample':' active'):'');
   $('wave').classList.toggle('moving',active);$('input-label').textContent=state.mode==='sample'?'Illustrative conversation':'Device microphone';
-  $('listen').querySelector('span').textContent=active?'Pause':state.status==='paused'?'Resume':state.status==='complete'?'Sample complete':'Start listening';
+  $('listen').querySelector('span').textContent=active?'Pause':state.status==='paused'?'Resume':state.status==='complete'?'Sample complete':'Start';
   $('listen').disabled=busy||state.ended||state.status==='complete';
   $('end').disabled=(!state.transcript.length&&!active)||busy;
   $('end').hidden=!state.transcript.length&&!active;
@@ -37,7 +37,7 @@ function renderControls(){
 }
 function renderTranscript(){
   const box=$('transcript');const previousTop=box.scrollTop;const followLatest=!$('conversation-details').open||box.scrollHeight-box.scrollTop-box.clientHeight<48;box.replaceChildren();
-  if(!state.transcript.length){const empty=node('div',undefined,'transcript-empty');empty.append(node('p','Your conversation will appear here.'),node('span','Start listening, or add a line to try the coaching.'));box.append(empty);}
+  if(!state.transcript.length){const empty=node('div',undefined,'transcript-empty');empty.append(node('p','Your conversation will appear here.'),node('span','Tap Start, or add a line to try the coaching.'));box.append(empty);}
   state.transcript.forEach(row=>{
     const el=node('div',undefined,'utterance'+(row.speaker==='Agent'?' agent':''));el.dataset.id=row.id;
     const meta=node('div',row.speaker,'speaker');meta.append(node('time',fmt(row.at)));const edit=node('button','Edit','edit-line');edit.type='button';edit.disabled=state.ended;edit.setAttribute('aria-label',`Edit ${row.speaker} line`);edit.addEventListener('click',()=>openLine(row));el.append(meta,node('p',row.text),edit);box.append(el);

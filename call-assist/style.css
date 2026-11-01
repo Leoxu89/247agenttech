@@ -33,8 +33,10 @@ h1 { font-size: 12px; font-weight: 500; margin: 0; }
 .state-dot.sample { background: #7c6742; }
 .session-actions { gap: 8px; flex-shrink: 0; }
 .quiet-button, .listen-button { font-size: 12px; font-weight: 500; min-height: 44px; border: 0; color: var(--green); background: none; padding: 0 4px; white-space: nowrap; }
-.listen-button { position: relative; padding: 0 10px; }
-.listen-button::before { content: ''; position: absolute; inset: 7px 0; border: 1px solid #c4cec7; border-radius: 6px; pointer-events: none; }
+.listen-button { width: 64px; height: 64px; flex-shrink: 0; padding: 0; border-radius: 50%; background: #c62828; color: #fff; font-weight: 600; }
+.listen-button:hover:not(:disabled) { background: #ad2020; }
+.listen-button:active:not(:disabled) { background: #951b1b; }
+.listen-button:focus-visible { outline-color: #c62828; }
 main { width: 100%; max-width: 720px; margin: 0 auto; padding: 18px 22px 28px; }
 .prompt-card { background: var(--green); color: #fff; padding: 23px 24px 27px; border-radius: 14px; }
 h2 { font-size: 12px; font-weight: 500; margin: 0; }
