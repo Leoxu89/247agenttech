@@ -20,9 +20,13 @@ Publish hosting/call-assist/ to call-assist/ in the website repository. hosting/
 ## iPhone test
 
 1. Open the HTTPS preview directly in Safari.
-2. Try a sample conversation, wait about 23 seconds, correct Saturday to Sunday and review Key Information.
+2. Choose Try sample, wait about 23 seconds, expand Show conversation details, correct Saturday to Sunday and review Key information.
 3. End and export. Start a new session, enable the consent checkbox and microphone, then speak English.
 4. Correct Unassigned speakers manually. Keep the page in the foreground and resume if Safari pauses recognition.
 5. Export before closing or refreshing; session data lives only in the tab.
 
 Actual iPhone microphone accuracy must be verified on the physical phone. This deployment establishes HTTPS access, not guaranteed recognition or background listening.
+
+## Focus interface — 1 November 2026
+
+The selected design uses two main sections: a green next-response panel and a plain white key-information area. Status, title and controls are compact at the top. Detailed transcript and suggested next steps expand within Key information. Repeated evidence is grouped into a single bullet; long excerpts are shortened with an ellipsis and remain complete in the expanded transcript and export. Live updates preserve scroll position when the reader has scrolled up.

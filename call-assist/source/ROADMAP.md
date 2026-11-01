@@ -2,7 +2,7 @@
 
 ## 1. Demonstrator — implemented for local review
 
-One agent, one buyer and microphone input. Large Next Section prompts, Key Information bullet points and auto-scrolling Live Transcription. Include sample input, corrections, pause/resume, summary and export. Validate the user experience before adding integrations.
+One agent, one buyer and microphone input. Large What to say next prompts and Key information bullet points, with expandable conversation details and transcript. Include sample input, corrections, pause/resume, summary and export. Validate the user experience before adding integrations.
 
 Phone-accessible browser preview: https://247agenttech.com/call-assist/ (GitHub Pages, local rules in the browser). Physical iPhone microphone testing is pending.
 
@@ -21,3 +21,5 @@ Test with real agents and realistic buyer conversations. Check corrected budgets
 ## 5. Product expansion
 
 Choose native iOS/iPadOS packaging or a supported web deployment based on pilot results. Add authentication, agency/team permissions, durable session storage, reviewed follow-up drafts, CRM integration and operational monitoring as needed. Calling and meeting audio integrations are not required: a spare listening device is the agreed input assumption.
+
+UI update, 1 November 2026: Focus design selected. Green suggestions, plain white key information, small top controls, and two main components.

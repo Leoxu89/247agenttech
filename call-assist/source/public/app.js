@@ -27,19 +27,23 @@ function renderControls(){
   $('listen').querySelector('span').textContent=active?'Pause':state.status==='paused'?'Resume':state.status==='complete'?'Sample complete':'Start listening';
   $('listen').disabled=busy||state.ended||state.status==='complete';
   $('end').disabled=(!state.transcript.length&&!active)||busy;
+  $('end').hidden=!state.transcript.length&&!active;
+  $('listen').hidden=state.ended||state.status==='complete';
+  $('demo').hidden=state.transcript.length>0||state.ended;
   $('end').textContent=state.ended?'Review session':'End session';
   $('demo').disabled=active||busy||state.transcript.length>0||state.ended;
   $('manual').disabled=state.ended;
   $('transcript-hint').replaceChildren(node('span',undefined,'small-dot'),document.createTextNode(active?(state.mode==='sample'?' Sample text · no microphone':' Transcribing · speakers unassigned'):' Microphone is off'));
 }
 function renderTranscript(){
-  const box=$('transcript');box.replaceChildren();
+  const box=$('transcript');const previousTop=box.scrollTop;const followLatest=!$('conversation-details').open||box.scrollHeight-box.scrollTop-box.clientHeight<48;box.replaceChildren();
   if(!state.transcript.length){const empty=node('div',undefined,'transcript-empty');empty.append(node('p','Your conversation will appear here.'),node('span','Start listening, or add a line to try the coaching.'));box.append(empty);}
   state.transcript.forEach(row=>{
     const el=node('div',undefined,'utterance'+(row.speaker==='Agent'?' agent':''));el.dataset.id=row.id;
-    const meta=node('div',row.speaker,'speaker');meta.append(node('time',fmt(row.at)));const edit=node('button','↗','edit-line');edit.type='button';edit.setAttribute('aria-label',`Edit ${row.speaker} line`);edit.addEventListener('click',()=>openLine(row));el.append(meta,node('p',row.text),edit);box.append(el);
+    const meta=node('div',row.speaker,'speaker');meta.append(node('time',fmt(row.at)));const edit=node('button','Edit','edit-line');edit.type='button';edit.disabled=state.ended;edit.setAttribute('aria-label',`Edit ${row.speaker} line`);edit.addEventListener('click',()=>openLine(row));el.append(meta,node('p',row.text),edit);box.append(el);
   });
-  $('segment-count').textContent=state.transcript.length;scrollTranscript();
+  $('segment-count').textContent=state.transcript.length;
+  if(followLatest)scrollTranscript();else requestAnimationFrame(()=>{box.scrollTop=previousTop;});
 }
 function scrollTranscript(){requestAnimationFrame(()=>{$('transcript').scrollTop=$('transcript').scrollHeight;});}
 function renderInterim(text){$('interim')?.remove();if(!text)return;const el=node('div',undefined,'utterance interim');el.id='interim';el.append(node('div','Hearing…','speaker'),node('p',text));$('transcript').append(el);scrollTranscript();}
@@ -65,14 +69,32 @@ async function updateCoach(){
 }
 function renderCoach(){
   const c=state.coach;if(!c)return;$('coach-state').textContent=c.engine;
-  const prompts=$('prompts');prompts.replaceChildren();prompts.append(node('p',`“${c.say}”`,'primary-prompt'));
-  const other=(c.options||[]).find(x=>x!==c.say);if(other){const alt=node('div',undefined,'alternative');alt.append(node('span','OR ASK'),node('p',`“${other}”`));prompts.append(alt);}
+  const prompts=$('prompts');prompts.replaceChildren();prompts.append(node('p',c.say,'primary-prompt'));
+  const other=(c.options||[]).find(x=>x!==c.say);if(other){const alt=node('div',undefined,'alternative');alt.append(node('span','Or ask'),node('p',other));prompts.append(alt);}
   $('prompt-context').textContent=state.mode==='sample'?'Sample conversation · illustrative guidance':c.engine==='AI coach'?'Suggested wording · use your own judgement':'Rule-based suggestions · AI is not connected';
   const info=$('information');info.replaceChildren();
-  if(c.facts.length){const ul=node('ul',undefined,'key-list');for(const fact of c.facts){const row=state.transcript.find(r=>r.id===fact.segmentId);const li=node('li');li.append(node('strong',`${fact.label}: `),document.createTextNode(fact.evidence));if(row?.speaker==='Unassigned')li.append(node('span','Speaker unassigned · confirm who said this','attribution'));ul.append(li);}info.append(ul);}
-  else{const empty=node('div',undefined,'info-empty');empty.append(node('span','⌁','empty-symbol'),node('p','Buyer needs, concerns and next steps will appear as you talk.'));info.append(empty);}
+  const groups=new Map();
+  for(const fact of c.facts){const key=JSON.stringify([fact.segmentId,fact.evidence]);const item=groups.get(key);if(item){if(!item.labels.includes(fact.label))item.labels.push(fact.label);}else groups.set(key,{...fact,labels:[fact.label]});}
+  if(groups.size){
+    const ul=node('ul',undefined,'key-list');
+    for(const fact of groups.values()){
+      const row=state.transcript.find(r=>r.id===fact.segmentId),li=node('li');
+      // Keep the original words and preserve complete evidence in the expandable transcript.
+      const evidence=fact.evidence;const end=evidence.length>135?evidence.lastIndexOf(' ',135):-1;
+      const brief=evidence.length>135?evidence.slice(0,end>0?end:135)+'…':evidence;
+      li.append(node('span',fact.labels.join(' · '),'fact-label'),document.createTextNode(brief));
+      if(row?.speaker==='Unassigned')li.append(node('span','Speaker unassigned · confirm who said this','attribution'));
+      ul.append(li);
+    }
+    info.append(ul);
+  }else info.append(node('p','The important details will appear here as you talk.','info-empty'));
+  const catchup=$('catchup');catchup.replaceChildren();
+  if(state.transcript.length){
+    if(c.missing?.length)catchup.append(node('h3','Still to clarify'),node('p',c.missing.join(' · ')));
+    if(c.nextSteps?.length){catchup.append(node('h3','Suggested next steps'));const steps=node('ul');for(const step of c.nextSteps)steps.append(node('li',step));catchup.append(steps);}
+  }
   if(c.sources?.length)info.append(node('p','Property context: agent-provided notes. Verify source and currency before quoting.','source-note'));
-  $('info-count').textContent=c.facts.length?`${c.facts.length} key details`:'Builds as you talk';
+  $('info-count').textContent=groups.size?`${groups.size} key details`:'Builds as you talk';
 }
 function stopInput(){
   clearTimeout(state.demoTimer);state.demoTimer=null;
@@ -110,10 +132,11 @@ function exportNotes(){
 }
 function reset(){
   stopInput();clearTimeout(coachTimer);state.epoch++;state.revision=0;Object.assign(state,{transcript:[],mode:null,status:'idle',elapsed:0,coach:null,coachRevision:-1,ended:false,name:'',playbook:'',demoIndex:0,consent:false});
-  document.querySelectorAll('dialog[open]').forEach(d=>d.close());$('client-name').value='';$('playbook').value='';$('consent').checked=false;$('session-name').textContent='Buyer consultation / New session';$('summary').replaceChildren();$('info-count').textContent='Builds as you talk';$('information').replaceChildren(node('div','Buyer needs, concerns and next steps will appear here.','info-empty'));$('prompts').replaceChildren(node('p','“What does your next home need to feel like?”','primary-prompt'));$('prompt-context').textContent='A little guidance. Room for your own words.';message('');renderTranscript();renderControls();tick();scheduleCoach();
+  document.querySelectorAll('dialog[open]').forEach(d=>d.close());$('client-name').value='';$('playbook').value='';$('consent').checked=false;$('session-name').textContent='Buyer consultation / New session';$('summary').replaceChildren();$('info-count').textContent='Builds as you talk';$('information').replaceChildren(node('p','The important details will appear here as you talk.','info-empty'));$('prompts').replaceChildren(node('p','What does your next home need to have?','primary-prompt'));const alternative=node('div',undefined,'alternative');alternative.append(node('span','Or ask'),node('p','What’s prompted you to start looking?'));$('prompts').append(alternative);$('catchup').replaceChildren();$('conversation-details').open=false;$('prompt-context').textContent='A little guidance. Room for your own words.';message('');renderTranscript();renderControls();tick();
 }
 $('listen').addEventListener('click',()=>{if(['listening','sample','starting'].includes(state.status)){stopInput();return;}if(state.mode==='sample'){setStatus('sample');demoStep();return;}if(!Recognition){message('Speech recognition is unavailable in this browser. Try Safari or Chrome, or use the sample conversation.');return;}if(state.consent)startMicrophone();else $('consent-dialog').showModal();});
 $('demo').addEventListener('click',startDemo);
+$('conversation-details').addEventListener('toggle',()=>{if($('conversation-details').open)scrollTranscript();});
 $('consent-form').addEventListener('submit',e=>{e.preventDefault();state.consent=true;$('consent-dialog').close();startMicrophone();});
 $('setup').addEventListener('click',()=>$('setup-dialog').showModal());
 $('setup-form').addEventListener('submit',e=>{e.preventDefault();state.name=$('client-name').value.trim();state.playbook=$('playbook').value.trim();state.revision++;$('session-name').textContent=state.name||'Buyer consultation / New session';$('setup-dialog').close();scheduleCoach();});
@@ -121,7 +144,7 @@ $('manual').addEventListener('click',()=>openLine());
 $('line-form').addEventListener('submit',e=>{e.preventDefault();const text=$('line-text').value.trim();if(!text){$('line-text').setCustomValidity('Enter what was said.');$('line-text').reportValidity();return;}if(state.editId){const row=state.transcript.find(r=>r.id===state.editId);if(row){row.text=text;row.speaker=$('line-speaker').value;state.revision++;renderTranscript();scheduleCoach();}}else addLine($('line-speaker').value,text);$('line-dialog').close();});
 $('line-text').addEventListener('input',()=>$('line-text').setCustomValidity(''));
 $('delete-line').addEventListener('click',()=>{state.transcript=state.transcript.filter(r=>r.id!==state.editId);state.revision++;$('line-dialog').close();renderTranscript();renderControls();scheduleCoach();});
-$('end').addEventListener('click',()=>{if(!state.ended){stopInput();state.ended=true;setStatus('ended');message('Session ended. Review and export your notes, or start a new session.');}renderSummary();$('summary-dialog').showModal();if(state.coachRevision!==state.revision){clearTimeout(coachTimer);updateCoach();}});
+$('end').addEventListener('click',()=>{if(!state.ended){stopInput();state.ended=true;setStatus('ended');renderTranscript();message('Session ended. Review and export your notes, or start a new session.');}renderSummary();$('summary-dialog').showModal();if(state.coachRevision!==state.revision){clearTimeout(coachTimer);updateCoach();}});
 $('export').addEventListener('click',exportNotes);
 for(const id of ['new-session','summary-new'])$(id).addEventListener('click',()=>$('reset-dialog').showModal());
 $('confirm-reset').addEventListener('click',reset);

@@ -9,11 +9,12 @@ The phone preview runs the same local rules in your browser without the Node bac
 Run `npm run build:pages` to rebuild `hosting/call-assist/`. See [deployment and directory guide](docs/DEPLOYMENT.md).
 
 
-A touch-friendly real estate conversation companion with three sections:
+A simple, touch-friendly conversation companion with two main sections:
 
-- **Next Section:** large, brief options for what to say, without an explanation panel.
-- **Key Information:** conversation details as bullet points backed by transcript excerpts.
-- **Live Transcription:** microphone text with automatic scrolling and editable speaker labels.
+- **What to say next:** one large suggestion and a slightly smaller alternative on a green panel.
+- **Key information:** readable bullet points on a plain white background. Expand **Show conversation details** for next steps and the complete transcript, with editable speaker labels and conversation corrections.
+
+The compact top bar contains the listening state, Start listening / Pause / Resume, a sample option and settings. End session appears once a conversation starts. There is no separate transcript panel or large page title. Controls retain 44px tap areas even though their text is small.
 
 ## Run
 
@@ -29,9 +30,9 @@ Open http://localhost:4173. On this workspace's Mac, Node is bundled here if it 
 /Users/leoxu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node --env-file-if-exists=.env server.mjs
 ```
 
-Click **Try a sample conversation** to see the full experience without microphone permission, accounts, or API keys. The sample is fictional. **Start listening** requests permission for the browser's speech recognition service; Safari and Chrome support varies by device and settings. **Add or correct a line** also lets you try your own conversation without a microphone.
+Click **Try sample** to see the full experience without microphone permission, accounts, or API keys. The sample is fictional. **Start listening** requests permission for the browser's speech recognition service; Safari and Chrome support varies by device and settings. **Add or correct a line** also lets you try your own conversation without a microphone.
 
-Use the settings icon for a session name and optional property/agency notes. End a session to review and export Markdown notes. Starting a new session clears the existing one after confirmation. Reloading or closing the tab loses the session unless exported. No transcript is persisted in browser storage or on the server.
+Use **Settings** for a session name and optional property/agency notes. End a session to review and export Markdown notes. Starting a new session clears the existing one after confirmation. Reloading or closing the tab loses the session unless exported. No transcript is persisted in browser storage or on the server.
 
 ## Coaching modes
 
