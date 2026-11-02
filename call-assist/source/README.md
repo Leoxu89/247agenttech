@@ -15,7 +15,7 @@ The app keeps transcripts and property notes in this tab only, unless you export
 
 ## Verified on 2 November 2026
 
-24 automated checks passed. The deployed backend returned a real Luna suggestion in 2.1 seconds, with full structured output in 3.4 seconds. A synthetic spoken suburb/budget test streamed text during playback and finalized 0.8 seconds after audio ended. These are individual smoke measurements, not latency guarantees. Local browser sample interaction passed. Physical iPhone microphone accuracy and the owner's hosted browser sign-in remain to be tested by the owner.
+24 automated checks passed. The deployed backend returned a real Luna suggestion in 2.1 seconds, with full structured output in 3.4 seconds. A synthetic spoken suburb/budget test streamed text during playback and finalized 0.8 seconds after audio ended. These are individual smoke measurements, not latency guarantees. Hosted browser sign-in and AI sample interaction passed. Physical iPhone microphone accuracy remains to be tested by the owner.
 
 ## Project directory
 
