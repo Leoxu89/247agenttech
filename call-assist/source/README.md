@@ -1,72 +1,40 @@
-# Agent Assist — minimum demonstrator
+# Call Assist — live AI demonstrator
 
-## iPhone preview
+Open **https://247agenttech.com/call-assist/** on iPhone Safari. It opens the live app at **https://call-assist-live.bowei-l-xu.chatgpt.site/**. Sign in with the owner's ChatGPT account, tap **Start**, confirm transcription consent, and allow microphone access. **Try sample** runs a fictional conversation through real AI without using the microphone.
 
-Open https://247agenttech.com/call-assist/ directly in iPhone Safari. The project is published under `call-assist/` in [Leoxu89/247agenttech](https://github.com/Leoxu89/247agenttech/tree/main/call-assist). It is entry 06 in the domain homepage project index.
+The app retains the selected Focus interface: a green “What to say next” panel with a large suggestion and smaller alternative, followed by key-information bullets on white. Expand conversation details to review, correct speaker labels, and export notes.
 
-The phone preview runs the same local rules in your browser without the Node backend. Sample conversation, manual corrections, summary, export and supported browser microphone recognition work over HTTPS. AI, Dropbox and REA remain disconnected. Sessions stay in the tab; export before closing. Microphone language is Australian English. Actual physical-device recognition remains to be tested.
+## Connected services
 
-Run `npm run build:pages` to rebuild `hosting/call-assist/`. See [deployment and directory guide](docs/DEPLOYMENT.md).
+- **Transcription:** OpenAI `gpt-live-transcribe`, streaming directly from the device using a short-lived token minted by the backend. Microphone audio is converted to 24 kHz PCM16. Client silence detection commits turns after about 500 ms.
+- **Suggestions and key information:** OpenAI Responses API with `gpt-6-luna`, reasoning disabled, streamed structured output. The main suggestion appears before the rest of the response completes. Superseded coaching requests are cancelled.
+- **Server:** private Sites Worker. The permanent API key is stored encrypted in D1; its wrapping secret is a server environment secret. The key never enters frontend code. Provider responses use `store: false`; provider retention policies still apply.
+- **Access:** owner-private ChatGPT sign-in protects the API. Hosted counters limit coaching and token creation. Dropbox, REA, CRM, automatic speaker identification, and saved sessions are not connected.
 
+The app keeps transcripts and property notes in this tab only, unless you export them. It does not save audio or transcript content on its server. Microphone audio and coaching text are sent to OpenAI. Speaker labels begin as **Unassigned** and can be corrected. It listens to the device's surroundings, not directly to phone-call audio. Backgrounding pauses the microphone.
 
-A simple, touch-friendly conversation companion with two main sections:
+## Verified on 2 November 2026
 
-- **What to say next:** one large suggestion and a slightly smaller alternative on a green panel.
-- **Key information:** readable bullet points on a plain white background. Expand **Show conversation details** for next steps and the complete transcript, with editable speaker labels and conversation corrections.
+24 automated checks passed. The deployed backend returned a real Luna suggestion in 2.1 seconds, with full structured output in 3.4 seconds. A synthetic spoken suburb/budget test streamed text during playback and finalized 0.8 seconds after audio ended. These are individual smoke measurements, not latency guarantees. Local browser sample interaction passed. Physical iPhone microphone accuracy and the owner's hosted browser sign-in remain to be tested by the owner.
 
-The compact top bar contains the listening state, a red circular Start / Pause / Resume button, a sample option and settings. End session appears once a conversation starts. There is no separate transcript panel or large page title. Controls retain 44px tap areas even though their text is small.
+## Project directory
 
-## Run
+| Path | Purpose |
+| --- | --- |
+| `public/` | Focus UI, streaming client, microphone worklet |
+| `coach.mjs` | Structured coaching, source validation, streaming |
+| `api.mjs` | Hosted API, transient tokens, encrypted key storage, limits |
+| `server.mjs` | Loopback-only Node development server |
+| `backend/` | Registered private Sites Worker and schema migrations |
+| `scripts/build-backend.mjs` | Embeds app and API modules into Worker |
+| `scripts/build-pages.mjs` | Builds domain entry, offline sample, GitHub source mirror |
+| `test/` | Input, source-evidence, streaming, ordering, credential checks |
+| `docs/DEPLOYMENT.md` | Deployment, secret renewal, verification |
+| `ROADMAP.md` | Completed work and next pilot steps |
+| `hosting/call-assist/` | Generated GitHub Pages files and reproducible source |
 
-Requires Node.js 22.9 or newer. No package install is necessary.
+## Local development
 
-```sh
-npm start
-```
+Node.js 22.9+; no package installation needed. Keep `.env` ignored. `npm start` runs at http://localhost:4173 and loads the existing key from `.env`. `npm test` runs the checks. `npm run build:backend` regenerates the Worker; run the backend build/validation before publishing through Sites. `npm run build:pages` prepares the GitHub Pages mirror.
 
-Open http://localhost:4173. On this workspace's Mac, Node is bundled here if it is not on PATH:
-
-```sh
-/Users/leoxu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node --env-file-if-exists=.env server.mjs
-```
-
-Click **Try sample** to see the full experience without microphone permission, accounts, or API keys. The sample is fictional. **Start** requests permission for the browser's speech recognition service; Safari and Chrome support varies by device and settings. **Add or correct a line** also lets you try your own conversation without a microphone.
-
-Use **Settings** for a session name and optional property/agency notes. End a session to review and export Markdown notes. Starting a new session clears the existing one after confirmation. Reloading or closing the tab loses the session unless exported. No transcript is persisted in browser storage or on the server.
-
-## Coaching modes
-
-**Default: local playbook.** Predefined rules detect budget, location, property needs, timing, finance, concerns and inspection mentions. Key information contains verbatim excerpts, not independently verified facts. Unassigned speech is marked as uncertain. This is a demonstrator of the interaction, not general AI reasoning. Agent-provided property notes are not interpreted in local mode.
-
-**Optional: AI coach.** Copy `.env.example` to `.env`, supply your own `OPENAI_API_KEY`, and restart the server. The server calls the OpenAI Responses API with structured output and `store: false`. Credentials never go to the browser. The model defaults to `gpt-4.1-mini`; override `OPENAI_MODEL` if needed. AI calls send the transcript and any property notes to OpenAI. Provider availability, account access and API charges apply. AI failures are visibly labelled and fall back to the local playbook. Live AI calls have not been verified with a real key in this workspace.
-
-## Microphone and mobile use
-
-This is a responsive browser demonstrator, not an App Store app. The microphone listens to the device's surroundings, including another device on speakerphone. It does not capture phone-call audio directly. Browser speech recognition may send audio to its provider. No audio file is recorded by this application.
-
-Microphone speech starts with **Unassigned** speaker labels. Correct a line to attribute it to the agent or client. Automatic diarisation is not included. Browser-initiated stops and backgrounding visibly pause listening; tap Resume to restart. An audio interruption or network failure can lose words; verify the transcript.
-
-The development server deliberately binds only to this Mac's loopback interface. `localhost` on an iPhone refers to the iPhone, not the Mac. The browser-local demo is now available over HTTPS at https://247agenttech.com/call-assist/. A future server-backed pilot needs its own secure hosting and access controls. The viewport has been checked at 390 px width; real-device microphone accuracy remains to be tested. No live microphone was activated during automated checks.
-
-## Property sources
-
-There is no connected property feed or automatic listing matching in this demonstrator. There are no invented real listings. Approved property notes can be pasted into settings for the optional AI coach; verify their dates and sources.
-
-An initial server-only Dropbox discovery endpoint exists at `POST /api/search` with `{ "query": "property address" }`. It requires `DROPBOX_ACCESS_TOKEN` and can be scoped with `DROPBOX_ROOT`. It only returns file metadata, not document text, verified listing facts, or AI grounding. The UI does not call it yet. The Dropbox connector in the Codex conversation is separate from runtime app credentials.
-
-Next integration: a scoped Dropbox document index with extraction and source citations, followed by authorised REA/CRM listing access. REA's [Listing Export API](https://partner.realestate.com.au/listing-export/overview/) requires agency authorisation and the appropriate export scope; it is not an unrestricted public listing-search feed.
-
-## Verify
-
-```sh
-npm test
-```
-
-Tests cover client-versus-agent attribution, evidence validation, input limits, corrections, routes and origin checks. Browser checks cover the sample flow, transcript correction, auto-scroll, session summary, export, reset and phone-width overflow.
-
-## Deliberate limits
-
-- Single user, one in-memory session, up to 300 segments; export and start a fresh session for longer conversations.
-- No accounts, CRM sync, production hosting, continuous Dropbox sync or live REA feed.
-- No recording files, automatic speaker separation, offline speech guarantee, or native background listening.
-- No production reliability or real-device transcription claim. The first pilot should establish accuracy, latency and usefulness with actual agents.
+The key-free, browser-rule sample remains at https://247agenttech.com/call-assist/demo/. It is explicitly a demo, not the live AI app. The API key was created with a 30-day expiry; renew it through secure OpenAI Developers setup and re-provision the backend before expiry.

@@ -124,3 +124,5 @@ textarea { resize: vertical; }
   .prompt-card { padding: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; } }
+
+.live-caption{font-size:15px;color:#626862;line-height:1.5;margin:0 0 12px}.live-caption:empty{display:none}

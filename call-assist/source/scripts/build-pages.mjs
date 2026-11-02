@@ -3,15 +3,16 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const output=path.join(root,'hosting/call-assist');
-await mkdir(output,{recursive:true});
-for(const file of ['index.html','app.js','style.css','icon.svg','manifest.webmanifest','local-coach.js']){
+const assets=['index.html','app.js','style.css','icon.svg','manifest.webmanifest','local-coach.js','sse.js','realtime.js','audio-worklet.js'];
+await mkdir(path.join(output,'demo'),{recursive:true});
+for(const file of assets){
  let content=await readFile(path.join(root,'public',file),'utf8');
- if(file==='index.html')content=content.replace('<head>','<head>\n  <meta name="coaching-mode" content="browser">');
- await writeFile(path.join(output,file),content);
+ if(file==='index.html')content=content.replace('<head>','<head>\n  <meta name="coaching-mode" content="browser">').replace('Audio streams to OpenAI for live transcription. The transcript and your notes are sent to OpenAI for suggestions. This app does not save audio or transcripts on its server. Export your notes before closing this tab.','This separate sample uses browser speech recognition and local coaching rules. Audio may be processed by the browser provider. Export before closing.');
+ await writeFile(path.join(output,'demo',file),content);
 }
-// Explicit source allowlist: never publish .env, sessions, backups or credentials.
-for(const file of ['README.md','ROADMAP.md','package.json','server.mjs','coach.mjs','.env.example','.gitignore','scripts/build-pages.mjs','docs/DEPLOYMENT.md','test/coach.test.mjs','test/server.test.mjs','test/pages.test.mjs','public/index.html','public/app.js','public/style.css','public/icon.svg','public/manifest.webmanifest','public/local-coach.js']){
- const dest=path.join(output,'source',file);await mkdir(path.dirname(dest),{recursive:true});await copyFile(path.join(root,file),dest);
-}
-await writeFile(path.join(output,'README.md'),'# Call Assist — phone preview\n\nOpen https://247agenttech.com/call-assist/ in iPhone Safari. Try the sample, edit a transcript line, end the session and export notes. Start a new session to test the microphone in Australian English.\n\nThis GitHub Pages preview runs local coaching rules entirely in the browser. No AI, Dropbox or REA feed is connected. Transcript is held in the tab until exported; it is not uploaded by the app. Browser speech recognition may process audio with its provider. No automatic speaker identification or background listening.\n\nThe source/ directory contains the reproducible Node project and deployment instructions.\n');
-console.log('Built hosting/call-assist with browser coaching and reproducible source.');
+await writeFile(path.join(output,'index.html'),'<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=https://call-assist-live.bowei-l-xu.chatgpt.site/"><title>Call Assist — opening live app</title></head><body><h1>Call Assist</h1><p><a href="https://call-assist-live.bowei-l-xu.chatgpt.site/">Open Call Assist — live AI</a></p><p>Sign in with your ChatGPT owner account, then tap Start.</p><p><a href="./demo/">Try the separate browser-rule sample</a></p></body></html>');
+// Explicit source allowlist: excludes keys, transcripts, private files and Git state.
+const sourceFiles=['README.md','ROADMAP.md','START-HERE-MACBOOK.md','package.json','server.mjs','coach.mjs','api.mjs','.env.example','.gitignore','scripts/build-pages.mjs','scripts/build-backend.mjs','scripts/provision-hosted.mjs','scripts/smoke-live.mjs','docs/DEPLOYMENT.md','docs/RELEASE.md','test/coach.test.mjs','test/server.test.mjs','test/pages.test.mjs','test/live.test.mjs',...assets.map(f=>'public/'+f),'backend/package.json','backend/README.md','backend/.openai/hosting.json','backend/worker/index.js','backend/scripts/build.sh','backend/scripts/validate-artifact.mjs','backend/drizzle/0000_live_backend.sql','backend/drizzle/meta/_journal.json'];
+for(const file of sourceFiles){const dest=path.join(output,'source',file);await mkdir(path.dirname(dest),{recursive:true});await copyFile(path.join(root,file),dest);}
+await writeFile(path.join(output,'README.md'),'# Call Assist\n\nhttps://247agenttech.com/call-assist/ opens the private live AI app. Sign in with the owner ChatGPT account. Streaming transcription: gpt-live-transcribe. Coaching: gpt-6-luna. No permanent key is published here.\n\nThe demo/ subdirectory is a separate key-free browser-rule sample. The source/ directory mirrors reproducible application and backend source. See source/README.md and source/docs/DEPLOYMENT.md.\n');
+console.log('Built domain entry, separate static sample, and allowlisted source mirror.');

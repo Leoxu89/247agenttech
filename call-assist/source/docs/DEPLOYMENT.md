@@ -1,32 +1,31 @@
-# GitHub Pages phone preview
+# Live deployment and directory guide
 
-- Preview: https://247agenttech.com/call-assist/
-- Repository: https://github.com/Leoxu89/247agenttech
-- Independent project directory: call-assist/
-- Reproducible source: call-assist/source/
-- Homepage project index: index.html, entry 06 — Call Assist.
-- Hosting: existing GitHub Pages deployment from main; keep the root CNAME and other projects.
+## Destinations
 
-## Two execution modes
+- Domain entry: https://247agenttech.com/call-assist/
+- Private live app: https://call-assist-live.bowei-l-xu.chatgpt.site/
+- GitHub repository: https://github.com/Leoxu89/247agenttech/tree/main/call-assist
+- Static sample: https://247agenttech.com/call-assist/demo/
+- Sites project: `appgprj_6ae73a5e064c819186654c193f671d49`
 
-The Node server retains optional server-side AI coaching and Dropbox metadata discovery. The public Pages build explicitly uses browser-local rules and makes no coaching/status API requests. Both modes share public/local-coach.js. No transcript persistence or upload is added. Microphone speech recognition still uses the browser provider; audio processing and recognition support depend on the device.
+GitHub Pages serves the entry and source mirror; it cannot run the API. The entry opens the private Sites app. Keep the owner-private audience when publishing updates. iPhone users sign in to the owner's ChatGPT account before Start. Other domains/projects in this repository are not changed.
 
 ## Build and publish
 
-Run npm test and npm run build:pages with Node 22.9+. Node is currently bundled at /Users/leoxu/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node if it is absent from PATH.
+Run root `npm test`, then `npm run build:backend`. In `backend/`, run `bash scripts/build.sh` and `node scripts/validate-artifact.mjs`. Use the Sites plugin's source helper to commit/push/package this checkout, then publish the returned commit/archive with the private deployment tool. Wait for terminal deployment success. D1 schema migrations in `backend/drizzle/` are applied by Sites; do not create tables during requests.
 
-Publish hosting/call-assist/ to call-assist/ in the website repository. hosting/index.html is a local snapshot of the updated website index; before future changes fetch the latest remote index and preserve other work. Update main only against its inspected head. Wait for the matching Pages workflow, then verify the HTTPS project, module MIME types, homepage navigation and sample flow. Never put .env, API keys or real conversation exports in the public repository.
+After verifying the deployed API, run `npm run build:pages`. Publish only generated `hosting/call-assist/` entries under GitHub `call-assist/`, preserving all other tree paths and checking the branch-head lease. The source mirror uses an explicit allowlist; never publish `.env`, sessions, personal files, artifacts, helper credentials or Git state.
 
-## iPhone test
+## Credentials
 
-1. Open the HTTPS preview directly in Safari.
-2. Choose Try sample, wait about 23 seconds, expand Show conversation details, correct Saturday to Sunday and review Key information.
-3. End and export. Start a new session, enable the consent checkbox and microphone, then speak English.
-4. Correct Unassigned speakers manually. Keep the page in the foreground and resume if Safari pauses recognition.
-5. Export before closing or refreshing; session data lives only in the tab.
+The local OpenAI key is in ignored `.env`. Do not print or commit it. Hosted `OPENAI_MODEL` is `gpt-6-luna`. Transcription uses `gpt-live-transcribe`. The permanent key is AES-GCM encrypted in D1 `service_secrets`; `KEY_ENCRYPTION_SECRET` is a native Sites server secret. No transcript content is stored in D1. Minute counters expire and are cleaned up.
 
-Actual iPhone microphone accuracy must be verified on the physical phone. This deployment establishes HTTPS access, not guaranteed recognition or background listening.
+Provision through `scripts/provision-hosted.mjs` with `node --env-file=.env`. It accepts JSON containing the exact Site URL, wrapping secret and private Sites service token over hidden stdin, encrypts the local key, then sends ciphertext to the private `/api/admin/key` endpoint. Never put these secrets into shell arguments, screenshots, source or normal output. The endpoint requires the wrapping secret plus the platform's private access boundary. A normal server `OPENAI_API_KEY` environment secret is also supported when securely provisioned by an operator.
 
-## Focus interface — 1 November 2026
+The current key was created with a 30-day expiry. Renewal requires secure key setup and provisioning again. If the wrapping secret is unavailable, configure a fresh wrapping secret and re-provision the existing local key, then redeploy. Do not rotate credentials merely for a check.
 
-The selected design uses two main sections: a green next-response panel and a plain white key-information area. Status, title and controls are compact at the top. Detailed transcript and suggested next steps expand within Key information. Repeated evidence is grouped into a single bullet; long excerpts are shortened with an ellipsis and remain complete in the expanded transcript and export. Live updates preserve scroll position when the reader has scrolled up.
+## Verification
+
+`GET /api/status` returns model names and configuration booleans, never credentials. `scripts/smoke-live.mjs` checks hosted SSE coaching, ephemeral token creation and a synthetic audio clip. It accepts Site URL/service token over hidden stdin and prints only synthetic results and timings. The clip must exist at ignored `artifacts/synthetic.wav` (24 kHz mono PCM16).
+
+On 2 November 2026: 24 automated checks passed. Hosted coaching first suggestion 2111 ms, complete 3413 ms. Synthetic transcription first delta 894 ms after playback started, final 768 ms after speech ended. These are smoke measurements. The hosted sign-in gate was verified; the owner still needs to sign in and test an actual iPhone microphone. No user microphone was activated during this verification.

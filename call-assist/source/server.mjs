@@ -1,4 +1,5 @@
 import http from 'node:http';
+import {handleApi} from './api.mjs';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {validateSession,localCoach,aiCoach} from './coach.mjs';
@@ -19,15 +20,22 @@ async function readBody(req){let s='';for await(const c of req){s+=c;if(Buffer.b
 export function createServer(){return http.createServer(async(req,res)=>{
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' wss://api.openai.com; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
   try{
     const url=new URL(req.url,'http://localhost');
     if(req.headers.host && !/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(req.headers.host))return send(403,{error:'Local access only.'});
-    if(req.method==='GET'&&url.pathname==='/api/status')return send(200,{ai:!!process.env.OPENAI_API_KEY,dropbox:!!process.env.DROPBOX_ACCESS_TOKEN,rea:false});
+    if(req.method==='GET'&&url.pathname==='/api/status')return send(200,{ai:!!process.env.OPENAI_API_KEY,transcription:!!process.env.OPENAI_API_KEY,model:process.env.OPENAI_MODEL||'gpt-6-luna',transcriptionModel:'gpt-live-transcribe',dropbox:!!process.env.DROPBOX_ACCESS_TOKEN,rea:false});
     if(req.method==='POST'){
       if(req.headers.origin && req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin not allowed.'});
       if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required.'});
       const body=await readBody(req);
+      if(process.env.OPENAI_API_KEY&&['/api/coach','/api/transcription-token'].includes(url.pathname)){
+        const controller=new AbortController();res.on?.('close',()=>controller.abort());
+        const response=await handleApi(new Request(`http://${req.headers.host}${url.pathname}`,{method:'POST',headers:req.headers,body:JSON.stringify(body),signal:controller.signal}),process.env);
+        res.writeHead(response.status,Object.fromEntries(response.headers));
+        for await(const chunk of response.body)res.write(chunk);
+        res.end();return;
+      }
       if(url.pathname==='/api/search'){
         if(typeof body.query!=='string'||body.query.length<2||body.query.length>200)return send(400,{error:'Search must be 2–200 characters.'});
         return send(200,await searchDropbox(body.query));
@@ -42,7 +50,7 @@ export function createServer(){return http.createServer(async(req,res)=>{
       return send(404,{error:'Endpoint not found.'});
     }
     if(req.method!=='GET')return send(405,{error:'Method not allowed.'});
-    const files={'/':'index.html','/app.js':'app.js','/local-coach.js':'local-coach.js','/style.css':'style.css','/icon.svg':'icon.svg','/manifest.webmanifest':'manifest.webmanifest'};
+    const files={'/':'index.html','/app.js':'app.js','/local-coach.js':'local-coach.js','/sse.js':'sse.js','/realtime.js':'realtime.js','/audio-worklet.js':'audio-worklet.js','/style.css':'style.css','/icon.svg':'icon.svg','/manifest.webmanifest':'manifest.webmanifest'};
     const file=files[url.pathname];if(!file)return send(404,{error:'Not found.'});
     const data=await readFile(new URL(file,root));res.writeHead(200,{'Content-Type':mime['.'+file.split('.').at(-1)],'Cache-Control':'no-cache'});res.end(data);
   }catch(err){send(err instanceof SyntaxError?400:400,{error:err.message||'Request failed.'});}

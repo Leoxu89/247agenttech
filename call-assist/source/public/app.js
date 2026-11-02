@@ -1,9 +1,11 @@
 import {validateSession,localCoach} from './local-coach.js';
+import {readSSE} from './sse.js';
+import {LiveTranscription} from './realtime.js';
 const browserCoach = document.querySelector('meta[name=coaching-mode]')?.content === 'browser';
 const $ = id => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const state = {transcript:[],playbook:'',name:'',mode:null,status:'idle',elapsed:0,lastTick:0,recognition:null,demoIndex:0,demoTimer:null,epoch:0,revision:0,coach:null,coachRevision:-1,consent:false,editId:null,ended:false};
-let coachTimer, coaching=false, pending=false;
+let coachTimer, coachRequest, liveInput;
 const samples=[
   ['Agent','Thanks for coming in. What are you looking for in your next home?'],
   ['Client','We’re looking for a three-bedroom house in Doncaster East. A garden is important for us.'],
@@ -46,26 +48,34 @@ function renderTranscript(){
   if(followLatest)scrollTranscript();else requestAnimationFrame(()=>{box.scrollTop=previousTop;});
 }
 function scrollTranscript(){requestAnimationFrame(()=>{$('transcript').scrollTop=$('transcript').scrollHeight;});}
-function renderInterim(text){$('interim')?.remove();if(!text)return;const el=node('div',undefined,'utterance interim');el.id='interim';el.append(node('div','Hearing…','speaker'),node('p',text));$('transcript').append(el);scrollTranscript();}
+function renderInterim(text){$('live-caption').textContent=text?'Hearing: '+text:'';$('interim')?.remove();if(!text)return;const el=node('div',undefined,'utterance interim');el.id='interim';el.append(node('div','Hearing…','speaker'),node('p',text));$('transcript').append(el);scrollTranscript();}
 function addLine(speaker,text){
   const clean=text.trim();if(!clean)return;
   if(state.transcript.length>=300){stopInput();message('This demo supports 300 segments per session. End and export this session, then start a new one.');return;}
   state.transcript.push({id:crypto.randomUUID(),speaker,text:clean.slice(0,4000),at:Math.floor(state.elapsed)});state.revision++;renderTranscript();renderControls();scheduleCoach();
 }
-function scheduleCoach(){clearTimeout(coachTimer);coachTimer=setTimeout(updateCoach,650);}
+function scheduleCoach(){coachRequest?.abort();clearTimeout(coachTimer);coachTimer=setTimeout(updateCoach,150);}
 async function updateCoach(){
-  if(coaching){pending=true;return;}
-  coaching=true;const epoch=state.epoch,revision=state.revision;
+  coachRequest?.abort();const request=new AbortController();coachRequest=request;
+  const epoch=state.epoch,revision=state.revision;
   $('coach-state').textContent='Updating…';
   try{
-    const body={transcript:state.transcript,playbook:state.playbook};
-    let data;
+    const body={transcript:state.transcript,playbook:state.playbook};let data;
     if(browserCoach){validateSession(body);data=localCoach(body);}
-    else{const res=await fetch('./api/coach',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(30000),body:JSON.stringify(body)});data=await res.json();if(!res.ok)throw new Error(data.error||'Coaching unavailable.');}
+    else{
+      const res=await fetch('./api/coach',{method:'POST',headers:{'Content-Type':'application/json','Accept':'text/event-stream'},signal:request.signal,body:JSON.stringify(body)});
+      if(!res.ok){const error=await res.json();throw new Error(error.error||'Coaching unavailable.');}
+      await readSSE(res.body,event=>{
+        if(epoch!==state.epoch||revision!==state.revision)return;
+        if(event.type==='suggestion'){$('prompts').replaceChildren(node('p',event.say,'primary-prompt'));$('coach-state').textContent='Finishing key information…';}
+        if(event.type==='complete')data=event.data;
+        if(event.type==='error')throw new Error(event.error);
+      },request.signal);
+      if(!data)throw new Error('Coaching connection ended.');
+    }
     if(epoch!==state.epoch||revision!==state.revision)return;
-    state.coach=data;state.coachRevision=revision;renderCoach();if(data.warning)message(data.warning);if($('summary-dialog').open)renderSummary();
-  }catch(error){if(epoch===state.epoch){state.coach=null;state.coachRevision=state.revision;if($('summary-dialog').open)renderSummary();$('coach-state').textContent='Coaching offline';message('Coaching connection lost. Your transcript is still here. Add another line or save settings to retry.');}}
-  finally{coaching=false;if(pending||epoch!==state.epoch||revision!==state.revision){pending=false;scheduleCoach();}}
+    state.coach=data;state.coachRevision=revision;renderCoach();if($('summary-dialog').open)renderSummary();
+  }catch(error){if(request.signal.aborted)return;if(epoch===state.epoch&&revision===state.revision){$('coach-state').textContent='Coaching offline';message('AI coaching is unavailable. Your transcript is kept. Save settings or add a line to retry.');}}
 }
 function renderCoach(){
   const c=state.coach;if(!c)return;$('coach-state').textContent=c.engine;
@@ -97,11 +107,17 @@ function renderCoach(){
   $('info-count').textContent=groups.size?`${groups.size} key details`:'Builds as you talk';
 }
 function stopInput(){
-  clearTimeout(state.demoTimer);state.demoTimer=null;
+  clearTimeout(state.demoTimer);state.demoTimer=null;liveInput?.stop();liveInput=null;$('live-caption').textContent='';
   if(state.recognition){const rec=state.recognition;state.recognition=null;rec.abort();}
   $('interim')?.remove();if(['listening','sample','starting'].includes(state.status))setStatus('paused');
 }
 function startMicrophone(){
+  if(!browserCoach){
+    if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){message('Microphone access requires a secure connection in Safari or Chrome.');return;}
+    state.mode='microphone';setStatus('starting');const epoch=state.epoch;
+    const input=new LiveTranscription({onReady:()=>{if(liveInput!==input)return;message('');setStatus('listening');},onText:text=>{if(state.epoch===epoch)addLine('Unassigned',text);},onInterim:text=>{if(liveInput===input)renderInterim(text);},onError:text=>{if(liveInput!==input)return;liveInput=null;setStatus('paused');renderInterim('');message(text);}});
+    liveInput=input;input.start();return;
+  }
   if(!Recognition){message('Speech recognition is unavailable in this browser. Try Safari or Chrome, or use the sample conversation and manual input.');return;}
   if(!window.isSecureContext){message('Microphone access requires HTTPS or localhost. Use the sample conversation until a secure device connection is configured.');return;}
   state.mode='microphone';const rec=new Recognition();state.recognition=rec;rec.lang='en-AU';rec.continuous=true;rec.interimResults=true;
@@ -131,10 +147,10 @@ function exportNotes(){
   const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'}));const a=node('a');a.href=url;a.download=`agent-assist-${new Date().toISOString().slice(0,10)}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function reset(){
-  stopInput();clearTimeout(coachTimer);state.epoch++;state.revision=0;Object.assign(state,{transcript:[],mode:null,status:'idle',elapsed:0,coach:null,coachRevision:-1,ended:false,name:'',playbook:'',demoIndex:0,consent:false});
+  stopInput();coachRequest?.abort();clearTimeout(coachTimer);state.epoch++;state.revision=0;Object.assign(state,{transcript:[],mode:null,status:'idle',elapsed:0,coach:null,coachRevision:-1,ended:false,name:'',playbook:'',demoIndex:0,consent:false});
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());$('client-name').value='';$('playbook').value='';$('consent').checked=false;$('session-name').textContent='Buyer consultation / New session';$('summary').replaceChildren();$('info-count').textContent='Builds as you talk';$('information').replaceChildren(node('p','The important details will appear here as you talk.','info-empty'));$('prompts').replaceChildren(node('p','What does your next home need to have?','primary-prompt'));const alternative=node('div',undefined,'alternative');alternative.append(node('span','Or ask'),node('p','What’s prompted you to start looking?'));$('prompts').append(alternative);$('catchup').replaceChildren();$('conversation-details').open=false;$('prompt-context').textContent='A little guidance. Room for your own words.';message('');renderTranscript();renderControls();tick();
 }
-$('listen').addEventListener('click',()=>{if(['listening','sample','starting'].includes(state.status)){stopInput();return;}if(state.mode==='sample'){setStatus('sample');demoStep();return;}if(!Recognition){message('Speech recognition is unavailable in this browser. Try Safari or Chrome, or use the sample conversation.');return;}if(state.consent)startMicrophone();else $('consent-dialog').showModal();});
+$('listen').addEventListener('click',()=>{if(['listening','sample','starting'].includes(state.status)){stopInput();return;}if(state.mode==='sample'){setStatus('sample');demoStep();return;}if(browserCoach&&!Recognition){message('Speech recognition is unavailable in this browser. Try Safari or Chrome, or use the sample conversation.');return;}if(state.consent)startMicrophone();else $('consent-dialog').showModal();});
 $('demo').addEventListener('click',startDemo);
 $('conversation-details').addEventListener('toggle',()=>{if($('conversation-details').open)scrollTranscript();});
 $('consent-form').addEventListener('submit',e=>{e.preventDefault();state.consent=true;$('consent-dialog').close();startMicrophone();});
@@ -151,5 +167,5 @@ $('confirm-reset').addEventListener('click',reset);
 for(const el of document.querySelectorAll('[data-close]'))el.addEventListener('click',()=>el.closest('dialog').close());
 window.addEventListener('beforeunload',e=>{if(state.transcript.length){e.preventDefault();e.returnValue='';}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.mode==='microphone'&&['listening','starting'].includes(state.status)){stopInput();message('Listening paused because the app was moved to the background. Return here and tap Resume.');}});
-(browserCoach ? Promise.resolve({json:()=>Promise.resolve({ai:false})}) : fetch('./api/status')).then(r=>r.json()).then(s=>{$('integration-status').textContent=s.ai?'AI coaching configured. Transcript and notes are sent to the AI provider for suggestions.':(browserCoach?'Phone preview: local rules run in this browser. AI and property feeds are not connected. Property notes are not interpreted.':'Local playbook active. Set OPENAI_API_KEY on the server to enable AI coaching. Local guidance uses predefined rules and does not read property notes.');$('coach-state').textContent=s.ai?'AI coach':'Local playbook';}).catch(()=>{$('integration-status').textContent='Server unavailable. Start the local server to use coaching.';});
+(browserCoach ? Promise.resolve({json:()=>Promise.resolve({ai:false})}) : fetch('./api/status')).then(r=>r.json()).then(s=>{$('integration-status').textContent=s.ai?`Live transcription: ${s.transcriptionModel}. Suggestions: ${s.model}. Audio streams to OpenAI; transcript and notes are sent for coaching. No audio or transcript is saved by this app.`:(browserCoach?'Phone preview: local rules run in this browser. AI and property feeds are not connected. Property notes are not interpreted.':'Local playbook active. Set OPENAI_API_KEY on the server to enable AI coaching. Local guidance uses predefined rules and does not read property notes.');$('coach-state').textContent=s.ai?'AI coach':'Local playbook';}).catch(()=>{$('integration-status').textContent='Server unavailable. Start the local server to use coaching.';});
 renderControls();

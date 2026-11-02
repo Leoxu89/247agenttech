@@ -1,25 +1,23 @@
 # Product roadmap
 
-## 1. Demonstrator — implemented for local review
+Updated 2 November 2026.
 
-One agent, one buyer and microphone input. Large What to say next prompts and Key information bullet points, with expandable conversation details and transcript. Include sample input, corrections, pause/resume, summary and export. Validate the user experience before adding integrations.
+## 1. Minimal demonstrator — complete
 
-Phone-accessible browser preview: https://247agenttech.com/call-assist/ (GitHub Pages, local rules in the browser). Physical iPhone microphone testing is pending.
+Focus UI with tiny header, red Start control, green suggestion panel, white key-information bullets, expandable transcript, manual corrections, sample, pause/resume, summary and export. Public domain entry: https://247agenttech.com/call-assist/.
 
-## 2. Reliable live guidance
+## 2. Live AI backend — implemented and deployed
 
-Enable and evaluate AI coaching, concise requirement extraction and stable short prompts. Test physical iPhones/iPads near speakerphones and in face-to-face conversations. Handle recognition interruptions visibly and distinguish uncertain speaker attribution. Measure transcription accuracy, response latency and agent usefulness.
+Private hosted API with server-only encrypted credentials, short-lived transcription tokens, direct streaming `gpt-live-transcribe` microphone input, streamed `gpt-6-luna` suggestions and evidence-linked key information. Request cancellation and rate limits are included. Real hosted model calls and synthetic audio were verified. Next: owner sign-in and physical iPhone microphone trial, including quiet speech, accents, noisy rooms, pause/resume and network interruptions. Measure median and tail latency before making speed promises.
 
-## 3. Grounded property information
+## 3. Grounded property information — planned
 
-Index an approved Dropbox property folder; extract document text and keep property identity, source, date and supporting passage. Add authorised realestate.com.au Listing Export API or agency CRM data. Resolve stale or conflicting information and do not invent missing property facts. Show relevant property details within Key Information.
+Connect an approved Dropbox property folder and authorised REA Listing Export API or agency CRM. Extract text with property identity, source dates and supporting passages. Resolve stale/conflicting information and verify supplied notes. Do not invent missing property details.
 
-## 4. Agent pilot
+## 4. Agent pilot — planned
 
-Test with real agents and realistic buyer conversations. Check corrected budgets, suburbs, requirements, objections, inspection requests and property status changes. Verify retrieval and summaries. Set consent, retention and access policies before real client use.
+Test with agents using a spare listening device. Evaluate corrections to budgets, suburbs, needs, objections and inspections. Agree on consent and retention. Check useful suggestions and attribution uncertainty; automatic speaker identification remains future work.
 
-## 5. Product expansion
+## 5. Product expansion — planned
 
-Choose native iOS/iPadOS packaging or a supported web deployment based on pilot results. Add authentication, agency/team permissions, durable session storage, reviewed follow-up drafts, CRM integration and operational monitoring as needed. Calling and meeting audio integrations are not required: a spare listening device is the agreed input assumption.
-
-UI update, 1 November 2026: Focus design selected. Green suggestions, plain white key information, small top controls, and two main components.
+Agency/team access, saved sessions, CRM, reviewed follow-up drafts and monitoring. Choose native iOS packaging only if browser pilot evidence supports it. Current app has no direct telephone-call capture and pauses when backgrounded.
