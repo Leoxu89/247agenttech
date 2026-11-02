@@ -36,7 +36,7 @@ export class LiveTranscription {
  event(event){
   if(this.stopped&&!this.finishing)return;
   if(event.type==='input_audio_buffer.committed'){this.ledger.commit(event.item_id,event.previous_item_id);for(const item of this.ledger.drain())if(item.text.trim())this.onText(item.text);}
-  if(event.type==='conversation.item.input_audio_transcription.delta'){const text=(this.partial.get(event.item_id)||'')+event.delta;this.partial.set(event.item_id,text);this.onInterim(text);}
+  if(event.type==='conversation.item.input_audio_transcription.delta'){const text=(this.partial.get(event.item_id)||'')+event.delta;this.partial.set(event.item_id,text);this.onInterim([...this.partial.values()].join(' '));}
   if(event.type==='conversation.item.input_audio_transcription.completed'){this.partial.delete(event.item_id);for(const item of this.ledger.complete(event.item_id,event.transcript||''))if(item.text.trim())this.onText(item.text);this.onInterim([...this.partial.values()].join(' '));}
   if(!this.stopped&&(event.type==='error'||event.type==='conversation.item.input_audio_transcription.failed'))this.fail('Transcription is unavailable. Your transcript is kept. Tap Resume to retry.');
  }

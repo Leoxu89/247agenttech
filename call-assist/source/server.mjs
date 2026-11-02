@@ -29,7 +29,7 @@ export function createServer(){return http.createServer(async(req,res)=>{
       if(req.headers.origin && req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin not allowed.'});
       if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required.'});
       const body=await readBody(req);
-      if(process.env.OPENAI_API_KEY&&['/api/coach','/api/transcription-token'].includes(url.pathname)){
+      if(process.env.OPENAI_API_KEY&&['/api/coach','/api/suggest','/api/transcription-token'].includes(url.pathname)){
         const controller=new AbortController();res.on?.('close',()=>controller.abort());
         const response=await handleApi(new Request(`http://${req.headers.host}${url.pathname}`,{method:'POST',headers:req.headers,body:JSON.stringify(body),signal:controller.signal}),process.env);
         res.writeHead(response.status,Object.fromEntries(response.headers));
@@ -50,7 +50,7 @@ export function createServer(){return http.createServer(async(req,res)=>{
       return send(404,{error:'Endpoint not found.'});
     }
     if(req.method!=='GET')return send(405,{error:'Method not allowed.'});
-    const files={'/':'index.html','/app.js':'app.js','/local-coach.js':'local-coach.js','/sse.js':'sse.js','/realtime.js':'realtime.js','/audio-worklet.js':'audio-worklet.js','/style.css':'style.css','/icon.svg':'icon.svg','/manifest.webmanifest':'manifest.webmanifest'};
+    const files={'/':'index.html','/app.js':'app.js','/local-coach.js':'local-coach.js','/sse.js':'sse.js','/realtime.js':'realtime.js','/anticipation.js':'anticipation.js','/audio-worklet.js':'audio-worklet.js','/style.css':'style.css','/icon.svg':'icon.svg','/manifest.webmanifest':'manifest.webmanifest'};
     const file=files[url.pathname];if(!file)return send(404,{error:'Not found.'});
     const data=await readFile(new URL(file,root));res.writeHead(200,{'Content-Type':mime['.'+file.split('.').at(-1)],'Cache-Control':'no-cache'});res.end(data);
   }catch(err){send(err instanceof SyntaxError?400:400,{error:err.message||'Request failed.'});}

@@ -40,8 +40,8 @@ export async function handleApi(request,env){
    await env.DB.prepare('INSERT INTO service_secrets (name, ciphertext, iv, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET ciphertext = excluded.ciphertext, iv = excluded.iv, updated_at = excluded.updated_at').bind('openai',body.ciphertext,body.iv,Date.now()).run();
    return json({configured:true});
   }
-  if(!['/api/coach','/api/transcription-token'].includes(route))return json({error:'Endpoint not found.'},404);
-  if(route==='/api/coach')try{validateSession(body);}catch(error){return json({error:error.message},400);}
+  if(!['/api/coach','/api/suggest','/api/transcription-token'].includes(route))return json({error:'Endpoint not found.'},404);
+  if(route==='/api/coach'||route==='/api/suggest')try{validateSession(body);if(route==='/api/suggest'&&(typeof body.partial!=='string'||!body.partial.trim()||body.partial.length>4000))throw new Error('Supply partial speech.');if(route==='/api/coach')delete body.partial;}catch(error){return json({error:error.message},400);}
   const key=await readApiKey(env);if(!key)return json({error:'The server API key is not configured.'},503);
   if(route==='/api/transcription-token'){
    await limit(env,'transcription',10);

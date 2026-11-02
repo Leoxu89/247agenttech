@@ -1,11 +1,25 @@
 import {validateSession,localCoach} from './local-coach.js';
 import {readSSE} from './sse.js';
 import {LiveTranscription} from './realtime.js';
+import {Anticipation} from './anticipation.js';
 const browserCoach = document.querySelector('meta[name=coaching-mode]')?.content === 'browser';
 const $ = id => document.getElementById(id);
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const state = {transcript:[],playbook:'',name:'',mode:null,status:'idle',elapsed:0,lastTick:0,recognition:null,demoIndex:0,demoTimer:null,epoch:0,revision:0,coach:null,coachRevision:-1,consent:false,editId:null,ended:false};
-let coachTimer, coachRequest, liveInput;
+let coachTimer, coachRequest, liveInput, shownDraftRevision=-1;
+const anticipation=new Anticipation({request:requestDraft,onSuggestion:renderDraft});
+async function requestDraft({text,signal,onSuggestion}){
+ const response=await fetch('./api/suggest',{method:'POST',headers:{'Content-Type':'application/json',Accept:'text/event-stream'},signal,body:JSON.stringify({transcript:state.transcript,playbook:state.playbook,partial:text})});
+ if(!response.ok)throw new Error('Draft unavailable.');let result;
+ await readSSE(response.body,event=>{if(event.type==='suggestion')onSuggestion(event);if(event.type==='complete')result=event.data;if(event.type==='error')throw new Error(event.error);},signal);
+ return result;
+}
+function renderDraft(data){
+ shownDraftRevision=state.revision;
+ const prompts=$('prompts');if(prompts.querySelector('.primary-prompt')?.textContent!==data.say)prompts.replaceChildren(node('p',data.say,'primary-prompt'));
+ if(data.options){prompts.querySelector('.alternative')?.remove();const other=data.options.find(x=>x!==data.say);if(other){const alt=node('div',undefined,'alternative');alt.append(node('span','Or ask'),node('p',other));prompts.append(alt);}}
+ $('prompt-state').textContent='Draft · listening';$('prompt-state').hidden=false;$('prompt-context').textContent='Tentative question based on unfinished speech. It may change.';
+}
 const samples=[
   ['Agent','Thanks for coming in. What are you looking for in your next home?'],
   ['Client','We’re looking for a three-bedroom house in Doncaster East. A garden is important for us.'],
@@ -48,11 +62,11 @@ function renderTranscript(){
   if(followLatest)scrollTranscript();else requestAnimationFrame(()=>{box.scrollTop=previousTop;});
 }
 function scrollTranscript(){requestAnimationFrame(()=>{$('transcript').scrollTop=$('transcript').scrollHeight;});}
-function renderInterim(text){$('live-caption').textContent=text?'Hearing: '+text:'';$('interim')?.remove();if(!text)return;const el=node('div',undefined,'utterance interim');el.id='interim';el.append(node('div','Hearing…','speaker'),node('p',text));$('transcript').append(el);scrollTranscript();}
+function renderInterim(text){state.partial=text;if(!browserCoach)anticipation.update(text,`${state.epoch}:${state.revision}`);$('live-caption').textContent=text?'Hearing: '+text:'';$('interim')?.remove();if(!text)return;const el=node('div',undefined,'utterance interim');el.id='interim';el.append(node('div','Hearing…','speaker'),node('p',text));$('transcript').append(el);scrollTranscript();}
 function addLine(speaker,text){
   const clean=text.trim();if(!clean)return;
   if(state.transcript.length>=300){stopInput();message('This demo supports 300 segments per session. End and export this session, then start a new one.');return;}
-  state.transcript.push({id:crypto.randomUUID(),speaker,text:clean.slice(0,4000),at:Math.floor(state.elapsed)});state.revision++;renderTranscript();renderControls();scheduleCoach();
+  state.transcript.push({id:crypto.randomUUID(),speaker,text:clean.slice(0,4000),at:Math.floor(state.elapsed)});state.revision++;anticipation.clear();state.partial='';renderTranscript();renderControls();scheduleCoach();
 }
 function scheduleCoach(){coachRequest?.abort();clearTimeout(coachTimer);coachTimer=setTimeout(updateCoach,150);}
 async function updateCoach(){
@@ -67,7 +81,7 @@ async function updateCoach(){
       if(!res.ok){const error=await res.json();throw new Error(error.error||'Coaching unavailable.');}
       await readSSE(res.body,event=>{
         if(epoch!==state.epoch||revision!==state.revision)return;
-        if(event.type==='suggestion'){$('prompts').replaceChildren(node('p',event.say,'primary-prompt'));$('coach-state').textContent='Finishing key information…';}
+        if(event.type==='suggestion'&&!(shownDraftRevision===state.revision&&state.partial)){$('prompt-state').hidden=true;$('prompts').replaceChildren(node('p',event.say,'primary-prompt'));$('coach-state').textContent='Finishing key information…';}
         if(event.type==='complete')data=event.data;
         if(event.type==='error')throw new Error(event.error);
       },request.signal);
@@ -79,9 +93,10 @@ async function updateCoach(){
 }
 function renderCoach(){
   const c=state.coach;if(!c)return;$('coach-state').textContent=c.engine;
-  const prompts=$('prompts');prompts.replaceChildren();prompts.append(node('p',c.say,'primary-prompt'));
-  const other=(c.options||[]).find(x=>x!==c.say);if(other){const alt=node('div',undefined,'alternative');alt.append(node('span','Or ask'),node('p',other));prompts.append(alt);}
-  $('prompt-context').textContent=state.mode==='sample'?'Sample conversation · illustrative guidance':c.engine==='AI coach'?'Suggested wording · use your own judgement':'Rule-based suggestions · AI is not connected';
+  const keepDraft=shownDraftRevision===state.revision&&state.partial;
+  const prompts=$('prompts');if(!keepDraft){$('prompt-state').hidden=true;shownDraftRevision=-1;prompts.replaceChildren();prompts.append(node('p',c.say,'primary-prompt'));
+  const other=(c.options||[]).find(x=>x!==c.say);if(other){const alt=node('div',undefined,'alternative');alt.append(node('span','Or ask'),node('p',other));prompts.append(alt);}}
+  if(!keepDraft)$('prompt-context').textContent=state.mode==='sample'?'Sample conversation · illustrative guidance':c.engine==='AI coach'?'Suggested wording · use your own judgement':'Rule-based suggestions · AI is not connected';
   const info=$('information');info.replaceChildren();
   const groups=new Map();
   for(const fact of c.facts){const key=JSON.stringify([fact.segmentId,fact.evidence]);const item=groups.get(key);if(item){if(!item.labels.includes(fact.label))item.labels.push(fact.label);}else groups.set(key,{...fact,labels:[fact.label]});}
@@ -107,6 +122,7 @@ function renderCoach(){
   $('info-count').textContent=groups.size?`${groups.size} key details`:'Builds as you talk';
 }
 function stopInput(){
+  anticipation.clear();state.partial='';
   clearTimeout(state.demoTimer);state.demoTimer=null;liveInput?.stop();liveInput=null;$('live-caption').textContent='';
   if(state.recognition){const rec=state.recognition;state.recognition=null;rec.abort();}
   $('interim')?.remove();if(['listening','sample','starting'].includes(state.status))setStatus('paused');
@@ -147,7 +163,7 @@ function exportNotes(){
   const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'}));const a=node('a');a.href=url;a.download=`agent-assist-${new Date().toISOString().slice(0,10)}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function reset(){
-  stopInput();coachRequest?.abort();clearTimeout(coachTimer);state.epoch++;state.revision=0;Object.assign(state,{transcript:[],mode:null,status:'idle',elapsed:0,coach:null,coachRevision:-1,ended:false,name:'',playbook:'',demoIndex:0,consent:false});
+  stopInput();coachRequest?.abort();clearTimeout(coachTimer);shownDraftRevision=-1;$('prompt-state').hidden=true;state.epoch++;state.revision=0;Object.assign(state,{transcript:[],mode:null,status:'idle',elapsed:0,coach:null,coachRevision:-1,ended:false,name:'',playbook:'',demoIndex:0,consent:false});
   document.querySelectorAll('dialog[open]').forEach(d=>d.close());$('client-name').value='';$('playbook').value='';$('consent').checked=false;$('session-name').textContent='Buyer consultation / New session';$('summary').replaceChildren();$('info-count').textContent='Builds as you talk';$('information').replaceChildren(node('p','The important details will appear here as you talk.','info-empty'));$('prompts').replaceChildren(node('p','What does your next home need to have?','primary-prompt'));const alternative=node('div',undefined,'alternative');alternative.append(node('span','Or ask'),node('p','What’s prompted you to start looking?'));$('prompts').append(alternative);$('catchup').replaceChildren();$('conversation-details').open=false;$('prompt-context').textContent='A little guidance. Room for your own words.';message('');renderTranscript();renderControls();tick();
 }
 $('listen').addEventListener('click',()=>{if(['listening','sample','starting'].includes(state.status)){stopInput();return;}if(state.mode==='sample'){setStatus('sample');demoStep();return;}if(browserCoach&&!Recognition){message('Speech recognition is unavailable in this browser. Try Safari or Chrome, or use the sample conversation.');return;}if(state.consent)startMicrophone();else $('consent-dialog').showModal();});

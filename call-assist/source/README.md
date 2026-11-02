@@ -38,3 +38,11 @@ The app keeps transcripts and property notes in this tab only, unless you export
 Node.js 22.9+; no package installation needed. Keep `.env` ignored. `npm start` runs at http://localhost:4173 and loads the existing key from `.env`. `npm test` runs the checks. `npm run build:backend` regenerates the Worker; run the backend build/validation before publishing through Sites. `npm run build:pages` prepares the GitHub Pages mirror.
 
 The key-free, browser-rule sample remains at https://247agenttech.com/call-assist/demo/. It is explicitly a demo, not the live AI app. The API key was created with a 30-day expiry; renew it through secure OpenAI Developers setup and re-provision the backend before expiry.
+
+## Early suggestions during speech
+
+The live partial transcript now feeds a lightweight `/api/suggest` request after at least six words. It returns only a short main question and alternative, streamed before the full utterance is finalized. A small “Draft · listening” label identifies tentative wording. Key information still uses finalized transcript evidence only.
+
+Draft requests are coalesced and spaced at least two seconds apart, sharing the existing 60-coaching-requests/minute global limit. Each new word does not restart the request. Finished turns, edits and resets invalidate old drafts; a revised partial cannot publish a response based on replaced text. The most recent draft remains visible while final coaching refines it. Extra draft requests can increase API usage.
+
+Verification: 30 automated checks passed. In a local real-API synthetic-audio trial, the first draft appeared 1.85 seconds before the utterance finished. This measures one scripted sentence; short utterances, noise and network/model delay may still finish before a draft is ready. Physical-device testing is needed. Run `node scripts/smoke-anticipation.mjs <origin>` with the ignored 24 kHz synthetic WAV to repeat the end-to-end timing trial.

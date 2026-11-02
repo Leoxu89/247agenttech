@@ -128,3 +128,5 @@ textarea { resize: vertical; }
 .live-caption{font-size:15px;color:#626862;line-height:1.5;margin:0 0 12px}.live-caption:empty{display:none}
 
 #user-name{max-width:100px;overflow:hidden;text-overflow:ellipsis}#name-dialog h2{margin-bottom:24px}
+
+.prompt-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px}#prompt-state{font-size:11px;color:var(--green);white-space:nowrap}

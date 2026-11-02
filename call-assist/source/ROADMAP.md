@@ -21,3 +21,5 @@ Test with agents using a spare listening device. Evaluate corrections to budgets
 ## 5. Product expansion — planned
 
 Agency/team access, saved sessions, CRM, reviewed follow-up drafts and monitoring. Choose native iOS packaging only if browser pilot evidence supports it. Current app has no direct telephone-call capture and pauses when backgrounded.
+
+Live speed update: anticipatory suggestions now use partial speech while the speaker is talking. Drafts are visibly tentative; confirmed facts still wait for final transcripts. Coalescing avoids restarting on every word. Continue physical iPhone speed/accuracy trials.
