@@ -8,7 +8,7 @@ Focus UI with tiny header, red Start control, green suggestion panel, white key-
 
 ## 2. Live AI backend — implemented and deployed
 
-Private hosted API with server-only encrypted credentials, short-lived transcription tokens, direct streaming `gpt-live-transcribe` microphone input, streamed `gpt-6-luna` suggestions and evidence-linked key information. Request cancellation and rate limits are included. Real hosted model calls and synthetic audio were verified. Next: owner sign-in and physical iPhone microphone trial, including quiet speech, accents, noisy rooms, pause/resume and network interruptions. Measure median and tail latency before making speed promises.
+Hosted API with server-only encrypted credentials, short-lived transcription tokens, direct streaming `gpt-live-transcribe` microphone input, streamed `gpt-6-luna` suggestions and evidence-linked key information. Request cancellation and rate limits are included. Real hosted model calls and synthetic audio were verified. Public access uses a name-only prompt with no account. Next: physical iPhone microphone trial, including quiet speech, accents, noisy rooms, pause/resume and network interruptions. Measure median and tail latency before making speed promises.
 
 ## 3. Grounded property information — planned
 

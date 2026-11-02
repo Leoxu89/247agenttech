@@ -1,6 +1,6 @@
 # Call Assist — live AI demonstrator
 
-Open **https://247agenttech.com/call-assist/** on iPhone Safari. It opens the live app at **https://call-assist-live.bowei-l-xu.chatgpt.site/**. Sign in with the owner's ChatGPT account, tap **Start**, confirm transcription consent, and allow microphone access. **Try sample** runs a fictional conversation through real AI without using the microphone.
+Open **https://247agenttech.com/call-assist/** on iPhone Safari. It opens the live app at **https://call-assist-live.bowei-l-xu.chatgpt.site/**. Enter your name, tap **Start**, confirm transcription consent, and allow microphone access. **Try sample** runs a fictional conversation through real AI without using the microphone.
 
 The app retains the selected Focus interface: a green “What to say next” panel with a large suggestion and smaller alternative, followed by key-information bullets on white. Expand conversation details to review, correct speaker labels, and export notes.
 
@@ -8,14 +8,14 @@ The app retains the selected Focus interface: a green “What to say next” pan
 
 - **Transcription:** OpenAI `gpt-live-transcribe`, streaming directly from the device using a short-lived token minted by the backend. Microphone audio is converted to 24 kHz PCM16. Client silence detection commits turns after about 500 ms.
 - **Suggestions and key information:** OpenAI Responses API with `gpt-6-luna`, reasoning disabled, streamed structured output. The main suggestion appears before the rest of the response completes. Superseded coaching requests are cancelled.
-- **Server:** private Sites Worker. The permanent API key is stored encrypted in D1; its wrapping secret is a server environment secret. The key never enters frontend code. Provider responses use `store: false`; provider retention policies still apply.
-- **Access:** owner-private ChatGPT sign-in protects the API. Hosted counters limit coaching and token creation. Dropbox, REA, CRM, automatic speaker identification, and saved sessions are not connected.
+- **Server:** Sites Worker. The permanent API key is stored encrypted in D1; its wrapping secret is a server environment secret. The key never enters frontend code. Provider responses use `store: false`; provider retention policies still apply.
+- **Access:** public, with a simple device-local name prompt. This is a display name, not authentication. Hosted counters limit coaching and token creation. Dropbox, REA, CRM, automatic speaker identification, and saved sessions are not connected.
 
 The app keeps transcripts and property notes in this tab only, unless you export them. It does not save audio or transcript content on its server. Microphone audio and coaching text are sent to OpenAI. Speaker labels begin as **Unassigned** and can be corrected. It listens to the device's surroundings, not directly to phone-call audio. Backgrounding pauses the microphone.
 
 ## Verified on 2 November 2026
 
-24 automated checks passed. The deployed backend returned a real Luna suggestion in 2.1 seconds, with full structured output in 3.4 seconds. A synthetic spoken suburb/budget test streamed text during playback and finalized 0.8 seconds after audio ended. These are individual smoke measurements, not latency guarantees. Hosted browser sign-in and AI sample interaction passed. Physical iPhone microphone accuracy remains to be tested by the owner.
+24 automated checks passed. The deployed backend returned a real Luna suggestion in 2.1 seconds, with full structured output in 3.4 seconds. A synthetic spoken suburb/budget test streamed text during playback and finalized 0.8 seconds after audio ended. These are individual smoke measurements, not latency guarantees. Hosted AI sample interaction passed. The name-only flow replaces the earlier account sign-in. Physical iPhone microphone accuracy remains to be tested by the owner.
 
 ## Project directory
 
@@ -25,7 +25,7 @@ The app keeps transcripts and property notes in this tab only, unless you export
 | `coach.mjs` | Structured coaching, source validation, streaming |
 | `api.mjs` | Hosted API, transient tokens, encrypted key storage, limits |
 | `server.mjs` | Loopback-only Node development server |
-| `backend/` | Registered private Sites Worker and schema migrations |
+| `backend/` | Registered Sites Worker and schema migrations |
 | `scripts/build-backend.mjs` | Embeds app and API modules into Worker |
 | `scripts/build-pages.mjs` | Builds domain entry, offline sample, GitHub source mirror |
 | `test/` | Input, source-evidence, streaming, ordering, credential checks |

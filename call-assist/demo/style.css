@@ -126,3 +126,5 @@ textarea { resize: vertical; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; } }
 
 .live-caption{font-size:15px;color:#626862;line-height:1.5;margin:0 0 12px}.live-caption:empty{display:none}
+
+#user-name{max-width:100px;overflow:hidden;text-overflow:ellipsis}#name-dialog h2{margin-bottom:24px}

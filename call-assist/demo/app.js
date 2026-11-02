@@ -169,3 +169,19 @@ window.addEventListener('beforeunload',e=>{if(state.transcript.length){e.prevent
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.mode==='microphone'&&['listening','starting'].includes(state.status)){stopInput();message('Listening paused because the app was moved to the background. Return here and tap Resume.');}});
 (browserCoach ? Promise.resolve({json:()=>Promise.resolve({ai:false})}) : fetch('./api/status')).then(r=>r.json()).then(s=>{$('integration-status').textContent=s.ai?`Live transcription: ${s.transcriptionModel}. Suggestions: ${s.model}. Audio streams to OpenAI; transcript and notes are sent for coaching. No audio or transcript is saved by this app.`:(browserCoach?'Phone preview: local rules run in this browser. AI and property feeds are not connected. Property notes are not interpreted.':'Local playbook active. Set OPENAI_API_KEY on the server to enable AI coaching. Local guidance uses predefined rules and does not read property notes.');$('coach-state').textContent=s.ai?'AI coach':'Local playbook';}).catch(()=>{$('integration-status').textContent='Server unavailable. Start the local server to use coaching.';});
 renderControls();
+
+// A display name only: no account, password or identity claim. Never sent to AI.
+let displayName='';
+try{displayName=(localStorage.getItem('call-assist-name')||'').trim().slice(0,60);}catch{}
+function showName(){ $('user-name').textContent=displayName;$('user-name').hidden=!displayName; }
+function askName(){ $('display-name').value=displayName;$('name-dialog').showModal(); }
+$('name-dialog').addEventListener('cancel',event=>{if(!displayName)event.preventDefault();});
+$('name-form').addEventListener('submit',event=>{
+ event.preventDefault();const value=$('display-name').value.trim();
+ if(!value){$('display-name').setCustomValidity('Please enter your name.');$('display-name').reportValidity();return;}
+ displayName=value.slice(0,60);try{localStorage.setItem('call-assist-name',displayName);}catch{}
+ showName();$('name-dialog').close();
+});
+$('display-name').addEventListener('input',()=>$('display-name').setCustomValidity(''));
+$('user-name').addEventListener('click',askName);
+showName();if(!displayName)askName();
