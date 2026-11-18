@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "net-worth-tracker",
+  "main": "dist/worker.mjs",
+  "compatibility_date": "2026-11-18",
+  "workers_dev": true,
+  "preview_urls": false,
+  "build": {"command": "node scripts/build.mjs"},
+  "d1_databases": [
+    {"binding": "DB", "database_name": "net-worth-tracker", "migrations_dir": "migrations"}
+  ]
+}

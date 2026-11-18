@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Net Worth Tracker</title>
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#172a27;background:#f3f5f2;font-synthesis:none;--ink:#123a32;--quiet:#51635e;--line:#e0e7e2;--card:#fff;--accent:#23745e}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #23745e;outline-offset:2px}header{background:#fff;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#153f36;color:#d9f4e5;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#14382f}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #dae4dd;background:#fff;color:#28473f;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#1b5546;color:white;border-color:#1b5546}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#153f36;color:#fff;border-color:#153f36}.kpi:first-child .muted{color:#d0e7dd}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f2f6f3}.tabs button[aria-pressed=true]{background:#dceee4;color:#174c3c}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#51635e}.empty{min-height:110px;border:1px dashed #d6e4da;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#51635e}.delta{font-weight:700;color:#17604c;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#465c53}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#eff3ef;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf0ed;font-size:.85rem}.mix-row:last-child{border:0}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#526760;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #edf1ee}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ebf0ec;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#579b83;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e5e8dc;border-radius:12px;background:#fbfcf6;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#155e4b}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
+dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:650px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.header,.page{padding-inline:14px}.page{padding-top:23px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi:first-child{grid-column:1/-1}.kpi,.panel{padding:14px}.mix-row{gap:6px}.kpi strong{font-size:1.65rem}.intro .toolbar{width:100%}.chart svg{height:155px}}
+</style>
+</head>
+<body>
+<header><div class="header"><div class="brand"><span class="mark" aria-hidden="true">↗</span> Net Worth Tracker</div><div class="toolbar"><button class="btn" id="quick" disabled>Paste update</button><button class="btn primary" id="add" disabled>New snapshot</button></div></div></header>
+<main class="page">
+  <section class="intro"><div><h1>Wealth overview</h1><p class="muted" id="asof"></p></div><div class="toolbar"><label for="snapshot" class="sr">Snapshot</label><select id="snapshot" class="date-select"></select><button class="btn" id="edit" disabled>Edit snapshot</button></div></section>
+  <section class="kpis" aria-label="Snapshot overview">
+    <article class="kpi"><span id="main-label">Tracked assets</span><strong id="main-amount"></strong><p class="muted" id="main-detail"></p></article>
+    <article class="kpi"><span>Portfolio value</span><strong id="portfolio-amount"></strong><p class="muted">Shares, funds and crypto</p></article>
+    <article class="kpi"><span>Cash</span><strong id="cash-amount"></strong><p class="muted">Across recorded cash balances</p></article>
+  </section>
+  <div class="grid">
+    <section class="panel"><div class="panel-head"><h2>Wealth history</h2><div class="tabs" id="periods" aria-label="History period"></div></div>
+      <div class="ranges" id="ranges" hidden><label>From <input type="date" id="from"></label><label>To <input type="date" id="to"></label></div>
+      <label class="muted">Series <select id="series"><option value="total">Tracked assets</option><option value="net">Net worth</option></select></label>
+      <p class="delta" id="change"></p><p class="muted" id="history-note"></p><div class="chart" id="chart"></div>
+    </section>
+    <section class="panel"><div class="panel-head"><h2>Asset mix</h2><span class="muted">Share of tracked assets</span></div><div id="mix"></div></section>
+  </div>
+  <section class="panel wide">
+    <div class="panel-head"><div><h2>Portfolio exposure</h2><p class="muted">Weights within recorded shares, funds and crypto</p></div>
+      <div class="tabs" id="group" aria-label="Portfolio grouping"><button data-group="name" aria-pressed="true">Company / asset</button><button data-group="sector" aria-pressed="false">Sector</button></div>
+    </div>
+    <div class="scroll"><table><thead><tr><th id="group-heading" scope="col">Holding</th><th scope="col" class="money">Value (AUD)</th><th scope="col">Weight</th></tr></thead><tbody id="holdings"></tbody></table></div>
+  </section>
+  <aside class="note" id="source-note"></aside>
+  <div class="toolbar footer"><p class="muted">Snapshots sync across devices after sign-in.</p><div class="toolbar"><button class="btn" id="export" disabled>Export backup</button><form method="post" action="/lock"><button class="btn">Lock</button></form><label class="btn" for="import">Import backup</label><input class="sr" type="file" accept="application/json,.json" id="import" disabled></div></div>
+  <p class="muted status" id="status" role="status"></p>
+</main>
+<dialog id="editor"><form id="form"><h2 id="dialog-title">Edit snapshot</h2><p class="muted">Enter the AUD value attributable to you. New snapshots start with a copy of your latest values.</p>
+<div class="toolbar"><label>Snapshot date <input id="edit-date" type="date" required></label><label><input id="complete" type="checkbox"> All assets and liabilities accounted for</label></div>
+<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
+<div class="toolbar"><button type="button" class="btn" id="row-add">Add row</button><div class="toolbar"><button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save snapshot</button></div></div><p id="error" class="error" role="alert"></p></form></dialog>
+<dialog id="quick-dialog"><form id="quick-form">
+  <h2>Paste a screenshot update</h2>
+  <p class="muted">Paste an update from chat. Values are absolute AUD balances. Items outside the update carry forward from that date or the latest earlier snapshot.</p>
+  <textarea id="patch" aria-label="Update JSON" rows="8" required style="width:100%;margin:12px 0;border:1px solid #d6e2d8;border-radius:7px;padding:8px"></textarea>
+  <p id="quick-error" class="error" role="alert"></p>
+  <div class="toolbar"><button type="button" class="btn" id="quick-cancel">Cancel</button><button class="btn primary" id="quick-review" type="submit">Review update</button></div>
+</form></dialog>
+<script>
+'use strict';
+const types = ['Cash','Listed shares','Funds','Unreconciled equity','Crypto','Property','Super','Business equity','Other assets','Liability'];
+const sectorTypes = new Set(['Listed shares','Unreconciled equity','Funds','Crypto']);
+const colors = ['#205745','#3f8873','#79aa87','#b6c88a','#8171a7','#a07940','#5a81a9','#bc8274','#779098'];
+const $ = id => document.getElementById(id);
+const el = (name, text, cls) => {
+  const node = document.createElement(name);
+  if (text !== undefined) node.textContent = text;
+  if (cls) node.className = cls;
+  return node;
+};
+const aud = new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0});
+const currency = value => 'A$' + aud.format(Math.abs(value)).replace(/^[^0-9]*/, '');
+const money = value => (value < 0 ? '−' : '') + currency(value);
+const pct = value => new Intl.NumberFormat('en-AU',{style:'percent',maximumFractionDigits:1}).format(value);
+const dateLabel = date => new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T00:00:00Z'));
+const validDate = date => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(Date.parse(date)) && new Date(date).toISOString().slice(0,10) === date;
+const sortDates = records => records.sort((a,b)=>a.date.localeCompare(b.date));
+function validate(records) {
+  if (!Array.isArray(records) || records.length < 1) throw Error('A backup must contain at least one snapshot.');
+  const dates = new Set();
+  return sortDates(records.map(({date,complete,source,rows}) => {
+    if (!validDate(date) || dates.has(date) || typeof complete !== 'boolean' || !Array.isArray(rows) || !rows.length) throw Error('Snapshot dates must be valid and unique, with at least one row per snapshot.');
+    dates.add(date);
+    const cleaned = rows.map(row => {
+      if (!Array.isArray(row) || row.length !== 4) throw Error('A snapshot row is missing information.');
+      const [label,type,sector,value] = row;
+      if (typeof label !== 'string' || !label.trim() || !types.includes(type) || typeof sector !== 'string' || !Number.isFinite(value) || value < 0 || value > 1e12) throw Error('Each row needs a label, asset type and valid positive or zero AUD value.');
+      return [label.trim(),type,sector.trim(),value];
+    });
+    return {date,complete,source:source === true,rows:cleaned};
+  }));
+}
+let records=[], active=null, revision=null, group='name', period='All', editing=null, saving=false;
+async function historyRequest(options) {
+  const response=await fetch('/api/snapshots',options);
+  const data=await response.json().catch(()=>null);
+  if (!response.ok || !data) throw Error(data?.error || 'Cloud history is unavailable. Reload to try again.');
+  return data;
+}
+async function loadHistory(){
+  const data=await historyRequest();
+  records=data.records.length?validate(data.records):[];
+  revision=data.revision;
+  active=records.at(-1)?.date??null;
+  for (const id of ['add','import','quick']) $(id).disabled=false;
+  render();
+}
+const sum = rows => rows.reduce((total,row)=>total+row[3],0);
+function summary(snapshot) {
+  const assets=snapshot.rows.filter(row=>row[1]!=='Liability');
+  const portfolio=assets.filter(row=>sectorTypes.has(row[1]));
+  const total=sum(assets), liabilities=sum(snapshot.rows.filter(row=>row[1]==='Liability'));
+  return {assets,portfolio,total,liabilities,net:total-liabilities,cash:sum(assets.filter(row=>row[1]==='Cash'))};
+}
+function grouped(rows,key) {
+  const values=new Map();
+  rows.forEach(row=>{const name=key(row);values.set(name,(values.get(name)||0)+row[3]);});
+  return [...values].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+}
+async function persist(next,date) {
+  if (saving || revision===null) throw Error('Wait for the current save, then try again.');
+  saving=true;
+  try {
+    const data=await historyRequest({method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision,records:next})});
+    revision=data.revision;
+    records=next;
+    active=date;
+    render();
+  } finally {
+    saving=false;
+  }
+}
+async function mergeHistory(incoming) {
+  const merged=new Map(records.map(record=>[record.date,record]));
+  for (const record of incoming) {
+    const existing=merged.get(record.date);
+    if (existing && !existing.source && JSON.stringify(existing)!==JSON.stringify(record)) {
+      if (record.source) continue;
+      throw Error('A different snapshot exists for '+dateLabel(record.date)+'. Review that date before importing.');
+    }
+    merged.set(record.date,record);
+  }
+  const next=sortDates([...merged.values()]);
+  await persist(next,next.at(-1).date);
+}
+function drawMix({assets,total,liabilities}) {
+  const target=$('mix');
+  target.replaceChildren();
+  if(!total){target.append(el('p','Add an asset value to see its weight.','empty'));return;}
+  const bar=el('div',undefined,'mix-bar');
+  bar.setAttribute('aria-hidden','true');
+  target.append(bar);
+  grouped(assets,row=>row[1]).forEach(([name,value],index)=>{
+    if (!value) return;
+    const color=colors[index%colors.length], segment=el('span');
+    segment.style.backgroundColor=color;
+    segment.style.width=(100*value/total)+'%';
+    bar.append(segment);
+    const line=el('div',undefined,'mix-row'), dot=el('span',undefined,'dot');
+    dot.style.backgroundColor=color;
+    line.append(dot,el('span',name),el('strong',money(value)),el('span',pct(value/total),'muted'));
+    target.append(line);
+  });
+  if(liabilities)target.append(el('p','Recorded liabilities '+money(liabilities),'muted'));
+}
+function drawExposure({portfolio}) {
+  const body=$('holdings'), total=sum(portfolio);
+  body.replaceChildren();
+  $('group-heading').textContent=group==='name'?'Holding':'Sector';
+  for(const button of $('group').querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.group===group));
+  for(const [name,value] of grouped(portfolio,row=>group==='name'?row[0]:row[2]||'Unclassified')){
+    const tr=el('tr'), td=el('td',undefined,'weight'), wrapper=el('div',undefined,'weight-inner'), track=el('span',undefined,'meter'), fill=el('span');
+    const ratio=total?value/total:0;
+    fill.style.width=(ratio*100)+'%';
+    track.append(fill);
+    track.setAttribute('aria-hidden','true');
+    wrapper.append(track,el('b',pct(ratio)));
+    td.append(wrapper);
+    tr.append(el('td',name),el('td',money(value),'money'),td);
+    body.append(tr);
+  }
+  if(!portfolio.length){const tr=el('tr'), td=el('td','No portfolio holdings in this snapshot.');td.colSpan=3;tr.append(td);body.append(tr);}
+}
+const day=86400000;
+function periodStart(end, selectedPeriod) {
+  const date=new Date(end+'T00:00:00Z');
+  if(selectedPeriod==='YTD')return end.slice(0,4)+'-01-01';
+  const originalDay=date.getUTCDate();
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth()-({'1M':1,'3M':3,'1Y':12}[selectedPeriod]));
+  const lastDay=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+1,0)).getUTCDate();
+  date.setUTCDate(Math.min(originalDay,lastDay));
+  return date.toISOString().slice(0,10);
+}
+function drawHistory() {
+  if (!records.length) return;
+  const series=$('series').value, latest=records.at(-1).date;
+  const start=period==='Custom'?$('from').value:period==='All'?'':periodStart(latest,period);
+  const end=period==='Custom'?$('to').value:latest;
+  const matching=records.filter(record=>(!start||record.date>=start)&&(!end||record.date<=end));
+  const data=matching.filter(record=>series!=='net'||record.complete).map(record=>({date:record.date,value:summary(record)[series]}));
+  const target=$('chart');target.replaceChildren();
+  $('change').textContent='';
+  if(start&&end&&start>end){$('history-note').textContent='Choose an end date on or after the start date.';return;}
+  if(!data.length){
+    $('history-note').textContent='';
+    target.append(el('p',series==='net'&&matching.length?'Net worth appears once a snapshot accounts for all assets and liabilities.':'No snapshots in this period.','empty'));
+    return;
+  }
+  const first=data[0], last=data.at(-1);
+  if(data.length>1){
+    const change=last.value-first.value;
+    $('change').textContent=(change>0?'+':'')+money(change)+(first.value>0?' ('+(change>0?'+':'')+pct(change/first.value)+')':'');
+  }
+  $('history-note').textContent=data.length===1?dateLabel(first.date)+' · Add a second snapshot to see change.':dateLabel(first.date)+' to '+dateLabel(last.date);
+  const w=620,h=170, left=88,right=23, top=12,bottom=31;
+  const vals=data.map(d=>d.value), lower=Math.min(...vals), upper=Math.max(...vals);
+  const min=lower===upper?lower-Math.max(1,Math.abs(lower)*.1):lower;
+  const max=lower===upper?upper+Math.max(1,Math.abs(upper)*.1):upper;
+  const span=(Date.parse(last.date)-Date.parse(first.date))/day;
+  const xy=d=>[span?left+(Date.parse(d.date)-Date.parse(first.date))/day/span*(w-left-right):(w+left-right)/2,top+(max-d.value)/(max-min)*(h-top-bottom)];
+  const svgEl=(name,attrs)=>{const node=document.createElementNS('http://www.w3.org/2000/svg',name);Object.entries(attrs).forEach(([key,val])=>node.setAttribute(key,val));return node;};
+  const svg=svgEl('svg',{viewBox:'0 0 '+w+' '+h,role:'img','aria-label':data.map(d=>dateLabel(d.date)+' '+money(d.value)).join(', ')});
+  for(let i=0;i<3;i++){
+    const y=top+(h-top-bottom)*i/2, value=max-(max-min)*i/2;
+    const axis=svgEl('text',{x:left-8,y:y+4,'text-anchor':'end',class:'chart-label'});
+    const short=new Intl.NumberFormat('en-AU',{notation:'compact',maximumFractionDigits:2}).format(Math.abs(value));
+    axis.textContent=(value<0?'−':'')+'A$'+short;
+    svg.append(svgEl('line',{x1:left,y1:y,x2:w-right,y2:y,stroke:'#e2ebe4'}),axis);
+  }
+  if(data.length>1)svg.append(svgEl('polyline',{points:data.map(d=>xy(d).join(',')).join(' '),fill:'none',stroke:'#23745e','stroke-width':3,'stroke-linejoin':'round'}));
+  data.forEach(d=>{
+    const [cx,cy]=xy(d), point=svgEl('circle',{cx,cy,r:5,fill:'#23745e',stroke:'#fff','stroke-width':2});
+    const title=svgEl('title',{});title.textContent=dateLabel(d.date)+' · '+money(d.value);point.append(title);svg.append(point);
+  });
+  for(const d of data.length===1?[first]:[first,last]){
+    const label=svgEl('text',{x:xy(d)[0],y:h-6,'text-anchor':data.length===1?'middle':d===first?'start':'end',class:'chart-label'});
+    label.textContent=dateLabel(d.date);svg.append(label);
+  }
+  target.append(svg);
+}
+function render() {
+  $('edit').disabled=!active;
+  $('export').disabled=!active;
+  if (!active) {
+    $('asof').textContent='Add your first snapshot or import a backup.';
+    for (const id of ['main-amount','portfolio-amount','cash-amount']) $(id).textContent='—';
+    $('chart').replaceChildren(el('p','Snapshots will appear here.','empty'));
+    $('source-note').hidden=true;
+    return;
+  }
+  const snapshot=records.find(record=>record.date===active), totals=summary(snapshot);
+  $('snapshot').replaceChildren(...records.slice().reverse().map(record=>new Option(dateLabel(record.date),record.date,false,record.date===active)));
+  $('asof').textContent=dateLabel(snapshot.date)+(snapshot.source?' · Provisional · ownership and account totals pending':snapshot.complete?' · Complete snapshot':' · Partial snapshot');
+  $('main-label').textContent=snapshot.complete?'Net worth':'Tracked assets';
+  $('main-amount').textContent=money(snapshot.complete?totals.net:totals.total);
+  $('main-detail').textContent=snapshot.complete?'Tracked assets '+money(totals.total)+' less liabilities '+money(totals.liabilities):'Net worth pending full asset and debt coverage';
+  $('portfolio-amount').textContent=money(sum(totals.portfolio));
+  $('cash-amount').textContent=money(totals.cash);
+  const note=$('source-note');note.replaceChildren();
+  note.hidden=false;
+  note.append(el('p',snapshot.complete?'Net worth uses the assets and liabilities recorded in this snapshot.':'This snapshot remains partial. Record missing balances and debts before marking it complete.','muted'));
+  drawMix(totals);drawExposure(totals);drawHistory();
+}
+for(const label of ['1M','3M','YTD','1Y','All','Custom']){
+  const button=el('button',label);
+  button.setAttribute('aria-pressed',String(label===period));
+  button.onclick=()=>{
+    period=label;
+    for(const control of $('periods').children)control.setAttribute('aria-pressed',String(control===button));
+    $('ranges').hidden=label!=='Custom';
+    if(records.length&&label==='Custom'&&!$('from').value&&!$('to').value){$('from').value=records[0].date;$('to').value=records.at(-1).date;}
+    drawHistory();
+  };
+  $('periods').append(button);
+}
+for(const id of ['from','to','series'])$(id).onchange=drawHistory;
+$('snapshot').onchange=event=>{active=event.target.value;render();};
+$('group').onclick=event=>{if(records.length && event.target.dataset.group){group=event.target.dataset.group;render();}};
+function input(value,label,type='text'){
+  const field=el('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);return field;
+}
+function editRow([name,type,sector,value]){
+  const row=el('tr'), label=input(name,'Label'), select=el('select'), category=input(sector,'Sector'), amount=input(value,'Value in AUD','number'), remove=el('button','×','btn');
+  label.required=true;
+  select.setAttribute('aria-label','Asset type');
+  types.forEach(kind=>select.add(new Option(kind,kind,false,type===kind)));
+  amount.min='0';amount.max='1000000000000';amount.step='0.01';amount.required=true;
+  remove.type='button';remove.setAttribute('aria-label','Remove row');remove.onclick=()=>row.remove();
+  for(const field of [label,select,category,amount,remove]){const td=el('td');td.append(field);row.append(td);}
+  $('edit-rows').append(row);
+  return label;
+}
+function openEditor(isNew) {
+  const snapshot=isNew?records.at(-1):records.find(record=>record.date===active);
+  editing=isNew?null:snapshot.date;
+  $('dialog-title').textContent=isNew?'New snapshot':'Edit snapshot';
+  $('edit-date').value=isNew?new Intl.DateTimeFormat('sv-SE',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()):snapshot.date;
+  $('complete').checked=isNew?false:snapshot.complete;
+  $('error').textContent='';
+  $('edit-rows').replaceChildren();
+  if(snapshot) snapshot.rows.forEach(editRow);
+  else editRow(['','Cash','','']);
+  $('editor').showModal();
+}
+$('add').onclick=()=>openEditor(true);
+$('edit').onclick=()=>openEditor(false);
+$('cancel').onclick=()=>$('editor').close();
+$('row-add').onclick=()=>editRow(['','Cash','','']).focus();
+$('form').onsubmit=async event=>{
+  event.preventDefault();
+  try {
+    const date=$('edit-date').value, complete=$('complete').checked;
+    const rows=Array.from($('edit-rows').children,row=>{
+      const [name,type,sector,value]=row.querySelectorAll('input,select');
+      return [name.value,type.value,sector.value,value.valueAsNumber];
+    });
+    const old=records.find(record=>record.date===editing);
+    const next=validate([...records.filter(record=>record.date!==editing),{date,complete,rows,source:old?.source}]);
+    await persist(next,date);
+    $('editor').close();
+    $('status').textContent='Snapshot saved for '+dateLabel(date)+'.';
+  }catch(error){$('error').textContent=error.message;}
+};
+$('export').onclick=()=>{
+  const url=URL.createObjectURL(new Blob([JSON.stringify(records,null,2)],{type:'application/json'}));
+  const link=el('a');link.href=url;link.download='net-worth-snapshots.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('import').onchange=async event=>{
+  const file=event.target.files[0];
+  if(!file)return;
+  try{
+    if(file.size>5000000)throw Error('This backup exceeds 5 MB.');
+    await mergeHistory(validate(JSON.parse(await file.text())));
+    $('status').textContent='Backup imported.';
+  }catch(error){$('status').textContent=error.message;}
+  finally{event.target.value='';}
+};
+function preparePatch(raw) {
+  const patch=JSON.parse(raw);
+  if(!patch || !validDate(patch.date) || !Array.isArray(patch.rows) || !patch.rows.length) throw Error('Include a date and at least one changed row.');
+  const base=records.find(record=>record.date===patch.date)??records.findLast(record=>record.date<patch.date);
+  const updated=validate([{date:patch.date,complete:false,source:false,rows:patch.rows}])[0];
+  const key=row=>JSON.stringify([row[0].toLowerCase(),row[1]]);
+  const changes=new Map();
+  for (const row of updated.rows) {
+    if(changes.has(key(row)))throw Error('Each changed item must have a unique label and asset type.');
+    changes.set(key(row),row);
+  }
+  const rows=(base?.rows??[]).map(row=>{
+    if(!changes.has(key(row)))return row;
+    const change=changes.get(key(row));
+    changes.delete(key(row));
+    return change;
+  }).concat([...changes.values()]);
+  return {date:patch.date, rows, editing:base?.date===patch.date?patch.date:null, complete:base?.date===patch.date&&base.complete};
+}
+$('quick').onclick=()=>{
+  $('patch').value='';
+  $('quick-error').textContent='';
+  $('quick-dialog').showModal();
+};
+$('quick-cancel').onclick=()=>$('quick-dialog').close();
+$('quick-form').onsubmit=event=>{
+  event.preventDefault();
+  try {
+    const proposal=preparePatch($('patch').value);
+    $('quick-dialog').close();
+    openEditor(proposal.editing===null);
+    if(proposal.editing!==null && active!==proposal.editing) {
+      editing=proposal.editing;
+      $('dialog-title').textContent='Review snapshot';
+    }
+    $('edit-date').value=proposal.date;
+    $('complete').checked=proposal.complete;
+    $('edit-rows').replaceChildren();
+    proposal.rows.forEach(editRow);
+  }catch(error){$('quick-error').textContent=error.message;}
+};
+$('status').textContent='Loading cloud history…';
+loadHistory().then(()=>{$('status').textContent='';},error=>{$('status').textContent=error.message;});
+</script>
+</body>
+</html>
