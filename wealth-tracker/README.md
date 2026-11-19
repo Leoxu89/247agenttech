@@ -19,3 +19,21 @@ Choose **Paste update**, paste compact JSON, then review and save. A new date ca
 ```
 
 Rows are `[label, asset type, sector, value in AUD]`. The supported types are Cash, Listed shares, Funds, Unreconciled equity, Crypto, Property, Super, Business equity, Other assets and Liability. Enter liabilities as positive amounts. Preserve an explicit date and native currency when extracting an update. Resolve any conversion ambiguity before applying the update.
+
+
+
+## Company share ownership
+
+Select **Shares** under Portfolio exposure for shares held, company shares outstanding, and the percentage owned. The calculation is `shares held / shares outstanding * 100`; small percentages retain up to eight decimal places. Funds and crypto are excluded from company ownership. Missing quantities display as unknown, never inferred from AUD values.
+
+Use **Edit snapshot → Share details** for direct company equity. Enter the share quantity attributable to you and its date. Enter shares outstanding with the date and source of that figure (for example, an issuer filing). Use an optional company/share-basis ID consistently across accounts to combine the same issuer. When combining share classes or ADRs, first convert holdings and the denominator onto the same economic share basis. Voting power is not calculated. Conflicting denominators or incomplete quantities suppress the percentage.
+
+Old four-element rows and backups still work. An optional fifth element stores share details:
+
+```json
+["Example company", "Listed shares", "Technology", 5000, {"companyId":"EXAMPLE ordinary", "shares":100, "sharesAsOf":"2026-11-03", "sharesOutstanding":100000000, "outstandingAsOf":"2026-11-01", "outstandingSource":"Issuer filing"}]
+```
+
+The resulting company ownership is 0.0001%. This example is illustrative, not portfolio data. Value-only pasted updates preserve existing share details. Supply a fifth element of `null` to explicitly clear them. Carried-forward quantities retain their original date. Export/import includes the extra fields.
+
+Build with `node scripts/build.mjs` and check behavior with `node --test test/*.test.mjs`. The build embeds `shared/ownership.js` into both the dashboard and Worker so validation rules agree. Do not serve the unbuilt HTML directly.

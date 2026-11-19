@@ -8,7 +8,7 @@
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#172a27;background:#f3f5f2;font-synthesis:none;--ink:#123a32;--quiet:#51635e;--line:#e0e7e2;--card:#fff;--accent:#23745e}
 *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #23745e;outline-offset:2px}header{background:#fff;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#153f36;color:#d9f4e5;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#14382f}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #dae4dd;background:#fff;color:#28473f;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#1b5546;color:white;border-color:#1b5546}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#153f36;color:#fff;border-color:#153f36}.kpi:first-child .muted{color:#d0e7dd}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f2f6f3}.tabs button[aria-pressed=true]{background:#dceee4;color:#174c3c}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#51635e}.empty{min-height:110px;border:1px dashed #d6e4da;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#51635e}.delta{font-weight:700;color:#17604c;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#465c53}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#eff3ef;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf0ed;font-size:.85rem}.mix-row:last-child{border:0}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#526760;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #edf1ee}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ebf0ec;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#579b83;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e5e8dc;border-radius:12px;background:#fbfcf6;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#155e4b}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
-dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:650px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:650px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}dialog details{min-width:190px}dialog details label{display:block;margin-top:8px}dialog details input{display:block}#share-note{margin-top:12px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
 @media(max-width:720px){.grid{grid-template-columns:1fr}.header,.page{padding-inline:14px}.page{padding-top:23px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi:first-child{grid-column:1/-1}.kpi,.panel{padding:14px}.mix-row{gap:6px}.kpi strong{font-size:1.65rem}.intro .toolbar{width:100%}.chart svg{height:155px}}
 </style>
 </head>
@@ -31,9 +31,10 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
   </div>
   <section class="panel wide">
     <div class="panel-head"><div><h2>Portfolio exposure</h2><p class="muted">Weights within recorded shares, funds and crypto</p></div>
-      <div class="tabs" id="group" aria-label="Portfolio grouping"><button data-group="name" aria-pressed="true">Company / asset</button><button data-group="sector" aria-pressed="false">Sector</button></div>
+      <div class="tabs" id="group" aria-label="Portfolio grouping"><button data-group="name" aria-pressed="true">Company / asset</button><button data-group="sector" aria-pressed="false">Sector</button><button data-group="shares" aria-pressed="false">Shares</button></div>
     </div>
-    <div class="scroll"><table><thead><tr><th id="group-heading" scope="col">Holding</th><th scope="col" class="money">Value (AUD)</th><th scope="col">Weight</th></tr></thead><tbody id="holdings"></tbody></table></div>
+    <div class="scroll"><table><thead id="exposure-head"><tr><th id="group-heading" scope="col">Holding</th><th scope="col" class="money">Value (AUD)</th><th scope="col">Weight</th></tr></thead><tbody id="holdings"></tbody></table></div>
+    <p id="share-note" class="muted" hidden>Company ownership = your direct shares ÷ shares outstanding. Missing quantities remain unknown. Funds and crypto are excluded. Match issuer and share basis across accounts; this is economic share ownership, not voting power.</p>
   </section>
   <aside class="note" id="source-note"></aside>
   <div class="toolbar footer"><p class="muted">Snapshots sync across devices after sign-in.</p><div class="toolbar"><button class="btn" id="export" disabled>Export backup</button><form method="post" action="/lock"><button class="btn">Lock</button></form><label class="btn" for="import">Import backup</label><input class="sr" type="file" accept="application/json,.json" id="import" disabled></div></div>
@@ -41,7 +42,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 </main>
 <dialog id="editor"><form id="form"><h2 id="dialog-title">Edit snapshot</h2><p class="muted">Enter the AUD value attributable to you. New snapshots start with a copy of your latest values.</p>
 <div class="toolbar"><label>Snapshot date <input id="edit-date" type="date" required></label><label><input id="complete" type="checkbox"> All assets and liabilities accounted for</label></div>
-<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th>Company shares (optional)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
 <div class="toolbar"><button type="button" class="btn" id="row-add">Add row</button><div class="toolbar"><button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save snapshot</button></div></div><p id="error" class="error" role="alert"></p></form></dialog>
 <dialog id="quick-dialog"><form id="quick-form">
   <h2>Paste a screenshot update</h2>
@@ -52,6 +53,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 </form></dialog>
 <script>
 'use strict';
+/* OWNERSHIP_HELPERS */
 const types = ['Cash','Listed shares','Funds','Unreconciled equity','Crypto','Property','Super','Business equity','Other assets','Liability'];
 const sectorTypes = new Set(['Listed shares','Unreconciled equity','Funds','Crypto']);
 const colors = ['#205745','#3f8873','#79aa87','#b6c88a','#8171a7','#a07940','#5a81a9','#bc8274','#779098'];
@@ -76,10 +78,11 @@ function validate(records) {
     if (!validDate(date) || dates.has(date) || typeof complete !== 'boolean' || !Array.isArray(rows) || !rows.length) throw Error('Snapshot dates must be valid and unique, with at least one row per snapshot.');
     dates.add(date);
     const cleaned = rows.map(row => {
-      if (!Array.isArray(row) || row.length !== 4) throw Error('A snapshot row is missing information.');
+      if (!Array.isArray(row) || ![4,5].includes(row.length)) throw Error('A snapshot row is missing information.');
       const [label,type,sector,value] = row;
       if (typeof label !== 'string' || !label.trim() || !types.includes(type) || typeof sector !== 'string' || !Number.isFinite(value) || value < 0 || value > 1e12) throw Error('Each row needs a label, asset type and valid positive or zero AUD value.');
-      return [label.trim(),type,sector.trim(),value];
+      const info=normalizeOwnership(row[4],type);
+      return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
     return {date,complete,source:source === true,rows:cleaned};
   }));
@@ -157,11 +160,38 @@ function drawMix({assets,total,liabilities}) {
   });
   if(liabilities)target.append(el('p','Recorded liabilities '+money(liabilities),'muted'));
 }
+function sharePercentage(ratio) {
+  if (ratio === null) return '—';
+  if (ratio > 0 && ratio*100 < 0.00000001) return '<0.00000001%';
+  return new Intl.NumberFormat('en-AU',{style:'percent',maximumFractionDigits:8}).format(ratio);
+}
+function exposureHeader(labels) {
+  const tr=el('tr');
+  labels.forEach((label,index)=>{const th=el('th',label,index?'money':undefined);th.scope='col';tr.append(th);});
+  $('exposure-head').replaceChildren(tr);
+}
+function drawShares(portfolio) {
+  const body=$('holdings');
+  exposureHeader(['Company','Shares held','Shares outstanding','Company owned','Share basis']);
+  const companies=companyOwnership(portfolio);
+  const count=value=>value===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:8}).format(value);
+  for (const company of companies) {
+    const row=el('tr'), identity=el('td'), basis=el('td');
+    identity.append(el('strong',company.name),el('p','Holdings date: '+company.quantityDates.join(', '),'muted'));
+    if(company.outstanding!==null)basis.append(el('p',company.date),el('p',company.source,'muted'));
+    if(company.status!=='Available')basis.append(el('p',company.status,'muted'));
+    row.append(identity,el('td',count(company.shares),'money'),el('td',count(company.outstanding),'money'),el('td',sharePercentage(company.ratio),'money'),basis);
+    body.append(row);
+  }
+  if(!companies.length){const row=el('tr'),td=el('td','No direct company equity in this snapshot.');td.colSpan=5;row.append(td);body.append(row);}
+}
 function drawExposure({portfolio}) {
   const body=$('holdings'), total=sum(portfolio);
   body.replaceChildren();
-  $('group-heading').textContent=group==='name'?'Holding':'Sector';
   for(const button of $('group').querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.group===group));
+  $('share-note').hidden=group!=='shares';
+  if(group==='shares'){drawShares(portfolio);return;}
+  exposureHeader([group==='name'?'Holding':'Sector','Value (AUD)','Weight']);
   for(const [name,value] of grouped(portfolio,row=>group==='name'?row[0]:row[2]||'Unclassified')){
     const tr=el('tr'), td=el('td',undefined,'weight'), wrapper=el('div',undefined,'weight-inner'), track=el('span',undefined,'meter'), fill=el('span');
     const ratio=total?value/total:0;
@@ -274,14 +304,24 @@ $('group').onclick=event=>{if(records.length && event.target.dataset.group){grou
 function input(value,label,type='text'){
   const field=el('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);return field;
 }
-function editRow([name,type,sector,value]){
+function editRow([name,type,sector,value,shareInfo]){
   const row=el('tr'), label=input(name,'Label'), select=el('select'), category=input(sector,'Sector'), amount=input(value,'Value in AUD','number'), remove=el('button','×','btn');
   label.required=true;
   select.setAttribute('aria-label','Asset type');
   types.forEach(kind=>select.add(new Option(kind,kind,false,type===kind)));
   amount.min='0';amount.max='1000000000000';amount.step='0.01';amount.required=true;
   remove.type='button';remove.setAttribute('aria-label','Remove row');remove.onclick=()=>row.remove();
-  for(const field of [label,select,category,amount,remove]){const td=el('td');td.append(field);row.append(td);}
+  const details=el('details'), shareFields={};
+  details.append(el('summary','Share details'));
+  for(const [key,title,fieldType] of [['companyId','Company / share basis ID','text'],['shares','Shares held','number'],['sharesAsOf','Holdings as of','date'],['sharesOutstanding','Company shares outstanding','number'],['outstandingAsOf','Outstanding as of','date'],['outstandingSource','Source for shares outstanding','text']]){
+    const field=input(shareInfo?.[key]??'',title,fieldType), wrapper=el('label',title,'muted');
+    if(fieldType==='number'){field.min=key==='sharesOutstanding'?'0.00000001':'0';field.max=String(Number.MAX_SAFE_INTEGER);field.step='any';}
+    if(fieldType==='text')field.maxLength=key==='companyId'?200:500;
+    field.dataset.shareField=key;shareFields[key]=field;wrapper.append(field);details.append(wrapper);
+  }
+  const updateShareFields=()=>{const supported=companyTypes.has(select.value);details.hidden=!supported;Object.values(shareFields).forEach(field=>field.disabled=!supported);};
+  select.onchange=updateShareFields;updateShareFields();
+  for(const field of [label,select,category,amount,details,remove]){const td=el('td');td.append(field);row.append(td);}
   $('edit-rows').append(row);
   return label;
 }
@@ -307,7 +347,12 @@ $('form').onsubmit=async event=>{
     const date=$('edit-date').value, complete=$('complete').checked;
     const rows=Array.from($('edit-rows').children,row=>{
       const [name,type,sector,value]=row.querySelectorAll('input,select');
-      return [name.value,type.value,sector.value,value.valueAsNumber];
+      const info={};
+      if(companyTypes.has(type.value))for(const field of row.querySelectorAll('[data-share-field]')){
+        if(field.value!=='')info[field.dataset.shareField]=field.type==='number'?field.valueAsNumber:field.value;
+      }
+      const ownership=companyTypes.has(type.value)?normalizeOwnership(info,type.value):null;
+      return [name.value,type.value,sector.value,value.valueAsNumber,...(ownership?[ownership]:[])];
     });
     const old=records.find(record=>record.date===editing);
     const next=validate([...records.filter(record=>record.date!==editing),{date,complete,rows,source:old?.source}]);
@@ -337,6 +382,7 @@ function preparePatch(raw) {
   const base=records.find(record=>record.date===patch.date)??records.findLast(record=>record.date<patch.date);
   const updated=validate([{date:patch.date,complete:false,source:false,rows:patch.rows}])[0];
   const key=row=>JSON.stringify([row[0].toLowerCase(),row[1]]);
+  const explicitShares=new Set(patch.rows.filter(row=>row.length===5).map(key));
   const changes=new Map();
   for (const row of updated.rows) {
     if(changes.has(key(row)))throw Error('Each changed item must have a unique label and asset type.');
@@ -346,7 +392,7 @@ function preparePatch(raw) {
     if(!changes.has(key(row)))return row;
     const change=changes.get(key(row));
     changes.delete(key(row));
-    return change;
+    return change.length===4 && row[4] && !explicitShares.has(key(row)) ? [...change,row[4]] : change;
   }).concat([...changes.values()]);
   return {date:patch.date, rows, editing:base?.date===patch.date?patch.date:null, complete:base?.date===patch.date&&base.complete};
 }
@@ -377,3 +423,4 @@ loadHistory().then(()=>{$('status').textContent='';},error=>{$('status').textCon
 </script>
 </body>
 </html>
+

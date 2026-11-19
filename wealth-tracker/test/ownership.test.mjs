@@ -1,0 +1,76 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const root=new URL('../',import.meta.url);
+const shared=readFileSync(new URL('shared/ownership.js',root),'utf8');
+const html=readFileSync(new URL('app/index.html',root),'utf8').replace('/* OWNERSHIP_HELPERS */',shared);
+class Node {
+  constructor(){this.children=[];this.dataset={};this.style={};this.value='';this.textContent='';}
+  append(...nodes){this.children.push(...nodes);}
+  replaceChildren(...nodes){this.children=nodes;}
+  setAttribute(key,value){this[key]=value;}
+  querySelectorAll(){return [];}
+}
+function browser(){
+  const nodes=new Map();
+  const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);},createElement:()=>new Node()};
+  const context=vm.createContext({document,Intl,Date,Map,Set,JSON,Number,Error,console});
+  let script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  script=script.slice(0,script.indexOf("$('status').textContent='Loading cloud history"));
+  vm.runInContext(script,context);
+  return {context,nodes,run:code=>vm.runInContext(code,context)};
+}
+const info={companyId:'EXAMPLE ordinary',shares:100,sharesAsOf:'2026-11-03',sharesOutstanding:100000000,outstandingAsOf:'2026-11-01',outstandingSource:'Issuer filing'};
+const row=(name='Example',meta=info)=>[name,'Listed shares','Tech',5000,meta];
+const serial=value=>JSON.parse(JSON.stringify(value));
+function server(){
+  const worker=readFileSync(new URL('server/worker.js',root),'utf8').replace('export default {','const worker = {');
+  const context=vm.createContext({TextEncoder,Response,console});vm.runInContext(shared+'\n'+worker,context);return context;
+}
+test('legacy backups and enhanced rows validate identically in browser and Worker',()=>{
+  const records=[{date:'2026-11-03',complete:false,rows:[['Cash','Cash','',10],row()]}];
+  const b=browser();b.context.input=records;const w=server();w.input=records;
+  assert.deepEqual(serial(b.run('validate(input)')[0].rows),serial(vm.runInContext('normalize(input)[0].rows',w)));
+  assert.deepEqual(serial(b.run('validate(input)')[0].rows[0]),records[0].rows[0]);
+});
+test('invalid quantities and unsourced denominators fail in browser and Worker',()=>{
+  const invalid=[{shares:-1},{shares:Infinity},{sharesOutstanding:0},{sharesOutstanding:100},{...info,outstandingAsOf:'2026-02-30'},{...info,shares:100000001},{unexpected:1}];
+  for(const metadata of invalid){
+    const input=[{date:'2026-11-03',complete:false,rows:[row('Example',metadata)]}];
+    const b=browser();b.context.input=input;assert.throws(()=>b.run('validate(input)'));
+    const w=server();w.input=input;assert.throws(()=>vm.runInContext('normalize(input)',w));
+  }
+});
+test('company counts aggregate across accounts without adding denominators',()=>{
+  const b=browser();b.context.rows=[row('Account A'),row('Account B',{...info,shares:50})];
+  const result=serial(b.run('companyOwnership(rows)'));
+  assert.equal(result.length,1);assert.equal(result[0].shares,150);assert.equal(result[0].outstanding,100000000);assert.equal(result[0].ratio,0.0000015);
+});
+test('missing quantities and conflicting denominators do not imply ownership',()=>{
+  const b=browser();b.context.rows=[row(),row('Account B',{companyId:info.companyId})];assert.equal(b.run('companyOwnership(rows)[0].ratio'),null);
+  b.context.rows=[row(),row('Account B',{...info,sharesOutstanding:200000000})];assert.equal(b.run('companyOwnership(rows)[0].ratio'),null);
+  b.context.rows=[row(),row('Account B',{...info,outstandingAsOf:'2026-10-01'})];assert.equal(b.run('companyOwnership(rows)[0].ratio'),null);
+});
+test('fractions remain visible, explicit zero stays zero, crypto/funds excluded',()=>{
+  const b=browser();assert.equal(b.run('sharePercentage(0.000001)'),'0.0001%');assert.equal(b.run('sharePercentage(0.000000000001)'),'<0.00000001%');assert.equal(b.run('sharePercentage(null)'),'—');
+  b.context.rows=[row('Example',{...info,shares:0}),['Fund','Funds','',1],['Bitcoin','Crypto','',1]];
+  assert.equal(b.run('companyOwnership(rows).length'),1);assert.equal(b.run('companyOwnership(rows)[0].ratio'),0);
+});
+test('partial updates preserve counts, while explicit null clears them',()=>{
+  const b=browser();b.context.input=[{date:'2026-11-03',complete:false,rows:[row()]}];b.run('records=validate(input)');
+  b.context.patch=JSON.stringify({date:'2026-11-03',rows:[['Example','Listed shares','Tech',6000]]});
+  assert.deepEqual(serial(b.run('preparePatch(patch).rows[0][4]')),info);
+  b.context.patch=JSON.stringify({date:'2026-11-03',rows:[['Example','Listed shares','Tech',6000,null]]});
+  assert.equal(b.run('preparePatch(patch).rows[0].length'),4);
+  b.context.patch=JSON.stringify({date:'2026-11-04',rows:[['New cash','Cash','',20]]});
+  assert.deepEqual(serial(b.run('preparePatch(patch).rows[0][4]')),info);
+});
+test('share view renders missing values and detailed ownership without changing exposure',()=>{
+  const b=browser();b.context.rows=[row()];b.run("group='shares';drawExposure({portfolio:rows})");
+  assert.equal(b.nodes.get('holdings').children.length,1);
+  assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'0.0001%');
+  b.context.rows=[['Example','Listed shares','Tech',5000]];b.run('drawExposure({portfolio:rows})');
+  assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'—');
+  b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,3);
+});

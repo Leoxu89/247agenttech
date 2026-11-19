@@ -84,11 +84,12 @@ function normalize(records) {
         record.rows.length>500) throw Error('Snapshot dates must be unique and each snapshot must have 1–500 entries.');
     dates.add(record.date);
     const rows=record.rows.map(row=>{
-      if (!Array.isArray(row) || row.length!==4) throw Error('Invalid snapshot entry.');
+      if (!Array.isArray(row) || ![4,5].includes(row.length)) throw Error('Invalid snapshot entry.');
       const [label,type,sector,value]=row;
       if (typeof label!=='string'||!label.trim()||label.length>200||!assetTypes.has(type)||typeof sector!=='string'||sector.length>200||
           !Number.isFinite(value)||value<0||value>1e12) throw Error('Provide a valid name, type and AUD value for every entry.');
-      return [label.trim(),type,sector.trim(),value];
+      const info=normalizeOwnership(row[4],type);
+      return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
     return {date:record.date,complete:record.complete,source:false,rows};
   });
@@ -139,3 +140,4 @@ export default {
     }
   },
 };
+
