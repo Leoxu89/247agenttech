@@ -91,7 +91,8 @@ function normalize(records) {
       const info=normalizeRowDetails(row[4],type);
       return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
-    return {date:record.date,complete:record.complete,source:false,rows};
+    const historical=normalizeHistorical(record.historical);
+    return {date:record.date,complete:record.complete,source:false,rows,...(historical?{historical}:{})};
   });
 }
 async function saveHistory(request,db,owner) {

@@ -102,3 +102,16 @@ test('source metadata survives saves and source-only patches preserve share deta
   b.context.patch=JSON.stringify({date:'2026-11-03',rows:[['Savings','Cash','',110]]});
   assert.deepEqual(serial(b.run('preparePatch(patch).rows[0][4]')),{assetSource:'Bank'});
 });
+test('historical notes and net estimates survive validation independently of row values',()=>{
+  const b=browser(), w=server();
+  const historical={note:'Approximate historical estimate',net:90};
+  const rows=[['Savings','Cash','',100],['Tax','Liability','',15]];
+  const input=[{date:'2025-12-24',complete:false,rows,historical}];
+  b.context.input=w.input=input;
+  assert.deepEqual(serial(b.run('validate(input)[0].historical')),historical);
+  assert.deepEqual(serial(vm.runInContext('normalize(input)[0].historical',w)),historical);
+  assert.equal(b.run('summary(validate(input)[0]).net'),85);
+  b.context.input[0].historical.net='90';
+  assert.throws(()=>b.run('validate(input)'));
+  assert.throws(()=>vm.runInContext('normalize(input)',w));
+});

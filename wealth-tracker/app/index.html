@@ -74,7 +74,7 @@ const sortDates = records => records.sort((a,b)=>a.date.localeCompare(b.date));
 function validate(records) {
   if (!Array.isArray(records) || records.length < 1) throw Error('A backup must contain at least one snapshot.');
   const dates = new Set();
-  return sortDates(records.map(({date,complete,source,rows}) => {
+  return sortDates(records.map(({date,complete,source,rows,historical}) => {
     if (!validDate(date) || dates.has(date) || typeof complete !== 'boolean' || !Array.isArray(rows) || !rows.length) throw Error('Snapshot dates must be valid and unique, with at least one row per snapshot.');
     dates.add(date);
     const cleaned = rows.map(row => {
@@ -84,7 +84,8 @@ function validate(records) {
       const info=normalizeRowDetails(row[4],type);
       return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
-    return {date,complete,source:source === true,rows:cleaned};
+    const estimate=normalizeHistorical(historical);
+    return {date,complete,source:source === true,rows:cleaned,...(estimate?{historical:estimate}:{})};
   }));
 }
 let records=[], active=null, revision=null, group='name', period='All', editing=null, saving=false;
@@ -267,7 +268,14 @@ function drawHistory() {
   const start=period==='Custom'?$('from').value:period==='All'?'':periodStart(latest,period);
   const end=period==='Custom'?$('to').value:latest;
   const matching=records.filter(record=>(!start||record.date>=start)&&(!end||record.date<=end));
-  const data=matching.filter(record=>series!=='net'||record.complete).map(record=>({date:record.date,value:summary(record)[series]}));
+  const data=matching
+    .filter(record=>series!=='net'||record.complete||record.historical?.net!==undefined)
+    .map(record=>({
+      date:record.date,
+      value:series==='net'&&!record.complete ? record.historical.net : summary(record)[series],
+      historical:!!record.historical,
+    }));
+  const includesHistorical=data.some(point=>point.historical);
   const target=$('chart');target.replaceChildren();
   $('change').textContent='';
   if(start&&end&&start>end){$('history-note').textContent='Choose an end date on or after the start date.';return;}
@@ -277,11 +285,12 @@ function drawHistory() {
     return;
   }
   const first=data[0], last=data.at(-1);
-  if(data.length>1){
+  if(data.length>1&&!includesHistorical){
     const change=last.value-first.value;
     $('change').textContent=(change>0?'+':'')+money(change)+(first.value>0?' ('+(change>0?'+':'')+pct(change/first.value)+')':'');
   }
   $('history-note').textContent=data.length===1?dateLabel(first.date)+' · Add a second snapshot to see change.':dateLabel(first.date)+' to '+dateLabel(last.date);
+  if(includesHistorical) $('history-note').textContent+=' · Hollow markers identify historical notes with varying coverage.';
   const w=620,h=170, left=88,right=23, top=12,bottom=31;
   const vals=data.map(d=>d.value), lower=Math.min(...vals), upper=Math.max(...vals);
   const min=lower===upper?lower-Math.max(1,Math.abs(lower)*.1):lower;
@@ -299,7 +308,7 @@ function drawHistory() {
   }
   if(data.length>1)svg.append(svgEl('polyline',{points:data.map(d=>xy(d).join(',')).join(' '),fill:'none',stroke:'#23745e','stroke-width':3,'stroke-linejoin':'round'}));
   data.forEach(d=>{
-    const [cx,cy]=xy(d), point=svgEl('circle',{cx,cy,r:5,fill:'#23745e',stroke:'#fff','stroke-width':2});
+    const [cx,cy]=xy(d), point=svgEl('circle',{cx,cy,r:5,fill:d.historical?'#fff':'#23745e',stroke:d.historical?'#23745e':'#fff','stroke-width':2});
     const title=svgEl('title',{});title.textContent=dateLabel(d.date)+' · '+money(d.value);point.append(title);svg.append(point);
   });
   for(const d of data.length===1?[first]:[first,last]){
@@ -320,15 +329,16 @@ function render() {
   }
   const snapshot=records.find(record=>record.date===active), totals=summary(snapshot);
   $('snapshot').replaceChildren(...records.slice().reverse().map(record=>new Option(dateLabel(record.date),record.date,false,record.date===active)));
-  $('asof').textContent=dateLabel(snapshot.date)+(snapshot.source?' · Provisional · ownership and account totals pending':snapshot.complete?' · Complete snapshot':' · Partial snapshot');
-  $('main-label').textContent=snapshot.complete?'Net worth':'Tracked assets';
-  $('main-amount').textContent=money(snapshot.complete?totals.net:totals.total);
-  $('main-detail').textContent=snapshot.complete?'Tracked assets '+money(totals.total)+' less liabilities '+money(totals.liabilities):'Net worth pending full asset and debt coverage';
+  const estimate=snapshot.complete?undefined:snapshot.historical?.net;
+  $('asof').textContent=dateLabel(snapshot.date)+(snapshot.historical?' · Historical notes':snapshot.source?' · Provisional · ownership and account totals pending':snapshot.complete?' · Complete snapshot':' · Partial snapshot');
+  $('main-label').textContent=snapshot.complete?'Net worth':estimate!==undefined?'Historical net estimate':'Tracked assets';
+  $('main-amount').textContent=money(estimate??(snapshot.complete?totals.net:totals.total));
+  $('main-detail').textContent=estimate!==undefined?'Itemized assets '+money(totals.total):snapshot.complete?'Tracked assets '+money(totals.total)+' less liabilities '+money(totals.liabilities):'Net worth pending full asset and debt coverage';
   $('portfolio-amount').textContent=money(sum(totals.portfolio));
   $('cash-amount').textContent=money(totals.cash);
   const note=$('source-note');note.replaceChildren();
   note.hidden=false;
-  note.append(el('p',snapshot.complete?'Net worth uses the assets and liabilities recorded in this snapshot.':'This snapshot remains partial. Record missing balances and debts before marking it complete.','muted'));
+  note.append(el('p',snapshot.historical?.note ?? (snapshot.complete?'Net worth uses the assets and liabilities recorded in this snapshot.':'This snapshot remains partial. Record missing balances and debts before marking it complete.'),'muted'));
   drawMix(totals);drawExposure(totals);drawHistory();
 }
 for(const label of ['1M','3M','YTD','1Y','All','Custom']){
@@ -402,7 +412,7 @@ $('form').onsubmit=async event=>{
       return [name.value,type.value,sector.value,value.valueAsNumber,...(ownership?[ownership]:[])];
     });
     const old=records.find(record=>record.date===editing);
-    const next=validate([...records.filter(record=>record.date!==editing),{date,complete,rows,source:old?.source}]);
+    const next=validate([...records.filter(record=>record.date!==editing),{date,complete,rows,source:old?.source,historical:old?.historical}]);
     await persist(next,date);
     $('editor').close();
     $('status').textContent='Snapshot saved for '+dateLabel(date)+'.';

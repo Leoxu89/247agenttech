@@ -49,3 +49,5 @@ Use the optional **Asset source** field when editing a snapshot. Give related ro
 ```
 
 Existing rows can use recognizable institution names in their labels. Any other rows with no known institution appear under **Source not recorded**. A source-only paste update preserves existing share details. An empty source clears the explicit label, so the breakdown falls back to the row label.
+
+Historical imports can include a snapshot-level `historical` object with a reconciliation `note` and an optional numeric `net` estimate in AUD. An estimated net value appears in the Net worth series and can differ from the itemized Asset mix. Cash-only entries appear in Tracked assets.

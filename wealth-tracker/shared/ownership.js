@@ -66,3 +66,13 @@ function normalizeRowDetails(value, type) {
   const result = Object.keys(shareDetails).length ? normalizeOwnership(shareDetails, type) : null;
   return assetSource?.trim() ? {...result, assetSource:assetSource.trim()} : result;
 }
+
+function normalizeHistorical(value) {
+  if (value == null) return null;
+  if (typeof value !== 'object' || Array.isArray(value) ||
+      typeof value.note !== 'string' || !value.note.trim() || value.note.length>2000 ||
+      (value.net !== undefined && (!Number.isFinite(value.net) || Math.abs(value.net)>1e12))) {
+    throw Error('Invalid historical estimate or reconciliation note.');
+  }
+  return value.net === undefined ? {note:value.note.trim()} : {note:value.note.trim(),net:value.net};
+}
