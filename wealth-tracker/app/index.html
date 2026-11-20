@@ -39,39 +39,72 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
   dialog{padding:14px}dialog input,dialog select,dialog textarea{font-size:16px}.ranges input,#series,.date-select{font-size:16px}
   .footer .toolbar{gap:7px}
 }
+
+.page{padding-top:24px}.intro h1{font-size:clamp(1.65rem,4vw,2.5rem);letter-spacing:-.045em}.intro p{margin-top:5px}
+.snapshot-controls{flex-wrap:nowrap}.manage{position:relative}.manage>summary{list-style:none;cursor:pointer;text-align:center;display:grid;place-items:center}
+.manage>summary::-webkit-details-marker{display:none}.manage-menu{position:absolute;right:0;z-index:5;min-width:155px;display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:0 7px 24px #123a3225}
+.metric-toggle{text-align:left;color:var(--ink);font:inherit;position:relative;padding-top:16px;padding-bottom:10px}.metric-toggle:hover{background:#eef5f0}.metric-toggle::after{content:'›';position:absolute;right:13px;top:11px;font-size:1.3rem;color:var(--accent)}
+.chart-controls{display:inline-flex;gap:4px;margin:0 0 5px 7px;vertical-align:middle}.chart-controls button{min-width:32px;padding-inline:7px}.chart-controls button:disabled{opacity:.45;cursor:default}
+.modal-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.modal-heading h2{margin:0}.editor-heading{position:sticky;top:0;background:white;z-index:2;padding:5px 0}
+#metric-dialog{max-width:min(520px,calc(100vw - 24px))}#exposure-basis:not(:empty){margin:8px 0 0}
+@media(max-width:720px){
+  .page{padding-top:16px}.metric-toggle{padding-top:13px}
+  .chart-controls{display:flex;margin:8px 0 0}.chart-controls button{min-width:42px}
+  .exposure tbody>tr.compact-holding{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px 6px;padding:6px 0}
+  .exposure .compact-holding>td{grid-column:span 2}.exposure .compact-holding>td:first-child{grid-column:1/5}
+  .exposure .compact-holding>td.holding-amount{grid-column:5/-1;text-align:right;align-self:center;font-weight:700}
+  .exposure .compact-holding>td.holding-amount::before{display:none}
+  .compact-holding .holding-toggle{min-height:34px;justify-content:flex-start;padding:2px 0;gap:8px}
+  .exposure .compact-holding td[data-label]::before{margin-bottom:0;font-size:.72rem}
+  #editor .scroll{overflow:visible}#editor table,#editor tbody{display:block;min-width:0}
+  #editor thead{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
+  #editor tbody>tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+  #editor td{padding:0;width:auto;min-width:0;border:0}#editor td:first-child{width:auto;grid-column:1/-1}
+  #editor td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;font-size:.76rem;color:var(--quiet);margin-bottom:2px}
+  #editor td:nth-last-child(2){grid-column:1/-1}#editor td:last-child{grid-column:2;text-align:right;width:auto}
+}
 </style>
 </head>
 <body>
-<header><div class="header"><div class="brand"><span class="mark" aria-hidden="true">↗</span> Net Worth Tracker</div><div class="toolbar"><button class="btn" id="quick" disabled>Paste update</button><button class="btn primary" id="add" disabled>New snapshot</button></div></div></header>
 <main class="page">
-  <section class="intro"><div><h1>Wealth overview</h1><p class="muted" id="asof"></p></div><div class="toolbar"><label for="snapshot" class="sr">Snapshot</label><select id="snapshot" class="date-select"></select><button class="btn" id="edit" disabled>Edit snapshot</button></div></section>
+  <section class="intro"><div><h1>Net Worth Tracker</h1><p class="muted" id="asof"></p></div><div class="toolbar snapshot-controls">
+  <label for="snapshot" class="sr">Snapshot</label><select id="snapshot" class="date-select"></select>
+  <details id="manage" class="manage"><summary class="btn">Manage</summary>
+    <div class="manage-menu"><button class="btn" id="edit" disabled>Edit snapshot</button><button class="btn" id="quick" disabled>Paste update</button><button class="btn primary" id="add" disabled>New snapshot</button></div>
+  </details></div></section>
   <section class="kpis" aria-label="Snapshot overview">
     <article class="kpi"><span id="main-label">Tracked assets</span><strong id="main-amount"></strong><p class="muted" id="main-detail"></p></article>
-    <article class="kpi"><span>Portfolio value</span><strong id="portfolio-amount"></strong><p class="muted">Shares, funds and crypto</p></article>
-    <article class="kpi"><span>Cash</span><strong id="cash-amount"></strong><p class="muted">Across recorded cash balances</p></article>
+    <button class="kpi metric-toggle" id="portfolio-detail" type="button" aria-haspopup="dialog" disabled><span>Portfolio value</span><strong id="portfolio-amount"></strong></button>
+    <button class="kpi metric-toggle" id="cash-detail" type="button" aria-haspopup="dialog" disabled><span>Cash</span><strong id="cash-amount"></strong></button>
   </section>
   <div class="grid">
     <section class="panel"><div class="panel-head"><h2>Wealth history</h2><div class="tabs" id="periods" aria-label="History period"></div></div>
       <div class="ranges" id="ranges" hidden><label>From <input type="date" id="from"></label><label>To <input type="date" id="to"></label></div>
       <label class="muted">Series <select id="series"><option value="total">Tracked assets</option><option value="net">Net worth</option></select></label>
+      <div class="chart-controls" role="group" aria-label="Chart zoom and pan">
+        <button class="btn" id="zoom-in" aria-label="Zoom in">+</button><button class="btn" id="zoom-out" aria-label="Zoom out">−</button>
+        <button class="btn" id="pan-back" aria-label="Earlier dates">‹</button><button class="btn" id="pan-next" aria-label="Later dates">›</button>
+        <button class="btn" id="zoom-reset">Reset</button>
+      </div>
       <p class="delta" id="change"></p><p class="muted" id="history-note"></p><div class="chart" id="chart"></div>
     </section>
     <section class="panel"><div class="panel-head"><h2>Asset mix</h2><span class="muted">Share of tracked assets</span></div><div id="mix"></div></section>
   </div>
   <section class="panel wide">
     <div class="panel-head"><div><h2>Portfolio exposure</h2><p class="muted">Tap a holding to see its account balances.</p></div>
-      <div class="tabs" id="group" aria-label="Portfolio grouping"><button data-group="name" aria-pressed="true">Company / asset</button><button data-group="sector" aria-pressed="false">Sector</button><button data-group="shares" aria-pressed="false">Shares</button></div>
+      <div class="tabs" id="group" aria-label="Portfolio grouping"><button data-group="name" aria-pressed="true">Company / asset</button><button data-group="sector" aria-pressed="false">Sector</button><button data-group="country" aria-pressed="false">Country</button><button data-group="shares" aria-pressed="false">Shares</button></div>
     </div>
     <div class="scroll exposure"><table><thead id="exposure-head"><tr><th id="group-heading" scope="col">Holding</th><th scope="col" class="money">Value (AUD)</th><th scope="col">Weight</th></tr></thead><tbody id="holdings"></tbody></table></div>
-    <p id="share-note" class="muted" hidden>Company ownership = your direct shares ÷ shares outstanding. Missing quantities remain unknown. Funds and crypto are excluded. Match issuer and share basis across accounts; this is economic share ownership, not voting power.</p>
+    <p id="exposure-basis" class="muted"></p><p id="share-note" class="muted" hidden>Average = reported shares ÷ disclosed holder accounts. Broker nominees can represent many investors.</p>
   </section>
   <aside class="note" id="source-note"></aside>
   <div class="toolbar footer"><p class="muted">Snapshots sync across devices after sign-in.</p><div class="toolbar"><button class="btn" id="export" disabled>Export backup</button><form method="post" action="/lock"><button class="btn">Lock</button></form><label class="btn" for="import">Import backup</label><input class="sr" type="file" accept="application/json,.json" id="import" disabled></div></div>
   <p class="muted status" id="status" role="status"></p>
 </main>
-<dialog id="editor"><form id="form"><h2 id="dialog-title">Edit snapshot</h2><p class="muted">Enter the AUD value attributable to you. New snapshots start with a copy of your latest values.</p>
+<dialog id="metric-dialog" aria-labelledby="metric-title"><div class="modal-heading"><h2 id="metric-title"></h2><button class="btn" id="metric-close" type="button">Close</button></div><div id="metric-body"></div></dialog>
+<dialog id="editor" aria-labelledby="dialog-title"><form id="form"><div class="modal-heading editor-heading"><h2 id="dialog-title">Edit snapshot</h2><button class="btn" id="editor-close" type="button" aria-label="Close snapshot editor">Close</button></div><p class="muted">Enter the AUD value attributable to you. New snapshots start with a copy of your latest values.</p>
 <div class="toolbar"><label>Snapshot date <input id="edit-date" type="date" required></label><label><input id="complete" type="checkbox"> All assets and liabilities accounted for</label></div>
-<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th>Asset source</th><th>Company shares (optional)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th>Asset source</th><th>Country</th><th>Company shares (optional)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
 <div class="toolbar"><button type="button" class="btn" id="row-add">Add row</button><div class="toolbar"><button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save snapshot</button></div></div><p id="error" class="error" role="alert"></p></form></dialog>
 <dialog id="quick-dialog"><form id="quick-form">
   <h2>Paste a screenshot update</h2>
@@ -151,7 +184,7 @@ async function persist(next,date) {
     const data=await historyRequest({method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision,records:next})});
     revision=data.revision;
     records=next;
-    active=date;
+    active=date;historyWindow=null;
     render();
   } finally {
     saving=false;
@@ -299,7 +332,7 @@ function appendHolding(body, row, holding, columns) {
 }
 function drawShares(portfolio) {
   const body=$('holdings');
-  exposureHeader(['Company','Shares held','Shares outstanding','Company owned','Share basis']);
+  exposureHeader(['Company','Shares held','Shares outstanding','Company owned','Average shares','Share basis']);
   const companies=companyOwnership(portfolio);
   for (const company of companies) {
     const row=el('tr'), basis=exposureCell('Share basis',undefined,'share-basis');
@@ -313,42 +346,53 @@ function drawShares(portfolio) {
     }
     if(company.status!=='Available')basis.append(el('span',company.status,'muted'));
     const percent = (company.approximate && company.ratio!==null ? '≈' : '') + sharePercentage(company.ratio);
+    const benchmark = company.rows.map(row=>row[4]?.benchmark).find(Boolean);
+    const average = exposureCell('Avg. shares',benchmark?Math.round(benchmark.shares/benchmark.holders).toLocaleString('en-AU'):'—');
+    if (benchmark) {
+      const link = el('a','Holder filing');
+      link.href=benchmark.source; link.target='_blank'; link.rel='noopener noreferrer';
+      basis.append(el('span',benchmark.holders.toLocaleString('en-AU')+' '+benchmark.basis+' · '+benchmark.date,'muted'),link);
+    }
     row.append(exposureCell('Shares held',displayShares(company.shares,company.approximate)),
-      exposureCell('Shares outstanding',displayShares(company.outstanding)),exposureCell('Company owned',percent),basis);
-    appendHolding(body,row,company,5);
+      exposureCell('Shares outstanding',displayShares(company.outstanding)),exposureCell('Company owned',percent),average,basis);
+    appendHolding(body,row,company,6);
   }
-  if(!companies.length){const row=el('tr'),td=el('td','No direct company equity in this snapshot.');td.colSpan=5;row.append(td);body.append(row);}
+  if(!companies.length){const row=el('tr'),td=el('td','No direct company equity in this snapshot.');td.colSpan=6;row.append(td);body.append(row);}
 }
-function drawExposure({portfolio}) {
+function drawExposure({portfolio, net}) {
   const body=$('holdings'), total=sum(portfolio);
   body.replaceChildren();
   for(const button of $('group').querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.group===group));
   $('share-note').hidden=group!=='shares';
+  const snapshot=records.find(record=>record.date===active);
+  const denominator=snapshot?.complete ? net : snapshot?.historical?.net ??
+    (Number.isFinite(net) ? net : undefined);
+  const netLabel=snapshot?.complete ? 'Net worth %' : snapshot?.historical?.net !== undefined ? 'Est. net %' : 'Known net %';
+  const basis=$('exposure-basis');
+  basis.textContent=group==='shares'?'':[
+    !snapshot?.complete && snapshot?.historical?.net === undefined ? 'Known net uses recorded assets less recorded debts.' : '',
+    group==='country' ? 'Country follows issuer headquarters. Crypto is shown separately.' : '',
+  ].filter(Boolean).join(' ');
   if(group==='shares'){drawShares(portfolio);return;}
   const byCompany = group === 'name';
-  exposureHeader(byCompany?['Company / asset','Value (AUD)','Shares held','Weight']:['Sector','Value (AUD)','Weight']);
+  const byCountry = group === 'country';
+  const columns = byCompany ? 5 : 4;
+  exposureHeader(byCompany?['Company / asset','Value (AUD)','Shares','Portfolio %',netLabel]:
+    [byCountry?'Country':'Sector','Value (AUD)','Portfolio %',netLabel]);
+  const key = row => byCountry ? row[4]?.country || (row[1]==='Crypto'?'Crypto · no country':'Unclassified country') :
+    row[2] || 'Unclassified';
   const holdings = byCompany ? companyOwnership(portfolio,true).map(company=>({...company,value:sum(company.rows)}))
-    .sort((a,b)=>b.value-a.value) : grouped(portfolio,row=>row[2]||'Unclassified').map(([name,value])=>({key:name,name,value,
-      rows:portfolio.filter(row=>(row[2]||'Unclassified')===name)}));
+    .sort((a,b)=>b.value-a.value) : grouped(portfolio,key).map(([name,value])=>({key:name,name,value,rows:portfolio.filter(row=>key(row)===name)}));
   for(const holding of holdings){
     const {value} = holding;
-    const tr=el('tr'), td=exposureCell('Weight',undefined,'weight'), wrapper=el('div',undefined,'weight-inner'), track=el('span',undefined,'meter'), fill=el('span');
-    const ratio=total?value/total:0;
-    fill.style.width=(ratio*100)+'%';
-    track.append(fill);
-    track.setAttribute('aria-hidden','true');
-    wrapper.append(track,el('b',pct(ratio)));
-    td.append(wrapper);
-    if(byCompany){
-      tr.append(exposureCell('Value (AUD)',mixMoney.format(value)),
-        exposureCell('Shares held',displayShares(holding.shares,holding.approximate)),td);
-      appendHolding(body,tr,holding,4);
-    }else{
-      tr.append(exposureCell('Value (AUD)',mixMoney.format(value)),td);
-      appendHolding(body,tr,holding,3);
-    }
+    const tr=el('tr',undefined,'compact-holding');
+    tr.append(exposureCell('Value (AUD)',mixMoney.format(value),'money holding-amount'));
+    if(byCompany) tr.append(exposureCell('Shares',displayShares(holding.shares,holding.approximate)));
+    tr.append(exposureCell('Portfolio %',total>0?pct(value/total):'—'),
+      exposureCell(netLabel,denominator>0?pct(value/denominator):'—'));
+    appendHolding(body,tr,holding,columns);
   }
-  if(!portfolio.length){const tr=el('tr'), td=el('td','No portfolio holdings in this snapshot.');td.colSpan=byCompany?4:3;tr.append(td);body.append(tr);}
+  if(!portfolio.length){const tr=el('tr'), td=el('td','No portfolio holdings in this snapshot.');td.colSpan=columns;tr.append(td);body.append(tr);}
 }
 const day=86400000;
 function periodStart(end, selectedPeriod) {
@@ -361,19 +405,49 @@ function periodStart(end, selectedPeriod) {
   date.setUTCDate(Math.min(originalDay,lastDay));
   return date.toISOString().slice(0,10);
 }
+let historyWindow = null;
+let historyDates = [];
+function changeHistoryWindow(action) {
+  const max = historyDates.length;
+  if (max < 2) return;
+  const old = historyWindow ?? {start:0,size:max};
+  let {start,size}=old;
+  if (action==='reset') historyWindow=null;
+  else {
+    if (action==='in'||action==='out') {
+      size=action==='in'?Math.max(2,Math.ceil(size/2)):Math.min(max,size*2);
+      const selected=historyDates.indexOf(active);
+      const center=selected>=old.start&&selected<old.start+old.size ? selected : old.start+(old.size-1)/2;
+      start=Math.round(center-(size-1)/2);
+    } else start+=(action==='next'?1:-1)*Math.max(1,Math.floor(size/2));
+    start=Math.max(0,Math.min(max-size,start));
+    historyWindow=size===max?null:{start,size};
+  }
+  drawHistory();
+}
+for (const [id,action] of [['zoom-in','in'],['zoom-out','out'],['pan-back','back'],['pan-next','next'],['zoom-reset','reset']]) {
+  $(id).onclick=()=>changeHistoryWindow(action);
+}
 function drawHistory() {
   if (!records.length) return;
   const series=$('series').value, latest=records.at(-1).date;
   const start=period==='Custom'?$('from').value:period==='All'?'':periodStart(latest,period);
   const end=period==='Custom'?$('to').value:latest;
   const matching=records.filter(record=>(!start||record.date>=start)&&(!end||record.date<=end));
-  const data=matching
+  const eligible=matching
     .filter(record=>series!=='net'||record.complete||record.historical?.net!==undefined)
     .map(record=>({
       date:record.date,
       value:series==='net'&&!record.complete ? record.historical.net : summary(record)[series],
       historical:!!record.historical,
     }));
+  historyDates=eligible.map(point=>point.date);
+  const window=historyWindow ?? {start:0,size:eligible.length};
+  const data=eligible.slice(window.start,window.start+window.size);
+  $('zoom-in').disabled=data.length<=2;
+  $('zoom-out').disabled=$('zoom-reset').disabled=!historyWindow;
+  $('pan-back').disabled=window.start===0;
+  $('pan-next').disabled=window.start+window.size>=eligible.length;
   const includesHistorical=data.some(point=>point.historical);
   const target=$('chart');target.replaceChildren();
   $('change').textContent='';
@@ -449,7 +523,7 @@ if (typeof ResizeObserver !== 'undefined') {
   }).observe($('chart'));
 }
 function render() {
-  $('edit').disabled=!active;
+  $('edit').disabled=$('portfolio-detail').disabled=$('cash-detail').disabled=!active;
   $('export').disabled=!active;
   if (!active) {
     $('asof').textContent='Add your first snapshot or import a backup.';
@@ -476,7 +550,7 @@ for(const label of ['1M','3M','YTD','1Y','All','Custom']){
   const button=el('button',label);
   button.setAttribute('aria-pressed',String(label===period));
   button.onclick=()=>{
-    period=label;
+    period=label;historyWindow=null;
     for(const control of $('periods').children)control.setAttribute('aria-pressed',String(control===button));
     $('ranges').hidden=label!=='Custom';
     if(records.length&&label==='Custom'&&!$('from').value&&!$('to').value){$('from').value=records[0].date;$('to').value=records.at(-1).date;}
@@ -484,9 +558,25 @@ for(const label of ['1M','3M','YTD','1Y','All','Custom']){
   };
   $('periods').append(button);
 }
-for(const id of ['from','to','series'])$(id).onchange=drawHistory;
+for(const id of ['from','to','series'])$(id).onchange=()=>{historyWindow=null;drawHistory();};
 $('snapshot').onchange=event=>{active=event.target.value;render();};
 $('group').onclick=event=>{if(records.length && event.target.dataset.group){group=event.target.dataset.group;render();}};
+for(const [id,title,filter] of [
+  ['portfolio-detail','Portfolio value',row=>sectorTypes.has(row[1])],
+  ['cash-detail','Cash',row=>row[1]==='Cash'],
+]){
+  $(id).onclick=()=>{
+    const snapshot=records.find(record=>record.date===active);
+    if(!snapshot)return;
+    const rows=snapshot.rows.filter(filter);
+    $('metric-title').textContent=title+' · '+mixMoney.format(sum(rows));
+    $('metric-body').replaceChildren(el('p',dateLabel(active),'muted'),
+      rows.length?drawAssetSources(rows):el('p','No recorded balances in this snapshot.','empty'));
+    $('metric-dialog').showModal();
+  };
+}
+$('metric-close').onclick=()=>$('metric-dialog').close();
+$('editor-close').onclick=()=>$('editor').close();
 function input(value,label,type='text'){
   const field=el('input');field.type=type;field.value=value;field.setAttribute('aria-label',label);return field;
 }
@@ -499,6 +589,9 @@ function editRow([name,type,sector,value,shareInfo]){
   remove.type='button';remove.setAttribute('aria-label','Remove row');remove.onclick=()=>row.remove();
   const assetSource=input(shareInfo?.assetSource??'','Asset source');
   assetSource.maxLength=120;
+  const country=input(shareInfo?.country??'','Country');
+  country.maxLength=80;
+  row.originalDetails=shareInfo;
   const details=el('details'), shareFields={};
   details.append(el('summary','Share details'));
   for(const [key,title,fieldType] of [['companyId','Company / share basis ID','text'],['shares','Shares held','number'],['estimatedShares','Estimated shares held','number'],['sharesAsOf','Holdings as of','date'],['sharesOutstanding','Company shares outstanding','number'],['outstandingAsOf','Outstanding as of','date'],['outstandingSource','Source for shares outstanding','text']]){
@@ -509,11 +602,15 @@ function editRow([name,type,sector,value,shareInfo]){
   }
   const updateShareFields=()=>{const supported=companyTypes.has(select.value);details.hidden=!supported;Object.values(shareFields).forEach(field=>field.disabled=!supported);};
   select.onchange=updateShareFields;updateShareFields();
-  for(const field of [label,select,category,amount,assetSource,details,remove]){const td=el('td');td.append(field);row.append(td);}
+  [label,select,category,amount,assetSource,country,details,remove].forEach((field,index)=>{
+    const td=el('td');td.dataset.label=['Account or holding','Asset type','Sector','Value (AUD)','Asset source','Country','',''][index];
+    td.append(field);row.append(td);
+  });
   $('edit-rows').append(row);
   return label;
 }
 function openEditor(isNew) {
+  $('manage').open=false;
   const snapshot=isNew?records.at(-1):records.find(record=>record.date===active);
   editing=isNew?null:snapshot.date;
   $('dialog-title').textContent=isNew?'New snapshot':'Edit snapshot';
@@ -534,11 +631,12 @@ $('form').onsubmit=async event=>{
   try {
     const date=$('edit-date').value, complete=$('complete').checked;
     const rows=Array.from($('edit-rows').children,row=>{
-      const [name,type,sector,value,assetSource]=row.querySelectorAll('input,select');
-      const info={assetSource:assetSource.value};
+      const [name,type,sector,value,assetSource,country]=row.querySelectorAll('input,select');
+      const info={assetSource:assetSource.value,country:country.value};
       if(companyTypes.has(type.value))for(const field of row.querySelectorAll('[data-share-field]')){
         if(field.value!=='')info[field.dataset.shareField]=field.type==='number'?field.valueAsNumber:field.value;
       }
+      if(info.companyId && info.companyId===row.originalDetails?.companyId) info.benchmark=row.originalDetails.benchmark;
       const ownership=normalizeRowDetails(info,type.value);
       return [name.value,type.value,sector.value,value.valueAsNumber,...(ownership?[ownership]:[])];
     });
@@ -581,20 +679,24 @@ function preparePatch(raw) {
     const change=changes.get(key(row));
     changes.delete(key(row));
     if (!rowDetails.has(key(row))) return row[4] ? [...change,row[4]] : change;
-    const {assetSource:previousSource, ...previousShares} = row[4] || {};
+    const {assetSource:previousSource,country:previousCountry,benchmark:previousBenchmark,...previousShares} = row[4] || {};
     const rawDetails = rowDetails.get(key(row));
-    const {assetSource, ...shares} = change[4] || {};
+    const {assetSource,country,benchmark,...shares} = change[4] || {};
     const sourceSpecified = rawDetails && Object.hasOwn(rawDetails,'assetSource');
-    const sourceOnly = sourceSpecified && Object.keys(rawDetails).length === 1;
+    const sourceOnly = rawDetails && Object.keys(rawDetails).length>0 && Object.keys(rawDetails).every(key=>['assetSource','country','benchmark'].includes(key));
     const details = normalizeRowDetails({
       ...(sourceOnly ? previousShares : shares),
       assetSource: sourceSpecified ? assetSource : previousSource,
+      country: rawDetails && Object.hasOwn(rawDetails,'country') ? country : previousCountry,
+      benchmark: rawDetails && Object.hasOwn(rawDetails,'benchmark') ? benchmark :
+        (sourceOnly||shares.companyId===previousShares.companyId) ? previousBenchmark : undefined,
     },change[1]);
     return [...change.slice(0,4),...(details?[details]:[])];
   }).concat([...changes.values()]);
   return {date:patch.date, rows, editing:base?.date===patch.date?patch.date:null, complete:base?.date===patch.date&&base.complete};
 }
 $('quick').onclick=()=>{
+  $('manage').open=false;
   $('patch').value='';
   $('quick-error').textContent='';
   $('quick-dialog').showModal();

@@ -62,12 +62,25 @@ function companyOwnership(rows, includeOtherAssets = false) {
 function normalizeRowDetails(value, type) {
   if (value == null) return null;
   if (typeof value !== 'object' || Array.isArray(value)) throw Error('Invalid asset details.');
-  const {assetSource, ...shareDetails} = value;
+  const {assetSource, country, benchmark, ...shareDetails} = value;
   if (assetSource !== undefined && (typeof assetSource !== 'string' || assetSource.length > 120)) {
     throw Error('Asset source must be text up to 120 characters.');
   }
-  const result = Object.keys(shareDetails).length ? normalizeOwnership(shareDetails, type) : null;
-  return assetSource?.trim() ? {...result, assetSource:assetSource.trim()} : result;
+  if (country !== undefined && (typeof country !== 'string' || country.length>80)) throw Error('Invalid exposure country.');
+  const result = {...(Object.keys(shareDetails).length ? normalizeOwnership(shareDetails, type) : null)};
+  if (assetSource?.trim()) result.assetSource=assetSource.trim();
+  if (country?.trim()) result.country=country.trim();
+  if (benchmark != null) {
+    const {holders,shares,date,basis,source}=benchmark;
+    if (!companyTypes.has(type) || !Number.isSafeInteger(holders) || holders<1 ||
+        !Number.isSafeInteger(shares) || shares<holders || !ownershipDate(date) ||
+        typeof basis!=='string' || !basis.trim() || basis.length>150 ||
+        typeof source!=='string' || source.length>500 || !/^https?:\/\//i.test(source)) {
+      throw Error('Invalid dated shareholder benchmark.');
+    }
+    result.benchmark={holders,shares,date,basis:basis.trim(),source};
+  }
+  return Object.keys(result).length ? result : null;
 }
 
 function normalizeHistorical(value) {

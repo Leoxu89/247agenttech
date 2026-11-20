@@ -75,7 +75,7 @@ test('share view renders missing values and detailed ownership without changing 
   assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'0.0001%');
   b.context.rows=[['Example','Listed shares','Tech',5000]];b.run('drawExposure({portfolio:rows})');
   assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'—');
-  b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,4);
+  b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,5);
 });
 test('asset mix expands into source subtotals and account rows for the selected snapshot',()=>{
   const b=browser();
@@ -150,4 +150,35 @@ test('chart point activates the dated snapshot via pointer and keyboard',()=>{
   marker()[1].handlers.keydown({key:'Enter',preventDefault(){}});
   assert.equal(b.run('active'),'2026-11-20');
   assert.equal(b.nodes.get('main-amount').textContent,'A$200');
+});
+test('country view preserves unknowns and uses separate portfolio and net denominators',()=>{
+  const b=browser();
+  b.context.portfolio=[['Local','Listed shares','',50,{country:'Australia'}],['Bitcoin','Crypto','',50]];
+  b.run("group='country';drawExposure({portfolio,net:200})");
+  const children=b.nodes.get('holdings').children;
+  assert.equal(children[0].children[0].children[0].children[0].textContent,'Australia');
+  assert.equal(children[0].children[2].textContent,'50%');
+  assert.equal(children[0].children[3].textContent,'25%');
+  assert.equal(children[2].children[0].children[0].children[0].textContent,'Crypto · no country');
+});
+test('zoom narrows dense snapshots and pan and reset expose the rest',()=>{
+  const b=browser();
+  b.context.input=Array.from({length:8},(_,i)=>({date:'2026-11-0'+(i+1),complete:false,rows:[['Cash','Cash','',i+1]]}));
+  b.run("records=validate(input);active=records.at(-1).date;$('series').value='total';drawHistory()");
+  const points=()=>b.nodes.get('chart').children[0].children.filter(node=>node.role==='button');
+  b.nodes.get('zoom-in').onclick();
+  assert.equal(points().length,4);
+  assert.equal(points()[0]['data-snapshot-date'],'2026-11-05');
+  b.nodes.get('pan-back').onclick();
+  assert.equal(points()[0]['data-snapshot-date'],'2026-11-03');
+  b.nodes.get('zoom-reset').onclick();
+  assert.equal(points().length,8);
+});
+test('a dated benchmark is independent of the current ownership denominator',()=>{
+  const b=browser(), w=server();
+  const benchmark={holders:100,shares:5000000,date:'2025-12-31',basis:'registered holders',source:'https://example.org/filing'};
+  b.context.input=w.input=[{date:'2026-11-03',complete:false,rows:[row('Example',{...info,benchmark})]}];
+  b.run("group='shares';drawExposure({portfolio:validate(input)[0].rows})");
+  assert.equal(b.nodes.get('holdings').children[0].children[4].textContent,'50,000');
+  assert.deepEqual(serial(vm.runInContext('normalize(input)[0].rows[0][4].benchmark',w)),benchmark);
 });
