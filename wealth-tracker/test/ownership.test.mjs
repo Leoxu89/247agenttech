@@ -6,16 +6,19 @@ const root=new URL('../',import.meta.url);
 const shared=readFileSync(new URL('shared/ownership.js',root),'utf8');
 const html=readFileSync(new URL('app/index.html',root),'utf8').replace('/* OWNERSHIP_HELPERS */',shared);
 class Node {
-  constructor(){this.children=[];this.dataset={};this.style={};this.value='';this.textContent='';}
+  constructor(){this.children=[];this.handlers={};this.dataset={};this.style={};this.value='';this.textContent='';}
   append(...nodes){this.children.push(...nodes);}
+  prepend(...nodes){this.children.unshift(...nodes);}
+  addEventListener(key,handler){this.handlers[key]=handler;}
+  querySelector(){return null;}
   replaceChildren(...nodes){this.children=nodes;}
   setAttribute(key,value){this[key]=value;}
   querySelectorAll(){return [];}
 }
 function browser(){
   const nodes=new Map();
-  const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);},createElement:()=>new Node()};
-  const context=vm.createContext({document,Intl,Date,Map,Set,JSON,Number,Error,console});
+  const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);},createElement:()=>new Node(),createElementNS:()=>new Node()};
+  const context=vm.createContext({document,Intl,Date,Map,Set,JSON,Number,Error,console,Option:class extends Node{}});
   let script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
   script=script.slice(0,script.indexOf("$('status').textContent='Loading cloud history"));
   vm.runInContext(script,context);
@@ -68,11 +71,11 @@ test('partial updates preserve counts, while explicit null clears them',()=>{
 });
 test('share view renders missing values and detailed ownership without changing exposure',()=>{
   const b=browser();b.context.rows=[row()];b.run("group='shares';drawExposure({portfolio:rows})");
-  assert.equal(b.nodes.get('holdings').children.length,1);
+  assert.equal(b.nodes.get('holdings').children.length,2);
   assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'0.0001%');
   b.context.rows=[['Example','Listed shares','Tech',5000]];b.run('drawExposure({portfolio:rows})');
   assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'—');
-  b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,3);
+  b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,4);
 });
 test('asset mix expands into source subtotals and account rows for the selected snapshot',()=>{
   const b=browser();
@@ -114,4 +117,37 @@ test('historical notes and net estimates survive validation independently of row
   b.context.input[0].historical.net='90';
   assert.throws(()=>b.run('validate(input)'));
   assert.throws(()=>vm.runInContext('normalize(input)',w));
+});
+test('company and shares views aggregate estimates and toggle the account breakdown',()=>{
+  const b=browser();
+  const {shares,...basis}=info;
+  b.context.rows=[row('Broker A',{...info,assetSource:'Broker A'}),row('Broker B',{...basis,estimatedShares:50,assetSource:'Broker B'})];
+  b.run("group='name';drawExposure({portfolio:rows})");
+  const [total,detail]=b.nodes.get('holdings').children;
+  assert.equal(total.children[1].textContent,'$10,000.00');
+  assert.equal(total.children[2].textContent,'≈150');
+  assert.equal(detail.hidden,true);
+  const button=total.children[0].children[0];
+  button.onclick();
+  assert.equal(button['aria-expanded'],'true');
+  assert.equal(detail.hidden,false);
+  assert.equal(detail.children[0].children[0].children[1].children[1].children[0].textContent,'≈50 shares');
+  b.run("group='shares';drawExposure({portfolio:rows})");
+  assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'≈0.00015%');
+  assert.throws(()=>b.run("normalizeOwnership({shares:1,estimatedShares:1},'Listed shares')"));
+});
+test('chart point activates the dated snapshot via pointer and keyboard',()=>{
+  const b=browser();
+  b.context.input=[{date:'2025-12-24',complete:false,rows:[['Old cash','Cash','',100]],historical:{net:90,note:'Old estimate'}},
+    {date:'2026-11-20',complete:false,rows:[['New cash','Cash','',200]]}];
+  b.run("records=validate(input);active=records.at(-1).date;$('series').value='total';render()");
+  const marker=()=>b.nodes.get('chart').children[0].children.filter(node=>node.role==='button');
+  marker()[0].handlers.click();
+  assert.equal(b.run('active'),'2025-12-24');
+  assert.equal(b.nodes.get('main-amount').textContent,'A$90');
+  assert.equal(b.nodes.get('mix').children[1].children[0].children[2].textContent,'$100.00');
+  assert.equal(marker()[0]['aria-pressed'],'true');
+  marker()[1].handlers.keydown({key:'Enter',preventDefault(){}});
+  assert.equal(b.run('active'),'2026-11-20');
+  assert.equal(b.nodes.get('main-amount').textContent,'A$200');
 });
