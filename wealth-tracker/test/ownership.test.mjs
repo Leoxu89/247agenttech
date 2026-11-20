@@ -30,6 +30,33 @@ function browser(){
 const info={companyId:'EXAMPLE ordinary',shares:100,sharesAsOf:'2026-11-03',sharesOutstanding:100000000,outstandingAsOf:'2026-11-01',outstandingSource:'Issuer filing'};
 const row=(name='Example',meta=info)=>[name,'Listed shares','Tech',5000,meta];
 const serial=value=>JSON.parse(JSON.stringify(value));
+test('yearly history compares consecutive years using the last available net value',()=>{
+  const b=browser(), rows=[['Cash','Cash','',200],['Loan','Liability','',50]];
+  b.context.input=[
+    {date:'2020-12-31',complete:true,rows:[['Cash','Cash','',100]]},
+    {date:'2021-06-30',complete:true,rows:[['Cash','Cash','',80]]},
+    {date:'2021-12-24',complete:false,rows,historical:{note:'Estimate',net:75}},
+    {date:'2021-12-31',complete:false,rows},
+    {date:'2023-12-20',complete:true,rows},
+    {date:'2024-12-20',complete:false,rows},
+    {date:'2025-12-20',complete:true,rows},
+  ];
+  b.run("records=validate(input);$('view-yearly').onclick()");
+  assert.equal(b.nodes.get('history-chart').hidden,true);
+  assert.equal(b.nodes.get('history-yearly').hidden,false);
+  const yearly=b.nodes.get('yearly-rows').children;
+  assert.deepEqual(yearly.map(row=>row.children.map(cell=>cell.textContent)),[
+    ['2025','A$150','—','—'],
+    ['2024','—','—','—'],
+    ['2023','A$150','—','—'],
+    ['2021','A$75','−A$25','−25%'],
+    ['2020','A$100','—','—'],
+  ]);
+  assert.equal(yearly[3].children[0].children[0].textContent,'24 Dec 2021 · est.');
+  b.run("$('view-chart').onclick()");
+  assert.equal(b.nodes.get('history-chart').hidden,false);
+  assert.equal(b.nodes.get('history-yearly').hidden,true);
+});
 function server(){
   const worker=readFileSync(new URL('server/worker.js',root),'utf8').replace('export default {','const worker = {');
   const context=vm.createContext({TextEncoder,Response,console});vm.runInContext(shared+'\n'+worker,context);return context;

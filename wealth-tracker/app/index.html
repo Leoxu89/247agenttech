@@ -67,6 +67,13 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 .chart:active{cursor:grabbing}.chart-help{margin-top:5px;font-size:.78rem}
 .chart-point .chart-dot{transition:stroke-width .12s ease}
 @media (pointer:fine){.chart-help{display:none}}
+.history-mode{margin-bottom:12px}
+.yearly-table{min-width:0;margin-top:8px}
+.yearly-table th,.yearly-table td{padding-inline:4px}
+.yearly-table th:first-child,.yearly-table td:first-child{padding-left:0}
+.yearly-table th:last-child,.yearly-table td:last-child{padding-right:0}
+.yearly-date{display:block;margin-top:3px;font-size:.72rem}
+@media(max-width:420px){.yearly-table{font-size:.78rem}.yearly-table th,.yearly-date{font-size:.7rem}}
 </style>
 </head>
 <body>
@@ -82,7 +89,13 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
     <button class="kpi metric-toggle" id="cash-detail" type="button" aria-haspopup="dialog" disabled><span>Cash</span><strong id="cash-amount"></strong></button>
   </section>
   <div class="grid">
-    <section class="panel"><div class="panel-head"><h2>Wealth history</h2><div class="tabs" id="periods" aria-label="History period"></div></div>
+    <section class="panel" aria-labelledby="history-title">
+      <div class="panel-head"><h2 id="history-title">Wealth history</h2><div class="tabs" role="group" aria-label="Wealth history view">
+        <button id="view-chart" type="button" aria-pressed="true" aria-controls="history-chart">Chart</button>
+        <button id="view-yearly" type="button" aria-pressed="false" aria-controls="history-yearly">Yearly</button>
+      </div></div>
+      <div id="history-chart">
+      <div class="tabs history-mode" id="periods" aria-label="History period"></div>
       <div class="ranges" id="ranges" hidden><label>From <input type="date" id="from"></label><label>To <input type="date" id="to"></label></div>
       <label class="muted">Series <select id="series"><option value="total">Tracked assets</option><option value="net">Net worth</option></select></label>
       <div class="chart-controls" role="group" aria-label="Chart zoom and pan">
@@ -91,6 +104,14 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
         <button class="btn" id="zoom-reset">Reset</button>
       </div>
       <p class="delta" id="change"></p><p class="muted" id="history-note"></p><div class="chart" id="chart"></div><p class="muted chart-help">Pinch to zoom · Drag to pan · Tap a point</p>
+      </div>
+      <div id="history-yearly" hidden>
+        <p class="muted">Uses the last available net worth or estimate in each year. Snapshot dates and asset coverage vary. A dash marks an unavailable value or change.</p>
+        <table class="yearly-table" aria-label="Year-over-year net worth changes">
+          <thead><tr><th scope="col">Year</th><th scope="col" class="money">Net worth</th><th scope="col" class="money">YoY change</th><th scope="col" class="money">YoY %</th></tr></thead>
+          <tbody id="yearly-rows"></tbody>
+        </table>
+      </div>
     </section>
     <section class="panel"><div class="panel-head"><h2>Asset mix</h2><span class="muted">Share of tracked assets</span></div><div id="mix"></div></section>
   </div>
@@ -134,6 +155,7 @@ const aud = new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maxim
 const currency = value => 'A$' + aud.format(Math.abs(value)).replace(/^[^0-9]*/, '');
 const money = value => (value < 0 ? '−' : '') + currency(value);
 const pct = value => new Intl.NumberFormat('en-AU',{style:'percent',maximumFractionDigits:1}).format(value);
+const snapshotNet = record => record.complete ? summary(record).net : record.historical?.net;
 const dateLabel = date => new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T00:00:00Z'));
 const validDate = date => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(Date.parse(date)) && new Date(date).toISOString().slice(0,10) === date;
 const sortDates = records => records.sort((a,b)=>a.date.localeCompare(b.date));
@@ -510,18 +532,16 @@ chart.addEventListener('click',event=>{
 },true);
 
 function drawHistory() {
-  if (!records.length) return;
+  if (!records.length || $('history-chart').hidden) return;
   const series=$('series').value, latest=records.at(-1).date;
   const start=period==='Custom'?$('from').value:period==='All'?'':periodStart(latest,period);
   const end=period==='Custom'?$('to').value:latest;
   const matching=records.filter(record=>(!start||record.date>=start)&&(!end||record.date<=end));
-  const eligible=matching
-    .filter(record=>series!=='net'||record.complete||record.historical?.net!==undefined)
-    .map(record=>({
+  const eligible=matching.map(record=>({
       date:record.date,
-      value:series==='net'&&!record.complete ? record.historical.net : summary(record)[series],
+      value:series==='net' ? snapshotNet(record) : summary(record).total,
       historical:!!record.historical,
-    }));
+    })).filter(point=>point.value!==undefined);
   historyExtent=eligible.length ? {start:Date.parse(eligible[0].date),end:Date.parse(eligible.at(-1).date)} : null;
   const domain=historyWindow ?? historyExtent;
   const data=domain ? eligible.filter(point=>Date.parse(point.date)>=domain.start&&Date.parse(point.date)<=domain.end) : [];
@@ -598,6 +618,48 @@ function drawHistory() {
   }
   target.append(svg);
 }
+function drawYearlyHistory() {
+  const years=new Map();
+  for (const record of records) {
+    const year=Number(record.date.slice(0,4)), value=snapshotNet(record);
+    if (!years.has(year) || value!==undefined) years.set(year,{record,value});
+  }
+  const body=$('yearly-rows');
+  body.replaceChildren();
+  if (!years.size) {
+    const row=el('tr'), message=el('td','Snapshots will appear here.');
+    message.colSpan=4;
+    row.append(message);
+    body.append(row);
+    return;
+  }
+  for (const [year,{record,value}] of [...years].reverse()) {
+    const prior=years.get(year-1)?.value;
+    const change=value===undefined || prior===undefined ? undefined : value-prior;
+    const sign=change>0?'+':'';
+    const row=el('tr');
+    const label=el('th',String(year));
+    label.setAttribute('scope','row');
+    if (value!==undefined) {
+      label.append(el('span',dateLabel(record.date)+(record.complete?'':' · est.'),'muted yearly-date'));
+    }
+    row.append(label,
+      el('td',value===undefined?'—':money(value),'money'),
+      el('td',change===undefined?'—':sign+money(change),'money'),
+      el('td',change!==undefined&&prior>0?(change<0?'−':sign)+pct(Math.abs(change)/prior):'—','money'));
+    body.append(row);
+  }
+}
+for (const view of ['chart','yearly']) {
+  $('view-'+view).onclick=()=>{
+    for (const panel of ['chart','yearly']) {
+      $('history-'+panel).hidden=panel!==view;
+      $('view-'+panel).setAttribute('aria-pressed',String(panel===view));
+    }
+    if (view==='yearly') drawYearlyHistory();
+    else drawHistory();
+  };
+}
 if (typeof ResizeObserver !== 'undefined') {
   let chartWidth;
   new ResizeObserver(([entry])=>{
@@ -629,6 +691,7 @@ function render() {
   note.hidden=false;
   note.append(el('p',snapshot.historical?.note ?? (snapshot.complete?'Net worth uses the assets and liabilities recorded in this snapshot.':'This snapshot remains partial. Record missing balances and debts before marking it complete.'),'muted'));
   drawMix(totals);drawExposure(totals);drawHistory();
+  if (!$('history-yearly').hidden) drawYearlyHistory();
 }
 for(const label of ['1M','3M','YTD','1Y','All','Custom']){
   const button=el('button',label);
