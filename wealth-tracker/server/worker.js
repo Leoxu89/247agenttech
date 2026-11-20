@@ -88,7 +88,7 @@ function normalize(records) {
       const [label,type,sector,value]=row;
       if (typeof label!=='string'||!label.trim()||label.length>200||!assetTypes.has(type)||typeof sector!=='string'||sector.length>200||
           !Number.isFinite(value)||value<0||value>1e12) throw Error('Provide a valid name, type and AUD value for every entry.');
-      const info=normalizeOwnership(row[4],type);
+      const info=normalizeRowDetails(row[4],type);
       return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
     return {date:record.date,complete:record.complete,source:false,rows};

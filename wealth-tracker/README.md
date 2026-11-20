@@ -37,3 +37,15 @@ Old four-element rows and backups still work. An optional fifth element stores s
 The resulting company ownership is 0.0001%. This example is illustrative, not portfolio data. Value-only pasted updates preserve existing share details. Supply a fifth element of `null` to explicitly clear them. Carried-forward quantities retain their original date. Export/import includes the extra fields.
 
 Build with `node scripts/build.mjs` and check behavior with `node --test test/*.test.mjs`. The build embeds `shared/ownership.js` into both the dashboard and Worker so validation rules agree. Do not serve the unbuilt HTML directly.
+
+## Asset mix details
+
+Expand an asset class to see the source subtotals and the individual accounts or holdings inside each source. Each snapshot has its own breakdown.
+
+Use the optional **Asset source** field when editing a snapshot. Give related rows the same source label to group them. A paste update or backup can carry this as a property of the optional fifth row element.
+
+```json
+["Example savings", "Cash", "", 12500, {"assetSource":"Example Bank"}]
+```
+
+Existing rows can use recognizable institution names in their labels. Any other rows with no known institution appear under **Source not recorded**. A source-only paste update preserves existing share details. An empty source clears the explicit label, so the breakdown falls back to the row label.

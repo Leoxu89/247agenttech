@@ -74,3 +74,31 @@ test('share view renders missing values and detailed ownership without changing 
   assert.equal(b.nodes.get('holdings').children[0].children[3].textContent,'—');
   b.run("group='name';drawExposure({portfolio:rows})");assert.equal(b.nodes.get('holdings').children[0].children.length,3);
 });
+test('asset mix expands into source subtotals and account rows for the selected snapshot',()=>{
+  const b=browser();
+  b.context.rows=[['NAB Savings','Cash','',10.12],['NAB Everyday','Cash','',20],
+    ['Physical cash','Cash','',40],['Example shares','Listed shares','',50,{...info,assetSource:'Broker'}],
+    ['Example card','Liability','',15]];
+  b.run('drawMix(summary({rows}))');
+  const cash=b.nodes.get('mix').children[1].children;
+  assert.equal(cash[0].children[1].textContent,'Cash');
+  assert.equal(cash[0].children[2].textContent,'$70.12');
+  const source=cash[1].children.find(block=>block.children[0].children[0].textContent==='NAB');
+  assert.equal(source.children[0].children[1].textContent,'$30.12');
+  assert.deepEqual(source.children.slice(1).map(line=>line.children[0].textContent),['NAB Everyday','NAB Savings']);
+  assert.equal(b.nodes.get('mix').children[2].children[1].children[0].children[0].children[0].textContent,'Broker');
+  b.context.rows=[['Older cash','Cash','',10]];
+  b.run('drawMix(summary({rows}))');
+  assert.equal(b.nodes.get('mix').children[1].children[1].children[0].children[0].children[0].textContent,'Source not recorded');
+});
+test('source metadata survives saves and source-only patches preserve share details',()=>{
+  const b=browser(), w=server();
+  const input=[{date:'2026-11-03',complete:false,rows:[['Savings','Cash','',100,{assetSource:' Bank '}],row()]}];
+  b.context.input=w.input=input;
+  b.run('records=validate(input)');
+  assert.deepEqual(serial(b.run('records[0].rows')),serial(vm.runInContext('normalize(input)[0].rows',w)));
+  b.context.patch=JSON.stringify({date:'2026-11-03',rows:[row('Example',{assetSource:'Broker'})]});
+  assert.deepEqual(serial(b.run('preparePatch(patch).rows[1][4]')),{...info,assetSource:'Broker'});
+  b.context.patch=JSON.stringify({date:'2026-11-03',rows:[['Savings','Cash','',110]]});
+  assert.deepEqual(serial(b.run('preparePatch(patch).rows[0][4]')),{assetSource:'Bank'});
+});

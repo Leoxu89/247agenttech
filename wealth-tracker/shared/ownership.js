@@ -54,3 +54,15 @@ function companyOwnership(rows) {
       status:conflict?'Conflicting share totals':invalidTotal?'Check share basis':!known?'Share count needed':!basis?'Shares outstanding needed':'Available'};
   }).sort((a,b)=>a.name.localeCompare(b.name));
 }
+
+// The optional row object also carries an account or institution label.
+function normalizeRowDetails(value, type) {
+  if (value == null) return null;
+  if (typeof value !== 'object' || Array.isArray(value)) throw Error('Invalid asset details.');
+  const {assetSource, ...shareDetails} = value;
+  if (assetSource !== undefined && (typeof assetSource !== 'string' || assetSource.length > 120)) {
+    throw Error('Asset source must be text up to 120 characters.');
+  }
+  const result = Object.keys(shareDetails).length ? normalizeOwnership(shareDetails, type) : null;
+  return assetSource?.trim() ? {...result, assetSource:assetSource.trim()} : result;
+}

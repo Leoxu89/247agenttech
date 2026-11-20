@@ -7,8 +7,8 @@
 <title>Net Worth Tracker</title>
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#172a27;background:#f3f5f2;font-synthesis:none;--ink:#123a32;--quiet:#51635e;--line:#e0e7e2;--card:#fff;--accent:#23745e}
-*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #23745e;outline-offset:2px}header{background:#fff;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#153f36;color:#d9f4e5;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#14382f}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #dae4dd;background:#fff;color:#28473f;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#1b5546;color:white;border-color:#1b5546}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#153f36;color:#fff;border-color:#153f36}.kpi:first-child .muted{color:#d0e7dd}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f2f6f3}.tabs button[aria-pressed=true]{background:#dceee4;color:#174c3c}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#51635e}.empty{min-height:110px;border:1px dashed #d6e4da;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#51635e}.delta{font-weight:700;color:#17604c;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#465c53}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#eff3ef;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf0ed;font-size:.85rem}.mix-row:last-child{border:0}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#526760;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #edf1ee}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ebf0ec;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#579b83;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e5e8dc;border-radius:12px;background:#fbfcf6;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#155e4b}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
-dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:650px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}dialog details{min-width:190px}dialog details label{display:block;margin-top:8px}dialog details input{display:block}#share-note{margin-top:12px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #23745e;outline-offset:2px}header{background:#fff;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#153f36;color:#d9f4e5;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#14382f}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #dae4dd;background:#fff;color:#28473f;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#1b5546;color:white;border-color:#1b5546}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#153f36;color:#fff;border-color:#153f36}.kpi:first-child .muted{color:#d0e7dd}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f2f6f3}.tabs button[aria-pressed=true]{background:#dceee4;color:#174c3c}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#51635e}.empty{min-height:110px;border:1px dashed #d6e4da;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#51635e}.delta{font-weight:700;color:#17604c;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#465c53}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#eff3ef;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto 10px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf0ed;font-size:.85rem}.mix-class[open]>.mix-row{background:#f2f6f3}.mix-row{cursor:pointer;list-style:none}.mix-row::-webkit-details-marker{display:none}.mix-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.mix-row:hover{background:#f2f6f3}.mix-chevron{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg)}.mix-class[open]>.mix-row .mix-chevron{transform:rotate(45deg)}.mix-sources{padding:2px 0 10px 16px}.mix-source{padding:8px 0;border-bottom:1px solid #edf0ed}.mix-source:last-child{border:0}.mix-source-title,.mix-account{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;line-height:1.5}.mix-account{color:var(--quiet);padding-left:10px;margin-top:4px}.mix-source-title span:first-child,.mix-account span:first-child{overflow-wrap:anywhere}.mix-amount{white-space:nowrap;font-variant-numeric:tabular-nums}.mix-row strong{white-space:nowrap}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#526760;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #edf1ee}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ebf0ec;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#579b83;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e5e8dc;border-radius:12px;background:#fbfcf6;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#155e4b}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
+dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:850px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}dialog details{min-width:190px}dialog details label{display:block;margin-top:8px}dialog details input{display:block}#share-note{margin-top:12px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
 @media(max-width:720px){.grid{grid-template-columns:1fr}.header,.page{padding-inline:14px}.page{padding-top:23px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi:first-child{grid-column:1/-1}.kpi,.panel{padding:14px}.mix-row{gap:6px}.kpi strong{font-size:1.65rem}.intro .toolbar{width:100%}.chart svg{height:155px}}
 </style>
 </head>
@@ -42,7 +42,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 </main>
 <dialog id="editor"><form id="form"><h2 id="dialog-title">Edit snapshot</h2><p class="muted">Enter the AUD value attributable to you. New snapshots start with a copy of your latest values.</p>
 <div class="toolbar"><label>Snapshot date <input id="edit-date" type="date" required></label><label><input id="complete" type="checkbox"> All assets and liabilities accounted for</label></div>
-<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th>Company shares (optional)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>Label</th><th>Asset type</th><th>Sector</th><th>Value (AUD)</th><th>Asset source</th><th>Company shares (optional)</th><th><span class="sr">Remove</span></th></tr></thead><tbody id="edit-rows"></tbody></table></div>
 <div class="toolbar"><button type="button" class="btn" id="row-add">Add row</button><div class="toolbar"><button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save snapshot</button></div></div><p id="error" class="error" role="alert"></p></form></dialog>
 <dialog id="quick-dialog"><form id="quick-form">
   <h2>Paste a screenshot update</h2>
@@ -81,7 +81,7 @@ function validate(records) {
       if (!Array.isArray(row) || ![4,5].includes(row.length)) throw Error('A snapshot row is missing information.');
       const [label,type,sector,value] = row;
       if (typeof label !== 'string' || !label.trim() || !types.includes(type) || typeof sector !== 'string' || !Number.isFinite(value) || value < 0 || value > 1e12) throw Error('Each row needs a label, asset type and valid positive or zero AUD value.');
-      const info=normalizeOwnership(row[4],type);
+      const info=normalizeRowDetails(row[4],type);
       return [label.trim(),type,sector.trim(),value,...(info?[info]:[])];
     });
     return {date,complete,source:source === true,rows:cleaned};
@@ -140,23 +140,68 @@ async function mergeHistory(incoming) {
   const next=sortDates([...merged.values()]);
   await persist(next,next.at(-1).date);
 }
+const mixMoney = new Intl.NumberFormat('en-AU', {style:'currency',currency:'AUD',minimumFractionDigits:2});
+const expandedAssetClasses = new Set();
+function sourceForAsset([label,type,,,details]) {
+  if (details?.assetSource) return details.assetSource;
+  const bank = label.match(/^(NAB|CBA|CommSec|IBKR|Binance)(?=\s|$)/i)
+    || label.match(/·\s*(CommSec|IBKR)\s*$/i);
+  if (bank) return bank[1];
+  if (/^physical cash$/i.test(label)) return 'Physical cash';
+  if (type === 'Property') return label;
+  return 'Source not recorded';
+}
+function drawAssetSources(rows) {
+  const content = el('div',undefined,'mix-sources');
+  const bySource = new Map();
+  for (const row of rows) {
+    const source = sourceForAsset(row);
+    if (!bySource.has(source)) bySource.set(source, []);
+    bySource.get(source).push(row);
+  }
+  for (const [source,accounts] of [...bySource].sort((a,b)=>sum(b[1])-sum(a[1]))) {
+    const block = el('div',undefined,'mix-source');
+    const title = el('div',undefined,'mix-source-title');
+    title.append(el('strong',source),el('strong',mixMoney.format(sum(accounts)),'mix-amount'));
+    block.append(title);
+    for (const [name,,,value] of accounts.slice().sort((a,b)=>b[3]-a[3])) {
+      if (accounts.length === 1 && name === source) continue;
+      const line = el('div',undefined,'mix-account');
+      line.append(el('span',name),el('span',mixMoney.format(value),'mix-amount'));
+      block.append(line);
+    }
+    content.append(block);
+  }
+  return content;
+}
 function drawMix({assets,total,liabilities}) {
   const target=$('mix');
   target.replaceChildren();
-  if(!total){target.append(el('p','Add an asset value to see its weight.','empty'));return;}
+  if(!assets.length){target.append(el('p','Add an asset to see the breakdown.','empty'));return;}
   const bar=el('div',undefined,'mix-bar');
   bar.setAttribute('aria-hidden','true');
   target.append(bar);
   grouped(assets,row=>row[1]).forEach(([name,value],index)=>{
-    if (!value) return;
     const color=colors[index%colors.length], segment=el('span');
     segment.style.backgroundColor=color;
-    segment.style.width=(100*value/total)+'%';
-    bar.append(segment);
-    const line=el('div',undefined,'mix-row'), dot=el('span',undefined,'dot');
+    const weight = total ? value/total : 0;
+    segment.style.width=(100*weight)+'%';
+    if (value) bar.append(segment);
+    const details = el('details',undefined,'mix-class');
+    const line = el('summary',undefined,'mix-row');
+    const dot = el('span',undefined,'dot');
+    const chevron = el('span',undefined,'mix-chevron');
+    chevron.setAttribute('aria-hidden','true');
     dot.style.backgroundColor=color;
-    line.append(dot,el('span',name),el('strong',money(value)),el('span',pct(value/total),'muted'));
-    target.append(line);
+    line.append(dot,el('span',name),el('strong',mixMoney.format(value)),el('span',pct(weight),'muted'),chevron);
+    details.append(line,drawAssetSources(assets.filter(row=>row[1]===name)));
+    details.open = expandedAssetClasses.has(name);
+    details.ontoggle = () => {
+      if (!details.isConnected) return;
+      if (details.open) expandedAssetClasses.add(name);
+      else expandedAssetClasses.delete(name);
+    };
+    target.append(details);
   });
   if(liabilities)target.append(el('p','Recorded liabilities '+money(liabilities),'muted'));
 }
@@ -311,6 +356,8 @@ function editRow([name,type,sector,value,shareInfo]){
   types.forEach(kind=>select.add(new Option(kind,kind,false,type===kind)));
   amount.min='0';amount.max='1000000000000';amount.step='0.01';amount.required=true;
   remove.type='button';remove.setAttribute('aria-label','Remove row');remove.onclick=()=>row.remove();
+  const assetSource=input(shareInfo?.assetSource??'','Asset source');
+  assetSource.maxLength=120;
   const details=el('details'), shareFields={};
   details.append(el('summary','Share details'));
   for(const [key,title,fieldType] of [['companyId','Company / share basis ID','text'],['shares','Shares held','number'],['sharesAsOf','Holdings as of','date'],['sharesOutstanding','Company shares outstanding','number'],['outstandingAsOf','Outstanding as of','date'],['outstandingSource','Source for shares outstanding','text']]){
@@ -321,7 +368,7 @@ function editRow([name,type,sector,value,shareInfo]){
   }
   const updateShareFields=()=>{const supported=companyTypes.has(select.value);details.hidden=!supported;Object.values(shareFields).forEach(field=>field.disabled=!supported);};
   select.onchange=updateShareFields;updateShareFields();
-  for(const field of [label,select,category,amount,details,remove]){const td=el('td');td.append(field);row.append(td);}
+  for(const field of [label,select,category,amount,assetSource,details,remove]){const td=el('td');td.append(field);row.append(td);}
   $('edit-rows').append(row);
   return label;
 }
@@ -346,12 +393,12 @@ $('form').onsubmit=async event=>{
   try {
     const date=$('edit-date').value, complete=$('complete').checked;
     const rows=Array.from($('edit-rows').children,row=>{
-      const [name,type,sector,value]=row.querySelectorAll('input,select');
-      const info={};
+      const [name,type,sector,value,assetSource]=row.querySelectorAll('input,select');
+      const info={assetSource:assetSource.value};
       if(companyTypes.has(type.value))for(const field of row.querySelectorAll('[data-share-field]')){
         if(field.value!=='')info[field.dataset.shareField]=field.type==='number'?field.valueAsNumber:field.value;
       }
-      const ownership=companyTypes.has(type.value)?normalizeOwnership(info,type.value):null;
+      const ownership=normalizeRowDetails(info,type.value);
       return [name.value,type.value,sector.value,value.valueAsNumber,...(ownership?[ownership]:[])];
     });
     const old=records.find(record=>record.date===editing);
@@ -382,7 +429,7 @@ function preparePatch(raw) {
   const base=records.find(record=>record.date===patch.date)??records.findLast(record=>record.date<patch.date);
   const updated=validate([{date:patch.date,complete:false,source:false,rows:patch.rows}])[0];
   const key=row=>JSON.stringify([row[0].toLowerCase(),row[1]]);
-  const explicitShares=new Set(patch.rows.filter(row=>row.length===5).map(key));
+  const rowDetails=new Map(patch.rows.filter(row=>row.length===5).map(row=>[key(row),row[4]]));
   const changes=new Map();
   for (const row of updated.rows) {
     if(changes.has(key(row)))throw Error('Each changed item must have a unique label and asset type.');
@@ -392,7 +439,17 @@ function preparePatch(raw) {
     if(!changes.has(key(row)))return row;
     const change=changes.get(key(row));
     changes.delete(key(row));
-    return change.length===4 && row[4] && !explicitShares.has(key(row)) ? [...change,row[4]] : change;
+    if (!rowDetails.has(key(row))) return row[4] ? [...change,row[4]] : change;
+    const {assetSource:previousSource, ...previousShares} = row[4] || {};
+    const rawDetails = rowDetails.get(key(row));
+    const {assetSource, ...shares} = change[4] || {};
+    const sourceSpecified = rawDetails && Object.hasOwn(rawDetails,'assetSource');
+    const sourceOnly = sourceSpecified && Object.keys(rawDetails).length === 1;
+    const details = normalizeRowDetails({
+      ...(sourceOnly ? previousShares : shares),
+      assetSource: sourceSpecified ? assetSource : previousSource,
+    },change[1]);
+    return [...change.slice(0,4),...(details?[details]:[])];
   }).concat([...changes.values()]);
   return {date:patch.date, rows, editing:base?.date===patch.date?patch.date:null, complete:base?.date===patch.date&&base.complete};
 }
