@@ -11,6 +11,8 @@ class Node {
   prepend(...nodes){this.children.unshift(...nodes);}
   addEventListener(key,handler){this.handlers[key]=handler;}
   querySelector(){return null;}
+  getBoundingClientRect(){return {left:0,width:390};}
+  setPointerCapture(){}
   replaceChildren(...nodes){this.children=nodes;}
   setAttribute(key,value){this[key]=value;}
   querySelectorAll(){return [];}
@@ -18,11 +20,12 @@ class Node {
 function browser(){
   const nodes=new Map();
   const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);},createElement:()=>new Node(),createElementNS:()=>new Node()};
-  const context=vm.createContext({document,Intl,Date,Map,Set,JSON,Number,Error,console,Option:class extends Node{}});
+  const frames=[];
+  const context=vm.createContext({document,Intl,Date,Map,Set,JSON,Number,Error,console,Option:class extends Node{},requestAnimationFrame:callback=>frames.push(callback)});
   let script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
   script=script.slice(0,script.indexOf("$('status').textContent='Loading cloud history"));
   vm.runInContext(script,context);
-  return {context,nodes,run:code=>vm.runInContext(code,context)};
+  return {context,nodes,run:code=>vm.runInContext(code,context),flush:()=>frames.splice(0).forEach(callback=>callback())};
 }
 const info={companyId:'EXAMPLE ordinary',shares:100,sharesAsOf:'2026-11-03',sharesOutstanding:100000000,outstandingAsOf:'2026-11-01',outstandingSource:'Issuer filing'};
 const row=(name='Example',meta=info)=>[name,'Listed shares','Tech',5000,meta];
@@ -181,4 +184,41 @@ test('a dated benchmark is independent of the current ownership denominator',()=
   b.run("group='shares';drawExposure({portfolio:validate(input)[0].rows})");
   assert.equal(b.nodes.get('holdings').children[0].children[4].textContent,'50,000');
   assert.deepEqual(serial(vm.runInContext('normalize(input)[0].rows[0][4].benchmark',w)),benchmark);
+});
+test('pinch zoom anchors to the contact midpoint and drag pans without selecting a point',()=>{
+  const b=browser();
+  b.context.input=Array.from({length:20},(_,i)=>({date:'2026-11-'+String(i+1).padStart(2,'0'),complete:false,rows:[['Cash','Cash','',i+1]]}));
+  b.run("records=validate(input);active=records.at(-1).date;$('series').value='total';drawHistory()");
+  const chart=b.nodes.get('chart');
+  const pointer=(type,id,x,y=100)=>chart.handlers[type]({pointerId:id,clientX:x,clientY:y,button:0,target:chart});
+  const initialSpan=b.run('historyExtent.end-historyExtent.start');
+  pointer('pointerdown',1,120);
+  pointer('pointerdown',2,240);
+  // Safari transfers implicit touch capture from the SVG marker to the stable chart.
+  chart.handlers.lostpointercapture({pointerId:1,target:{}});
+  pointer('pointermove',1,75);
+  pointer('pointermove',2,285);
+  b.flush();
+  assert.equal(b.run('Math.round((historyWindow.end-historyWindow.start)/(historyExtent.end-historyExtent.start)*100)'),57);
+  pointer('pointerup',2,285);
+  pointer('pointerup',1,75);
+  const zoomedStart=b.run('historyWindow.start');
+  pointer('pointerdown',3,150);
+  pointer('pointermove',3,200);
+  b.flush();
+  assert.ok(b.run('historyWindow.start')<zoomedStart);
+  pointer('pointerup',3,200);
+  let prevented=false;
+  chart.handlers.click({detail:1,stopPropagation(){prevented=true;}});
+  assert.ok(prevented);
+  assert.equal(b.run('active'),'2026-11-20');
+  pointer('pointerdown',4,150);
+  pointer('pointermove',4,151,120);
+  pointer('pointercancel',4,151,120);
+  prevented=false;
+  chart.handlers.click({detail:1,stopPropagation(){prevented=true;}});
+  assert.equal(prevented,false);
+  b.nodes.get('zoom-reset').onclick();
+  assert.equal(b.run('historyWindow'),null);
+  assert.equal(b.run('historyExtent.end-historyExtent.start'),initialSpan);
 });

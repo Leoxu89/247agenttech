@@ -6,16 +6,16 @@
 <meta name="color-scheme" content="light">
 <title>Net Worth Tracker</title>
 <style>
-:root{font-family:Inter,system-ui,sans-serif;color:#172a27;background:#f3f5f2;font-synthesis:none;--ink:#123a32;--quiet:#51635e;--line:#e0e7e2;--card:#fff;--accent:#23745e}
-*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #23745e;outline-offset:2px}header{background:#fff;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#153f36;color:#d9f4e5;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#14382f}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #dae4dd;background:#fff;color:#28473f;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#1b5546;color:white;border-color:#1b5546}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#153f36;color:#fff;border-color:#153f36}.kpi:first-child .muted{color:#d0e7dd}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f2f6f3}.tabs button[aria-pressed=true]{background:#dceee4;color:#174c3c}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#51635e}.empty{min-height:110px;border:1px dashed #d6e4da;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#51635e}.delta{font-weight:700;color:#17604c;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#465c53}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#eff3ef;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto 10px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf0ed;font-size:.85rem}.mix-class[open]>.mix-row{background:#f2f6f3}.mix-row{cursor:pointer;list-style:none}.mix-row::-webkit-details-marker{display:none}.mix-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.mix-row:hover{background:#f2f6f3}.mix-chevron{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg)}.mix-class[open]>.mix-row .mix-chevron{transform:rotate(45deg)}.mix-sources{padding:2px 0 10px 16px}.mix-source{padding:8px 0;border-bottom:1px solid #edf0ed}.mix-source:last-child{border:0}.mix-source-title,.mix-account{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;line-height:1.5}.mix-account{color:var(--quiet);padding-left:10px;margin-top:4px}.mix-source-title span:first-child,.mix-account span:first-child{overflow-wrap:anywhere}.mix-amount{white-space:nowrap;font-variant-numeric:tabular-nums}.mix-row strong{white-space:nowrap}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#526760;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #edf1ee}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ebf0ec;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#579b83;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e5e8dc;border-radius:12px;background:#fbfcf6;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#155e4b}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
-dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #d7e1d9;border-radius:16px;padding:20px;color:#172a27}dialog::backdrop{background:#153f3670}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #d6e2d8;border-radius:7px;padding:6px 7px;color:#173c32;background:#fff}input[type=checkbox]{accent-color:#1b5546}dialog table{min-width:850px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}dialog details{min-width:190px}dialog details label{display:block;margin-top:8px}dialog details input{display:block}#share-note{margin-top:12px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+:root{font-family:Inter,system-ui,sans-serif;color:#292724;background:#f6f3ee;font-synthesis:none;--ink:#2f2b26;--quiet:#60594f;--line:#e4ddd3;--card:#fffdf9;--accent:#6e5944}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #6e5944;outline-offset:2px}header{background:#fffdf9;border-bottom:1px solid var(--line)}.header,.page{max-width:1160px;margin:auto;padding-inline:26px}.header{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:750;letter-spacing:-.035em;font-size:1.1rem;display:flex;gap:10px;align-items:center}.mark{background:#302c27;color:#fff7ed;width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.page{padding-top:36px;padding-bottom:48px}.intro,.panel-head,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.065em;color:#302b25}h2{font-size:1.14rem;letter-spacing:-.03em}p{line-height:1.55}.muted{color:var(--quiet);font-size:.88rem}.intro p{margin-top:8px}.btn,.tabs button{border:1px solid #e0d8cc;background:#fffdf9;color:#403a33;border-radius:9px;padding:9px 13px;font-weight:650;font-size:.84rem;white-space:nowrap}.primary{background:#3e352b;color:white;border-color:#3e352b}.flag{display:inline-block;font-size:.74rem;color:#74541e;background:#fff1d6;padding:5px 9px;border-radius:7px;font-weight:700}.kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px;margin-top:24px}.kpi,.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.kpi:first-child{background:#302c27;color:#fffdf9;border-color:#302c27}.kpi:first-child .muted{color:#eee4d7}.kpi strong{font-size:clamp(1.55rem,3.7vw,2.39rem);letter-spacing:-.06em;display:block;margin:7px 0 5px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px}.panel .panel-head{margin-bottom:13px}.tabs{display:flex;flex-wrap:wrap;gap:4px}.tabs button{padding:6px 9px;border-color:transparent;background:#f5f0e8}.tabs button[aria-pressed=true]{background:#eae0d3;color:#44382b}.chart{margin-top:13px;position:relative}.chart svg{display:block;width:100%;height:185px;overflow:visible}.chart-label{font-size:.75rem;fill:#60594f}.empty{min-height:110px;border:1px dashed #ddd2c5;border-radius:10px;display:grid;place-items:center;text-align:center;padding:18px;color:#60594f}.delta{font-weight:700;color:#6e5944;margin:8px 0 3px}.ranges{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:10px 0}.ranges[hidden]{display:none}.ranges label{font-size:.76rem;color:#60594f}.ranges input{display:block;margin-top:3px}.mix-bar{display:flex;border-radius:7px;overflow:hidden;height:13px;background:#efe9e1;margin:17px 0 7px}.mix-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto 10px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #efe9e1;font-size:.85rem}.mix-class[open]>.mix-row{background:#f5f0e8}.mix-row{cursor:pointer;list-style:none}.mix-row::-webkit-details-marker{display:none}.mix-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.mix-row:hover{background:#f5f0e8}.mix-chevron{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg)}.mix-class[open]>.mix-row .mix-chevron{transform:rotate(45deg)}.mix-sources{padding:2px 0 10px 16px}.mix-source{padding:8px 0;border-bottom:1px solid #efe9e1}.mix-source:last-child{border:0}.mix-source-title,.mix-account{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;line-height:1.5}.mix-account{color:var(--quiet);padding-left:10px;margin-top:4px}.mix-source-title span:first-child,.mix-account span:first-child{overflow-wrap:anywhere}.mix-amount{white-space:nowrap;font-variant-numeric:tabular-nums}.mix-row strong{white-space:nowrap}.mix-row .muted{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}.dot{width:10px;height:10px;border-radius:3px}.wide{margin-top:14px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:510px}th{text-align:left;color:#5e554b;font-size:.74rem;font-weight:700}td,th{padding:10px 7px;border-bottom:1px solid #efe9e1}td.money,th.money{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr:last-child td{border-bottom:0}td.weight{width:31%;min-width:130px}.weight-inner{display:flex;align-items:center;gap:8px}.meter{height:5px;background:#ece5dc;border-radius:5px;flex:1;overflow:hidden}.meter span{display:block;background:#998069;height:100%}.weight b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;font-size:.81rem}.note{margin-top:14px;border:1px solid #e4dbce;border-radius:12px;background:#faf6ee;padding:13px 15px}.note p+p{margin-top:7px}.note details{margin-top:9px}.note summary{cursor:pointer}.note a{color:#71583f}.footer{margin-top:17px}.footer label{cursor:pointer}.status{min-height:1.4em;margin-top:7px}.date-select{max-width:100%}
+dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border:1px solid #ded5c9;border-radius:16px;padding:20px;color:#292724}dialog::backdrop{background:#302c2770}dialog h2{margin-bottom:8px}dialog .toolbar{margin:13px 0}input,select{border:1px solid #ded5c9;border-radius:7px;padding:6px 7px;color:#423a30;background:#fffdf9}input[type=checkbox]{accent-color:#3e352b}dialog table{min-width:850px}dialog td input,dialog td select{width:100%}dialog td:first-child{width:29%}dialog td:last-child{width:44px}dialog details{min-width:190px}dialog details label{display:block;margin-top:8px}dialog details input{display:block}#share-note{margin-top:12px}.error{color:#922b2b}.sr{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
 @media(max-width:720px){.grid{grid-template-columns:1fr}.header,.page{padding-inline:14px}.page{padding-top:23px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi:first-child{grid-column:1/-1}.kpi,.panel{padding:14px}.mix-row{gap:6px}.kpi strong{font-size:1.65rem}.intro .toolbar{width:100%}.chart svg{height:155px}}
 
-.chart-point{cursor:pointer}.chart-point:focus{outline:none}.chart-point:focus-visible .chart-dot,.chart-point:hover .chart-dot{stroke:#123a32;stroke-width:4}
+.chart-point{cursor:pointer}.chart-point:focus{outline:none}.chart-point:focus-visible .chart-dot,.chart-point:hover .chart-dot{stroke:#2f2b26;stroke-width:4}
 .holding-toggle{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:4px 0;border:0;background:none;color:var(--ink);font-weight:700;text-align:left}
 .holding-toggle:hover{color:var(--accent)}.holding-chevron{flex:none;width:8px;height:8px;border-bottom:2px solid;border-right:2px solid;transform:rotate(-45deg)}
 .holding-toggle[aria-expanded=true] .holding-chevron{transform:rotate(45deg)}
-.holding-detail[hidden]{display:none}.holding-detail>td{padding:0 7px 12px}.holding-accounts{list-style:none;margin:0;padding:8px 12px;background:#f2f6f3;border-radius:9px}
+.holding-detail[hidden]{display:none}.holding-detail>td{padding:0 7px 12px}.holding-accounts{list-style:none;margin:0;padding:8px 12px;background:#f5f0e8;border-radius:9px}
 .holding-accounts li{display:flex;justify-content:space-between;gap:12px;padding:7px 0}.holding-accounts li+li{border-top:1px solid var(--line)}
 .holding-accounts .muted,.share-basis span{display:block}.holding-values{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .share-basis a{color:var(--accent)}.exposure td:first-child{min-width:110px}.exposure th:not(:first-child){text-align:right}
@@ -42,8 +42,8 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 
 .page{padding-top:24px}.intro h1{font-size:clamp(1.65rem,4vw,2.5rem);letter-spacing:-.045em}.intro p{margin-top:5px}
 .snapshot-controls{flex-wrap:nowrap}.manage{position:relative}.manage>summary{list-style:none;cursor:pointer;text-align:center;display:grid;place-items:center}
-.manage>summary::-webkit-details-marker{display:none}.manage-menu{position:absolute;right:0;z-index:5;min-width:155px;display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:0 7px 24px #123a3225}
-.metric-toggle{text-align:left;color:var(--ink);font:inherit;position:relative;padding-top:16px;padding-bottom:10px}.metric-toggle:hover{background:#eef5f0}.metric-toggle::after{content:'›';position:absolute;right:13px;top:11px;font-size:1.3rem;color:var(--accent)}
+.manage>summary::-webkit-details-marker{display:none}.manage-menu{position:absolute;right:0;z-index:5;min-width:155px;display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:0 7px 24px #33291e26}
+.metric-toggle{text-align:left;color:var(--ink);font:inherit;position:relative;padding-top:16px;padding-bottom:10px}.metric-toggle:hover{background:#f4ede3}.metric-toggle::after{content:'›';position:absolute;right:13px;top:11px;font-size:1.3rem;color:var(--accent)}
 .chart-controls{display:inline-flex;gap:4px;margin:0 0 5px 7px;vertical-align:middle}.chart-controls button{min-width:32px;padding-inline:7px}.chart-controls button:disabled{opacity:.45;cursor:default}
 .modal-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.modal-heading h2{margin:0}.editor-heading{position:sticky;top:0;background:white;z-index:2;padding:5px 0}
 #metric-dialog{max-width:min(520px,calc(100vw - 24px))}#exposure-basis:not(:empty){margin:8px 0 0}
@@ -63,6 +63,15 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
   #editor td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;font-size:.76rem;color:var(--quiet);margin-bottom:2px}
   #editor td:nth-last-child(2){grid-column:1/-1}#editor td:last-child{grid-column:2;text-align:right;width:auto}
 }
+
+:root{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+.kpi,.panel{box-shadow:0 1px 2px #3c2d1e0a}
+.kpi:first-child strong{font-weight:650}
+.kpi strong{font-variant-numeric:lining-nums tabular-nums}
+.chart{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.chart:active{cursor:grabbing}.chart-help{margin-top:5px;font-size:.78rem}
+.chart-point .chart-dot{transition:stroke-width .12s ease}
+@media (pointer:fine){.chart-help{display:none}}
 </style>
 </head>
 <body>
@@ -86,7 +95,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
         <button class="btn" id="pan-back" aria-label="Earlier dates">‹</button><button class="btn" id="pan-next" aria-label="Later dates">›</button>
         <button class="btn" id="zoom-reset">Reset</button>
       </div>
-      <p class="delta" id="change"></p><p class="muted" id="history-note"></p><div class="chart" id="chart"></div>
+      <p class="delta" id="change"></p><p class="muted" id="history-note"></p><div class="chart" id="chart"></div><p class="muted chart-help">Pinch to zoom · Drag to pan · Tap a point</p>
     </section>
     <section class="panel"><div class="panel-head"><h2>Asset mix</h2><span class="muted">Share of tracked assets</span></div><div id="mix"></div></section>
   </div>
@@ -109,7 +118,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 <dialog id="quick-dialog"><form id="quick-form">
   <h2>Paste a screenshot update</h2>
   <p class="muted">Paste an update from chat. Values are absolute AUD balances. Items outside the update carry forward from that date or the latest earlier snapshot.</p>
-  <textarea id="patch" aria-label="Update JSON" rows="8" required style="width:100%;margin:12px 0;border:1px solid #d6e2d8;border-radius:7px;padding:8px"></textarea>
+  <textarea id="patch" aria-label="Update JSON" rows="8" required style="width:100%;margin:12px 0;border:1px solid #ded5c9;border-radius:7px;padding:8px"></textarea>
   <p id="quick-error" class="error" role="alert"></p>
   <div class="toolbar"><button type="button" class="btn" id="quick-cancel">Cancel</button><button class="btn primary" id="quick-review" type="submit">Review update</button></div>
 </form></dialog>
@@ -118,7 +127,7 @@ dialog{max-width:min(940px,calc(100vw - 24px));width:100%;max-height:90vh;border
 /* OWNERSHIP_HELPERS */
 const types = ['Cash','Listed shares','Funds','Unreconciled equity','Crypto','Property','Super','Business equity','Other assets','Liability'];
 const sectorTypes = new Set(['Listed shares','Unreconciled equity','Funds','Crypto']);
-const colors = ['#205745','#3f8873','#79aa87','#b6c88a','#8171a7','#a07940','#5a81a9','#bc8274','#779098'];
+const colors = ['#463d33','#88715a','#b7a38a','#d5c4ac','#7b737d','#a3825d','#777c84','#b58d7f','#9d978e'];
 const $ = id => document.getElementById(id);
 const el = (name, text, cls) => {
   const node = document.createElement(name);
@@ -406,28 +415,105 @@ function periodStart(end, selectedPeriod) {
   return date.toISOString().slice(0,10);
 }
 let historyWindow = null;
-let historyDates = [];
+let historyExtent = null;
+let chartInsets = {left:64,right:23};
+const chart = $('chart');
+
+function boundHistory(start, span) {
+  const {start:first,end:last}=historyExtent;
+  span=Math.max(Math.min(day,last-first),Math.min(last-first,span));
+  start=Math.max(first,Math.min(last-span,start));
+  return span >= last-first ? null : {start,end:start+span};
+}
+
 function changeHistoryWindow(action) {
-  const max = historyDates.length;
-  if (max < 2) return;
-  const old = historyWindow ?? {start:0,size:max};
-  let {start,size}=old;
+  if (!historyExtent || historyExtent.start===historyExtent.end) return;
+  const current = historyWindow ?? historyExtent;
+  const span = current.end-current.start;
   if (action==='reset') historyWindow=null;
-  else {
-    if (action==='in'||action==='out') {
-      size=action==='in'?Math.max(2,Math.ceil(size/2)):Math.min(max,size*2);
-      const selected=historyDates.indexOf(active);
-      const center=selected>=old.start&&selected<old.start+old.size ? selected : old.start+(old.size-1)/2;
-      start=Math.round(center-(size-1)/2);
-    } else start+=(action==='next'?1:-1)*Math.max(1,Math.floor(size/2));
-    start=Math.max(0,Math.min(max-size,start));
-    historyWindow=size===max?null:{start,size};
+  else if (action==='in'||action==='out') {
+    const nextSpan=Math.max(day,Math.min(historyExtent.end-historyExtent.start,span*(action==='in'?.5:2)));
+    const selected=Date.parse(active);
+    const anchor=selected>=current.start&&selected<=current.end ? selected : current.start+span/2;
+    const fraction=(anchor-current.start)/span;
+    historyWindow=boundHistory(anchor-nextSpan*fraction,nextSpan);
+  } else {
+    historyWindow=boundHistory(current.start+(action==='next'?1:-1)*span*.55,span);
   }
   drawHistory();
 }
 for (const [id,action] of [['zoom-in','in'],['zoom-out','out'],['pan-back','back'],['pan-next','next'],['zoom-reset','reset']]) {
   $(id).onclick=()=>changeHistoryWindow(action);
 }
+
+const chartPointers = new Map();
+let chartGesture = null;
+let chartGestureMoved = false;
+let chartFrame;
+function pointerGeometry() {
+  const [first,second]=chartPointers.values();
+  return second ? {x:(first.x+second.x)/2,y:(first.y+second.y)/2,
+    distance:Math.max(1,Math.hypot(first.x-second.x,first.y-second.y))} :
+    {x:first.x,y:first.y,distance:0};
+}
+function beginChartGesture() {
+  const rect=chart.getBoundingClientRect();
+  const plotWidth=Math.max(1,rect.width-chartInsets.left-chartInsets.right);
+  const plotLeft=rect.left+chartInsets.left;
+  const geometry=pointerGeometry();
+  const current=historyWindow ?? historyExtent;
+  const span=current.end-current.start;
+  chartGesture={...geometry,start:current.start,span,plotLeft,plotWidth};
+}
+function captureChartPointers() {
+  for (const id of chartPointers.keys()) {
+    try { chart.setPointerCapture(id); } catch { /* A contact may already have ended. */ }
+  }
+}
+chart.addEventListener('pointerdown',event=>{
+  if (!historyExtent || historyExtent.start===historyExtent.end || event.button!==0 || chartPointers.size>=2) return;
+  if (!chartPointers.size) chartGestureMoved=false;
+  chartPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  beginChartGesture();
+  if (chartPointers.size===2) {
+    chartGestureMoved=true;
+    captureChartPointers();
+  }
+});
+chart.addEventListener('pointermove',event=>{
+  if (!chartGesture || !chartPointers.has(event.pointerId)) return;
+  chartPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  const current=pointerGeometry();
+  const {x,y,distance,span,start,plotLeft,plotWidth}=chartGesture;
+  if (!chartGestureMoved) {
+    if (Math.abs(current.x-x)<6 || Math.abs(current.x-x)<Math.abs(current.y-y)) return;
+    chartGestureMoved=true;
+    captureChartPointers();
+  }
+  const proposedSpan=distance?span*distance/current.distance:span;
+  const nextSpan=Math.max(day,Math.min(historyExtent.end-historyExtent.start,proposedSpan));
+  const origin=(x-plotLeft)/plotWidth;
+  const destination=(current.x-plotLeft)/plotWidth;
+  historyWindow=boundHistory(start+origin*span-destination*nextSpan,nextSpan);
+  if (chartFrame===undefined) chartFrame=requestAnimationFrame(()=>{
+    chartFrame=undefined;
+    drawHistory();
+  });
+});
+for(const type of ['pointerup','pointercancel','lostpointercapture']){
+  chart.addEventListener(type,event=>{
+    if (type==='lostpointercapture' && event.target!==chart) return;
+    if (!chartPointers.delete(event.pointerId)) return;
+    if (chartPointers.size) beginChartGesture();
+    else chartGesture=null;
+  });
+}
+chart.addEventListener('click',event=>{
+  // Pointer-generated clicks following a drag must not activate a snapshot.
+  if (!chartGestureMoved || event.detail===0) return;
+  event.stopPropagation();
+},true);
+
 function drawHistory() {
   if (!records.length) return;
   const series=$('series').value, latest=records.at(-1).date;
@@ -441,20 +527,20 @@ function drawHistory() {
       value:series==='net'&&!record.complete ? record.historical.net : summary(record)[series],
       historical:!!record.historical,
     }));
-  historyDates=eligible.map(point=>point.date);
-  const window=historyWindow ?? {start:0,size:eligible.length};
-  const data=eligible.slice(window.start,window.start+window.size);
-  $('zoom-in').disabled=data.length<=2;
+  historyExtent=eligible.length ? {start:Date.parse(eligible[0].date),end:Date.parse(eligible.at(-1).date)} : null;
+  const domain=historyWindow ?? historyExtent;
+  const data=domain ? eligible.filter(point=>Date.parse(point.date)>=domain.start&&Date.parse(point.date)<=domain.end) : [];
+  $('zoom-in').disabled=!domain || domain.end-domain.start<=day;
   $('zoom-out').disabled=$('zoom-reset').disabled=!historyWindow;
-  $('pan-back').disabled=window.start===0;
-  $('pan-next').disabled=window.start+window.size>=eligible.length;
+  $('pan-back').disabled=!historyWindow || domain.start<=historyExtent.start;
+  $('pan-next').disabled=!historyWindow || domain.end>=historyExtent.end;
   const includesHistorical=data.some(point=>point.historical);
   const target=$('chart');target.replaceChildren();
   $('change').textContent='';
   if(start&&end&&start>end){$('history-note').textContent='Choose an end date on or after the start date.';return;}
   if(!data.length){
     $('history-note').textContent='';
-    target.append(el('p',series==='net'&&matching.length?'Net worth appears once a snapshot accounts for all assets and liabilities.':'No snapshots in this period.','empty'));
+    target.append(el('p',series==='net'&&matching.length?'Net worth appears once a snapshot accounts for all assets and liabilities.':historyWindow?'No snapshots in view. Drag or zoom out.':'No snapshots in this period.','empty'));
     return;
   }
   const first=data[0], last=data.at(-1);
@@ -462,17 +548,19 @@ function drawHistory() {
     const change=last.value-first.value;
     $('change').textContent=(change>0?'+':'')+money(change)+(first.value>0?' ('+(change>0?'+':'')+pct(change/first.value)+')':'');
   }
-  $('history-note').textContent=data.length===1?dateLabel(first.date)+' · Add a second snapshot to see change.':dateLabel(first.date)+' to '+dateLabel(last.date);
-  $('history-note').textContent+=' · Select a point to view its snapshot.';
+  const domainDate=time=>dateLabel(new Date(time).toISOString().slice(0,10));
+  $('history-note').textContent=domain.start===domain.end ? domainDate(domain.start) :
+    domainDate(domain.start)+' to '+domainDate(domain.end);
   if(includesHistorical) $('history-note').textContent+=' Historical coverage varies.';
   const compact = target.clientWidth < 450;
-  const w=compact ? Math.max(target.clientWidth,280) : 620;
+  const w=target.clientWidth || 620;
   const h=compact ? 170 : 185, left=compact?64:88,right=23, top=15,bottom=31;
   const vals=data.map(d=>d.value), lower=Math.min(...vals), upper=Math.max(...vals);
   const min=lower===upper?lower-Math.max(1,Math.abs(lower)*.1):lower;
   const max=lower===upper?upper+Math.max(1,Math.abs(upper)*.1):upper;
-  const span=(Date.parse(last.date)-Date.parse(first.date))/day;
-  const xy=d=>[span?left+(Date.parse(d.date)-Date.parse(first.date))/day/span*(w-left-right):(w+left-right)/2,top+(max-d.value)/(max-min)*(h-top-bottom)];
+  chartInsets={left,right};
+  const span=domain.end-domain.start;
+  const xy=d=>[span?left+(Date.parse(d.date)-domain.start)/span*(w-left-right):(w+left-right)/2,top+(max-d.value)/(max-min)*(h-top-bottom)];
   const svgEl=(name,attrs)=>{const node=document.createElementNS('http://www.w3.org/2000/svg',name);Object.entries(attrs).forEach(([key,val])=>node.setAttribute(key,val));return node;};
   const svg=svgEl('svg',{viewBox:'0 0 '+w+' '+h,role:'group','aria-label':'Wealth history. Select a point to view that snapshot.'});
   for(let i=0;i<3;i++){
@@ -480,9 +568,9 @@ function drawHistory() {
     const axis=svgEl('text',{x:left-8,y:y+4,'text-anchor':'end',class:'chart-label'});
     const short=new Intl.NumberFormat('en-AU',{notation:'compact',maximumFractionDigits:2}).format(Math.abs(value));
     axis.textContent=(value<0?'−':'')+'A$'+short;
-    svg.append(svgEl('line',{x1:left,y1:y,x2:w-right,y2:y,stroke:'#e2ebe4'}),axis);
+    svg.append(svgEl('line',{x1:left,y1:y,x2:w-right,y2:y,stroke:'#e9e1d7'}),axis);
   }
-  if(data.length>1)svg.append(svgEl('polyline',{points:data.map(d=>xy(d).join(',')).join(' '),fill:'none',stroke:'#23745e','stroke-width':3,'stroke-linejoin':'round'}));
+  if(data.length>1)svg.append(svgEl('polyline',{points:data.map(d=>xy(d).join(',')).join(' '),fill:'none',stroke:'#6e5944','stroke-width':3,'stroke-linejoin':'round'}));
   for (const d of data) {
     const [cx,cy] = xy(d);
     const selected = active === d.date;
@@ -491,7 +579,7 @@ function drawHistory() {
       'aria-pressed':String(selected),'data-snapshot-date':d.date,class:'chart-point'});
     const hitArea = svgEl('circle',{cx,cy,r:16,fill:'transparent'});
     const point = svgEl('circle',{cx,cy,r:selected?7:5,
-      fill:selected||!d.historical?'#23745e':'#fff',stroke:'#23745e','stroke-width':2,class:'chart-dot'});
+      fill:selected||!d.historical?'#6e5944':'#fffdf9',stroke:'#6e5944','stroke-width':2,class:'chart-dot'});
     const title=svgEl('title',{});
     title.textContent=label;
     marker.append(hitArea,point,title);
@@ -508,9 +596,10 @@ function drawHistory() {
     });
     svg.append(marker);
   }
-  for(const d of data.length===1?[first]:[first,last]){
-    const label=svgEl('text',{x:xy(d)[0],y:h-6,'text-anchor':data.length===1?'middle':d===first?'start':'end',class:'chart-label'});
-    label.textContent=dateLabel(d.date);svg.append(label);
+  const ticks=span ? [[domain.start,left,'start'],[domain.end,w-right,'end']] : [[domain.start,(w+left-right)/2,'middle']];
+  for(const [time,x,anchor] of ticks){
+    const label=svgEl('text',{x,y:h-6,'text-anchor':anchor,class:'chart-label'});
+    label.textContent=domainDate(time);svg.append(label);
   }
   target.append(svg);
 }
